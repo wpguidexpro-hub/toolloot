@@ -71,3 +71,48 @@ footer{border-top:1px solid #e5e7eb}
  .toolGrid,.aboutGrid{grid-template-columns:1fr}
  .footerInner{height:auto;padding:18px 0;gap:8px;flex-direction:column;align-items:flex-start}
 }
+.toolCard{display:block;color:inherit;text-decoration:none;transition:border-color .15s}
+.toolCard:hover{border-color:#9ca3af}
+.toolIcon{width:38px;height:38px;border:1px solid #e5e7eb;border-radius:8px;display:grid;place-items:center;color:#374151;margin-bottom:14px}
+.toolIcon.large{width:48px;height:48px;margin:0}
+.toolCard h3{margin:0 0 7px;font-size:16px}
+.toolLink{display:block;margin-top:16px;font-size:13px;font-weight:600;color:#374151}
+.toolPage{min-height:100vh;background:#fff;color:#111827}
+.toolPageInner{padding:34px 0 70px}
+.backLink{display:inline-block;color:#6b7280;font-size:14px;margin-bottom:30px}
+.backLink:hover{color:#111827}
+.toolTitle{display:flex;gap:15px;align-items:flex-start;margin-bottom:28px}
+.toolTitle h1{font-size:32px;text-align:left;margin:0 0 7px}
+.toolTitle p{margin:0;color:#6b7280;font-size:14px;line-height:1.6}
+.compressor{border:1px solid #e5e7eb;border-radius:10px;padding:20px;display:grid;grid-template-columns:1fr 320px;gap:24px}
+.dropZone{min-height:300px;border:1px dashed #cfd3d8;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center;color:#6b7280}
+.dropZone strong{color:#111827;font-size:16px}
+.dropZone input{display:block;margin-top:8px;max-width:90%}
+.settings{display:flex;flex-direction:column;gap:24px;padding:8px 0}
+.settings label{font-size:14px;color:#374151}
+.settings b{float:right;font-weight:600}
+.settings input[type=range]{display:block;width:100%;margin-top:13px}
+.primaryButton,.downloadButton{border:1px solid #111827;background:#111827;color:#fff;border-radius:7px;padding:11px 14px;font-weight:600;font-size:14px;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.primaryButton:disabled{opacity:.45;cursor:not-allowed}
+.results{margin-top:28px}
+.results h2{font-size:20px;margin:0 0 12px}
+.resultRow{border:1px solid #e5e7eb;border-radius:8px;padding:13px 15px;display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:9px}
+.resultRow div{min-width:0}.resultRow strong,.resultRow span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.resultRow strong{font-size:14px}.resultRow span{font-size:12px;color:#6b7280;margin-top:4px}
+.downloadButton{padding:8px 11px;white-space:nowrap}
+.privacyNote{display:flex;align-items:center;gap:9px;color:#6b7280;font-size:13px;margin-top:18px}
+.dark .toolPage{background:#0f1115;color:#e5e7eb}
+.dark .backLink,.dark .toolTitle p,.dark .privacyNote{color:#9ca3af}
+.dark .backLink:hover{color:#fff}
+.dark .compressor,.dark .resultRow{border-color:#30343c}
+.dark .dropZone{border-color:#454b55;color:#9ca3af}
+.dark .dropZone strong,.dark .settings label{color:#e5e7eb}
+.dark .toolIcon{border-color:#30343c;color:#e5e7eb}
+.dark .primaryButton,.dark .downloadButton{background:#e5e7eb;color:#111827;border-color:#e5e7eb}
+@media(max-width:760px){
+ .compressor{grid-template-columns:1fr;padding:14px}
+ .dropZone{min-height:230px}
+ .toolTitle h1{font-size:27px}
+ .resultRow{align-items:flex-start;flex-direction:column}
+ .downloadButton{width:100%}
+}
