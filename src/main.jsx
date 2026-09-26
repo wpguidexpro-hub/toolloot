@@ -63,7 +63,7 @@ function Header({ dark, setDark, canInstall, installApp }) {
       {nav.map(([name,path])=><a key={name} href={link(path)} onClick={()=>setMenu(false)}>{name}</a>)}
     </nav>
     <div className="headerActions">
-      <button className="installButton" onClick={installApp} aria-label="Install ToollooT"> <Download size={16}/> Install App</button>
+      {canInstall && <button className="installButton" onClick={installApp} aria-label="Install ToollooT"> <Download size={16}/> Install App</button>}
       <button className="iconButton" onClick={()=>setDark(!dark)} aria-label="Toggle theme">{dark?<Sun size={18}/>:<Moon size={18}/>}</button>
       <button className="iconButton mobileMenu" onClick={()=>setMenu(!menu)} aria-label="Menu">{menu?<X size={19}/>:<Menu size={19}/>}</button>
     </div>
@@ -90,11 +90,19 @@ function Layout({ children }) {
     try { localStorage.setItem("toolloot:theme", dark ? "dark" : "light"); } catch {}
     document.documentElement.dataset.theme = dark ? "dark" : "light";
   }, [dark]);
+  const [installed,setInstalled]=useState(false);
   useEffect(() => {
     if ("serviceWorker" in navigator) navigator.serviceWorker.register(link("/sw.js")).catch(()=>{});
+    const standalone = window.matchMedia?.("(display-mode: standalone)")?.matches || window.navigator.standalone === true;
+    setInstalled(!!standalone);
     const handler = e => { e.preventDefault(); setInstallPrompt(e); };
+    const installedHandler = () => { setInstalled(true); setInstallPrompt(null); };
     window.addEventListener("beforeinstallprompt", handler);
-    return () => window.removeEventListener("beforeinstallprompt", handler);
+    window.addEventListener("appinstalled", installedHandler);
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handler);
+      window.removeEventListener("appinstalled", installedHandler);
+    };
   }, []);
   const installApp = async () => {
     if (window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone) {
@@ -107,7 +115,7 @@ function Layout({ children }) {
     await installPrompt.userChoice;
     setInstallPrompt(null);
   };
-  return <div className={dark ? "app dark" : "app"}><Header dark={dark} setDark={setDark} canInstall={!!installPrompt} installApp={installApp}/>{children}<Footer/><nav className="mobileBottomNav" aria-label="Mobile navigation"><a href={link("/")}><HomeIcon size={19}/><span>Home</span></a><a href={link("/categories")}><Boxes size={19}/><span>Categories</span></a><a href={link("/how-to-use")}><FileText size={19}/><span>How to Use</span></a><a href={link("/about")}><HomeIcon size={19}/><span>About</span></a></nav></div>;
+  return <div className={dark ? "app dark" : "app"}><Header dark={dark} setDark={setDark} canInstall={!!installPrompt && !installed} installApp={installApp}/>{children}<Footer/><nav className="mobileBottomNav" aria-label="Mobile navigation"><a href={link("/")}><HomeIcon size={19}/><span>Home</span></a><a href={link("/categories")}><Boxes size={19}/><span>Categories</span></a><a href={link("/how-to-use")}><FileText size={19}/><span>How to Use</span></a><a href={link("/about")}><HomeIcon size={19}/><span>About</span></a></nav></div>;
 }
 function ToolCard({ tool }) {
   const openTool=async()=>{const recent=(await get("toolloot:recent-tools"))||[];const next=[tool.id,...recent.filter(id=>id!==tool.id)].slice(0,6);await set("toolloot:recent-tools",next)};
