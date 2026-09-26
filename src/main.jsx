@@ -280,6 +280,11 @@ function ImageItem({item,index,busy,update,applyAll,compressSingle,removeItem}) 
     {r&&<div className="itemResult"><div className="miniResultPreview"><span className="previewLabel">Compressed preview</span><img src={r.url} alt={"Compressed "+item.file.name}/></div><div className="resultInfo"><strong>{r.name}</strong><span>{r.width} × {r.height} • {formatBytes(r.original)} → {formatBytes(r.blob.size)} • {r.original>r.blob.size?Math.round((1-r.blob.size/r.original)*100)+"% smaller":"No size reduction"}</span><button className="textButton" onClick={()=>{}}>Settings stay with this image</button></div></div>}
   </article>;
 }
+function App(){
+  const [loading,setLoading]=useState(true);
+  useEffect(()=>{ const t=setTimeout(()=>setLoading(false),450); return ()=>clearTimeout(t); },[]);
+  return <>{loading&&<div className="pageLoader" role="status" aria-label="Loading"><div className="pageLoaderSpinner"/><span>Loading ToollooT…</span></div>}<Root/></>;
+}
 function Root(){
   const path=window.location.pathname.replace(/\/+$/,"")||"/";
   const local=path.replace(BASE.replace(/\/$/,""),"")||"/";
@@ -298,4 +303,4 @@ function Root(){
   if(local==="/contact")return <ContactPage/>;
   return <Home/>;
 }
-createRoot(document.getElementById("root")).render(<Root/>);
+createRoot(document.getElementById("root")).render(<App/>);
