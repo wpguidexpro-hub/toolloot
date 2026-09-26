@@ -5,7 +5,7 @@ import {Camera,Clipboard,FileImage,FolderOpen,Link2,MonitorUp,FolderArchive,Plus
 const imageOnly=files=>Array.from(files||[]).filter(f=>f.type.startsWith("image/")||/\.(heic|heif|avif|bmp|tif|tiff|gif)$/i.test(f.name));
 const fromUrl=async url=>{const r=await fetch(url);if(!r.ok)throw new Error("Image could not be loaded");const b=await r.blob();if(!b.type.startsWith("image/"))throw new Error("URL is not an image");return new File([b],"remote-image."+((b.type.split("/")[1]||"jpg")),{type:b.type})};
 
-export function ImageSourcePicker({onFiles,accept="image/*",multiple=true,label="Choose images"}){
+export function ImageSourcePicker({onFiles,accept="image/*",multiple=true,label="Choose images",className=""}){
  const [open,setOpen]=useState(false),[drag,setDrag]=useState(false);
  const input=useRef(null),camera=useRef(null),folder=useRef(null),zip=useRef(null);
  const add=files=>{const fs=imageOnly(files);if(fs.length)onFiles(fs)};
@@ -16,7 +16,7 @@ export function ImageSourcePicker({onFiles,accept="image/*",multiple=true,label=
  const zipImport=async e=>{setOpen(false);const f=e.target.files?.[0];e.target.value="";if(!f)return;try{const JSZip=(await import("jszip")).default,z=await JSZip.loadAsync(f),files=[];for(const name of Object.keys(z.files)){const x=z.files[name];if(x.dir||!/\.(jpe?g|png|webp|avif|gif|bmp|tiff?|heic|heif)$/i.test(name))continue;const b=await x.async("blob");files.push(new File([b],name.split("/").pop(),{type:b.type||"application/octet-stream"}))}if(files.length)onFiles(files);else throw new Error("No supported images found in ZIP")}catch(e){Swal.fire({icon:"error",title:"ZIP import failed",text:e?.message||"Could not read ZIP"})}};
  const choose=(ref)=>{setOpen(false);ref.current?.click()};
  const onDrop=e=>{e.preventDefault();setDrag(false);add(e.dataTransfer.files)};
- return <div className={"sourcePicker "+(drag?"isDragging":"")} onDragOver={e=>{e.preventDefault();setDrag(true)}} onDragLeave={()=>setDrag(false)} onDrop={onDrop}>
+ return <div className={"sourcePicker "+className+" "+(drag?"isDragging":"")} onDragOver={e=>{e.preventDefault();setDrag(true)}} onDragLeave={()=>setDrag(false)} onDrop={onDrop}>
   <div className="sourcePickerTitle"><FileImage size={18}/><div><strong>Drop images here or choose files</strong><span>Multiple images supported • No upload • Local processing</span></div></div>
   <div className="sourcePickerChoose"><button type="button" className="sourceChooseButton" onClick={()=>setOpen(x=>!x)}><FolderOpen size={18}/><span>{label}</span><ChevronDown size={16}/></button>
    {open&&<div className="sourceMenu">
