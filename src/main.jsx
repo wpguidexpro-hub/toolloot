@@ -2,7 +2,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import {
   Search, Boxes, Sparkles, Code2, Image as ImageIcon, FileText, Calculator,
   Menu, X, Sun, Moon, Upload, Download, SlidersHorizontal, Shield,
-  FileCheck, Mail, Layers3, Home as HomeIcon
+  FileCheck, Mail, Layers3, Home as HomeIcon, RotateCw, FlipHorizontal2,
+  Maximize2, Trash2, DownloadCloud, Target, Gauge
 } from "lucide-react";
 import { createRoot } from "react-dom/client";
 import "./styles.css";
@@ -60,7 +61,7 @@ function Footer() {
   return <footer><div className="container footerInner">
     <div><strong>ToolLoot</strong><span>Simple tools for everyday work.</span></div>
     <nav><a href={link("/about")}>About</a><a href={link("/privacy")}>Privacy</a><a href={link("/terms")}>Terms</a><a href={link("/contact")}>Contact</a></nav>
-    <small>© 2026 ToolLoot</small>
+    <small>Â© 2026 ToolLoot</small>
   </div></footer>;
 }
 function Layout({ children }) {
@@ -70,7 +71,7 @@ function Layout({ children }) {
 function ToolCard({ tool }) {
   return <a className="toolCard" href={link(tool.path)}>
     <div className="toolIcon"><ImageIcon size={20}/></div><h3>{tool.name}</h3>
-    <p>{tool.description}</p><span className="toolLink">Open tool →</span>
+    <p>{tool.description}</p><span className="toolLink">Open tool â†’</span>
   </a>;
 }
 function Home() {
@@ -79,7 +80,7 @@ function Home() {
     (category==="All Tools"||t.category===category) &&
     (t.name+" "+t.description).toLowerCase().includes(query.toLowerCase())
   ),[query,category]);
-  return <Layout><Seo title="ToolLoot — Free Online Tools" description="ToolLoot provides simple, fast and free online tools for images, documents, developers and everyday work."/>
+  return <Layout><Seo title="ToolLoot â€” Free Online Tools" description="ToolLoot provides simple, fast and free online tools for images, documents, developers and everyday work."/>
     <main>
       <section className="hero"><div className="container heroInner">
         <div className="eyebrow">TOOLLOOT</div><h1>Simple tools that get things done.</h1>
@@ -105,13 +106,13 @@ function Page({ title,description,icon:Icon,children }) {
 }
 function CategoryPage({categoryName,slug}) {
   const matches=tools.filter(t=>t.category===categoryName);
-  return <Page title={categoryName+" Tools — ToolLoot"} description={"Free "+categoryName.toLowerCase()+" tools from ToolLoot. Simple browser-based utilities designed for everyday tasks."} icon={categories.find(c=>c.name===categoryName)?.icon||Layers3}>
+  return <Page title={categoryName+" Tools â€” ToolLoot"} description={"Free "+categoryName.toLowerCase()+" tools from ToolLoot. Simple browser-based utilities designed for everyday tasks."} icon={categories.find(c=>c.name===categoryName)?.icon||Layers3}>
     <div className="sectionHead"><div><h2>{categoryName} tools</h2><p>{matches.length} available</p></div></div>
     {matches.length?<div className="toolGrid">{matches.map(t=><ToolCard tool={t} key={t.id}/>)}</div>:<div className="empty"><strong>No tools in this category yet.</strong><p>New ToolLoot tools will appear here as they are added.</p></div>}
   </Page>;
 }
 function CategoriesPage() {
-  return <Page title="Tool Categories — ToolLoot" description="Browse free online tool categories for images, documents, developers, calculators and AI." icon={Layers3}>
+  return <Page title="Tool Categories â€” ToolLoot" description="Browse free online tool categories for images, documents, developers, calculators and AI." icon={Layers3}>
     <div className="pageCards">{categories.slice(1).map(({name,icon:Icon,path})=><a className="infoCard" key={name} href={link(path)}><Icon size={20}/><strong>{name}</strong><span>Browse {name.toLowerCase()} tools.</span></a>)}</div>
   </Page>;
 }
@@ -122,14 +123,14 @@ function AboutPage() {
   </Page>;
 }
 function PrivacyPage() {
-  return <Page title="Privacy Policy — ToolLoot" description="Read the ToolLoot privacy policy and learn how browser-based tools handle your files and information." icon={Shield}>
+  return <Page title="Privacy Policy â€” ToolLoot" description="Read the ToolLoot privacy policy and learn how browser-based tools handle your files and information." icon={Shield}>
     <h2>Browser processing</h2><p>When a tool says it runs locally in your browser, files are processed on your device and are not uploaded by that tool.</p>
     <h2>Data collection</h2><p>ToolLoot does not need an account to use its basic browser tools. Any future service that requires data will clearly describe what is collected and why.</p>
     <p>Do not upload sensitive files to any online service unless you understand how that service handles them.</p>
   </Page>;
 }
 function TermsPage() {
-  return <Page title="Terms of Use — ToolLoot" description="Read the basic terms for using ToolLoot online tools." icon={FileCheck}>
+  return <Page title="Terms of Use â€” ToolLoot" description="Read the basic terms for using ToolLoot online tools." icon={FileCheck}>
     <h2>Use of tools</h2><p>ToolLoot tools are provided for general-purpose use. Check the result before relying on it for important work.</p>
     <h2>Availability</h2><p>Tools may be updated, changed or temporarily unavailable as the platform develops.</p>
   </Page>;
@@ -141,35 +142,37 @@ function ContactPage() {
   </Page>;
 }
 function ImageCompressor() {
-  const [files,setFiles]=useState([]),[quality,setQuality]=useState(.72),[maxWidth,setMaxWidth]=useState(0),[format,setFormat]=useState("webp"),[results,setResults]=useState([]),[busy,setBusy]=useState(false);
+  const [files,setFiles]=useState([]),[quality,setQuality]=useState(.72),[maxWidth,setMaxWidth]=useState(0),[format,setFormat]=useState("webp"),[targetKB,setTargetKB]=useState(0),[rotate,setRotate]=useState(0),[flip,setFlip]=useState(false),[results,setResults]=useState([]),[busy,setBusy]=useState(false),[progress,setProgress]=useState(0),[drag,setDrag]=useState(false);
   useEffect(()=>()=>results.forEach(r=>{URL.revokeObjectURL(r.url);URL.revokeObjectURL(r.originalUrl)}),[results]);
-  const addFiles=e=>{setFiles(Array.from(e.target.files||[]));setResults([]);};
+  const addFiles=e=>{setFiles(Array.from(e.target.files||[]).filter(f=>f.type.startsWith("image/")));setResults([]);setProgress(0);};
   const removeFile=name=>setFiles(f=>f.filter(x=>x.name!==name));
+  const encode=(canvas,type,q)=>new Promise((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(new Error("Encoding failed")),type,q));
+  const outputType=()=>format==="jpg"?"image/jpeg":format==="png"?"image/png":format==="avif"?"image/avif":format==="original"?null:"image/webp";
   async function compress(){
-    if(!files.length)return; setBusy(true); const output=[];
+    if(!files.length)return; setBusy(true); setProgress(0); const output=[];
     for(const file of files){
       const url=URL.createObjectURL(file),img=new Image(); img.src=url;
       await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=reject;});
-      const scale=maxWidth&&img.width>maxWidth?maxWidth/img.width:1,canvas=document.createElement("canvas");
-      canvas.width=Math.round(img.width*scale); canvas.height=Math.round(img.height*scale);
-      canvas.getContext("2d").drawImage(img,0,0,canvas.width,canvas.height);
-      const type=format==="original"?file.type:(format==="jpg"?"image/jpeg":format==="png"?"image/png":"image/webp");
-      const blob=await new Promise((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(new Error("Compression failed")),type,quality));
+      const scale=maxWidth&&img.width>maxWidth?maxWidth/img.width:1,w=Math.max(1,Math.round(img.width*scale)),h=Math.max(1,Math.round(img.height*scale)),turn=rotate%360,canvas=document.createElement("canvas");
+      canvas.width=turn%180?h:w;canvas.height=turn%180?w:h;
+      const ctx=canvas.getContext("2d");ctx.imageSmoothingQuality="high";ctx.save();ctx.translate(canvas.width/2,canvas.height/2);ctx.rotate(turn*Math.PI/180);ctx.scale(flip?-1:1,1);ctx.drawImage(img,-w/2,-h/2,w,h);ctx.restore();
+      const type=outputType()||file.type||"image/webp";
+      let blob=await encode(canvas,type,quality);if(targetKB>0&&/jpeg|webp|avif/.test(blob.type)&&blob.size>targetKB*1024){let lo=.1,hi=quality,best=blob;for(let n=0;n<8;n++){const mid=(lo+hi)/2,b=await encode(canvas,blob.type,mid);if(b.size<=targetKB*1024){best=b;lo=mid}else hi=mid}blob=best}
       const ext=type==="image/jpeg"?"jpg":type.split("/")[1];
-      output.push({name:file.name.replace(/\.[^.]+$/,"")+"-compressed."+ext,blob,original:file.size,width:canvas.width,height:canvas.height,url:URL.createObjectURL(blob),originalUrl:url});
+      output.push({name:file.name.replace(/\.[^.]+$/,"")+"-compressed."+ext,blob,original:file.size,width:canvas.width,height:canvas.height,url:URL.createObjectURL(blob),originalUrl:url});setProgress(Math.round((output.length/files.length)*100));
       // Keep the original preview URL alive until results are cleared.
     }
     setResults(output);setBusy(false);
   }
-  return <Layout><Seo title="Image Compressor — Free Online | ToolLoot" description="Compress JPG, PNG and WebP images online for free in your browser. Reduce image size without uploading files."/>
-    <main className="toolPage"><div className="container toolPageInner"><a className="backLink" href={link("/")}>← Back to ToolLoot</a>
+  return <Layout><Seo title="Image Compressor â€” Free Online | ToolLoot" description="Compress JPG, PNG and WebP images online for free in your browser. Reduce image size without uploading files."/>
+    <main className="toolPage"><div className="container toolPageInner"><a className="backLink" href={link("/")}>â† Back to ToolLoot</a>
       <div className="toolTitle"><div className="toolIcon large"><ImageIcon size={24}/></div><div><h1>Image Compressor</h1><p>Reduce image file size directly in your browser. Your images stay on your device.</p></div></div>
-      <div className="compressor"><div className="dropZone"><Upload size={28}/><strong>{files.length?files.length+" image(s) selected":"Choose images to compress"}</strong><span>JPG, PNG or WebP • Multiple files</span><label className="fileButton">Choose files<input type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={addFiles}/></label></div>
-        <div className="settings"><label>Output format<select value={format} onChange={e=>setFormat(e.target.value)}><option value="webp">WebP — smaller</option><option value="jpg">JPG — compatible</option><option value="png">PNG — lossless</option><option value="original">Original format</option></select></label>
+      <div className={"compressor "+(drag?"dragging":"")} onDragOver={e=>{e.preventDefault();setDrag(true)}} onDragLeave={()=>setDrag(false)} onDrop={e=>{e.preventDefault();setDrag(false);addFiles(e.dataTransfer.files)}}><div className="dropZone"><Upload size={28}/><strong>{files.length?files.length+" image(s) selected":"Drop images here or choose files"}</strong><span>JPG, PNG, WebP and other browser-supported images â€¢ Batch processing</span><label className="fileButton">Choose files<input type="file" accept="image/*" multiple onChange={addFiles}/></label></div>
+        <div className="settings"><label>Output format<select value={format} onChange={e=>setFormat(e.target.value)}><option value="webp">WebP â€” smaller</option><option value="jpg">JPG â€” compatible</option><option value="png">PNG â€” lossless</option><option value="original">Original format</option></select></label>
           <label>Quality <b>{Math.round(quality*100)}%</b><input type="range" min=".1" max="1" step=".05" value={quality} onChange={e=>setQuality(Number(e.target.value))}/><small>Quality affects JPG/WebP. PNG is lossless.</small></label>
-          <label>Max width <b>{maxWidth?maxWidth+" px":"Original"}</b><input type="range" min="0" max="4000" step="100" value={maxWidth} onChange={e=>setMaxWidth(Number(e.target.value))}/></label>
-          <button className="primaryButton" disabled={!files.length||busy} onClick={compress}>{busy?"Compressing...":"Compress images"}</button></div></div>
-      {results.length>0&&<div className="results"><h2>Preview & Comparison</h2>{results.map(item=><div className="comparisonCard" key={item.name}><div className="previewGrid"><div><span className="previewLabel">Original</span><img src={item.originalUrl} alt={"Original "+item.name}/><b>{formatBytes(item.original)}</b></div><div><span className="previewLabel">Compressed</span><img src={item.url} alt={"Compressed "+item.name}/><b>{formatBytes(item.blob.size)}</b></div></div><div className="compareMeta"><strong>{item.name}</strong><span>{item.width} × {item.height} • {item.original>item.blob.size?Math.round((1-item.blob.size/item.original)*100)+"% smaller":"No size reduction"}</span><a className="downloadButton" href={item.url} download={item.name}><Download size={17}/>Download</a></div></div>)}</div>}
+          <label>Max width <b>{maxWidth?maxWidth+" px":"Original"}</b><input type="range" min="0" max="6000" step="100" value={maxWidth} onChange={e=>setMaxWidth(Number(e.target.value))}/></label>          <label>Target size <b>{targetKB?targetKB+" KB":"Off"}</b><input type="range" min="0" max="5000" step="100" value={targetKB} onChange={e=>setTargetKB(Number(e.target.value))}/><small>Finds the highest quality that stays under the target.</small></label>
+          <div className="advancedRow"><button type="button" className="smallControl" onClick={()=>setRotate((rotate+90)%360)}><RotateCw size={15}/> Rotate {rotate}°</button><button type="button" className={"smallControl "+(flip?"selected":"")} onClick={()=>setFlip(!flip)}><FlipHorizontal2 size={15}/> Flip</button></div>          <button className="primaryButton" disabled={!files.length||busy} onClick={compress}>{busy?"Compressing "+progress+"%":"Compress images"}</button></div></div>
+      {files.length>0&&<div className="selectedFiles"><div className="sectionHead"><div><h2>Selected images</h2><p>{files.length} ready to process</p></div><button className="textButton" onClick={()=>{setFiles([]);setResults([])}}>Clear all</button></div><div className="selectedGrid">{files.map(file=><div className="selectedItem" key={file.name}><img src={URL.createObjectURL(file)} alt=""/><div><strong>{file.name}</strong><span>{formatBytes(file.size)}</span></div><button onClick={()=>removeFile(file.name)} aria-label={"Remove "+file.name}><Trash2 size={15}/></button></div>)}</div></div>}      {results.length>0&&<div className="results"><h2>Preview & Comparison</h2>{results.map(item=><div className="comparisonCard" key={item.name}><div className="previewGrid"><div><span className="previewLabel">Original</span><img src={item.originalUrl} alt={"Original "+item.name}/><b>{formatBytes(item.original)}</b></div><div><span className="previewLabel">Compressed</span><img src={item.url} alt={"Compressed "+item.name}/><b>{formatBytes(item.blob.size)}</b></div></div><div className="compareMeta"><strong>{item.name}</strong><span>{item.width} Ã— {item.height} â€¢ {item.original>item.blob.size?Math.round((1-item.blob.size/item.original)*100)+"% smaller":"No size reduction"}</span><a className="downloadButton" href={item.url} download={item.name}><Download size={17}/>Download</a></div></div>)}</div>}
       <div className="privacyNote"><SlidersHorizontal size={17}/><span>Compression runs locally in your browser. No upload or server is required.</span></div>
     </div></main>
   </Layout>;
