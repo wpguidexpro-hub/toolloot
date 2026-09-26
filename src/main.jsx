@@ -73,7 +73,18 @@ function Footer() {
   </div></footer>;
 }
 function Layout({ children }) {
-  const [dark,setDark] = useState(false);
+  const [dark,setDark] = useState(() => {
+    try {
+      const saved = localStorage.getItem("toolloot:theme");
+      if (saved === "dark") return true;
+      if (saved === "light") return false;
+      return window.matchMedia?.("(prefers-color-scheme: dark)")?.matches ?? false;
+    } catch { return false; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem("toolloot:theme", dark ? "dark" : "light"); } catch {}
+    document.documentElement.dataset.theme = dark ? "dark" : "light";
+  }, [dark]);
   return <div className={dark ? "app dark" : "app"}><Header dark={dark} setDark={setDark}/>{children}<Footer/></div>;
 }
 function ToolCard({ tool }) {
