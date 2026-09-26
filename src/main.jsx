@@ -49,7 +49,7 @@ function Seo({ title, description }) {
   }, [title, description]);
   return null;
 }
-function ToolLootIcon({ className="" }) {
+function ToollooTIcon({ className="" }) {
   return <img className={className} src={link("/favicon.png")} alt="ToollooT" aria-hidden="true" />;
 }
 function Header({ dark, setDark, canInstall, installApp }) {
@@ -57,7 +57,7 @@ function Header({ dark, setDark, canInstall, installApp }) {
   const nav = [["Tools","/"],["Categories","/categories"],["How to Use","/how-to-use"],["About","/about"]];
   return <header className="header">
     <a className="brand" href={link("/")} onClick={()=>setMenu(false)}>
-      <span className="brandIcon"><ToolLootIcon /></span><span>ToollooT</span>
+      <span className="brandIcon"><ToollooTIcon /></span><span>ToollooT</span>
     </a>
     <nav className={menu ? "nav open" : "nav"}>
       {nav.map(([name,path])=><a key={name} href={link(path)} onClick={()=>setMenu(false)}>{name}</a>)}
@@ -101,7 +101,7 @@ function Layout({ children }) {
       notify("info","ToollooT is already installed"); return;
     }
     if (!installPrompt) {
-      notify("info","Use your browser's Install App option to install ToolLoot"); return;
+      notify("info","Use your browser's Install App option to install ToollooT"); return;
     }
     installPrompt.prompt();
     await installPrompt.userChoice;
@@ -124,7 +124,7 @@ function Home() {
     (t.name+" "+t.description).toLowerCase().includes(query.toLowerCase())
   ),[query,category]);
   const recentTools=recentIds.map(id=>tools.find(t=>t.id===id)).filter(Boolean);
-  return <Layout><Seo title="ToolLoot - Free Online Tools" description="ToolLoot provides simple, fast and free online tools for images, documents, developers and everyday work."/>
+  return <Layout><Seo title="ToollooT - Free Online Tools" description="ToollooT provides simple, fast and free online tools for images, documents, developers and everyday work."/>
     <main>
       <section className="hero"><div className="container heroInner">
         <div className="eyebrow">TOOLLOOT</div><h1>Simple tools that get things done.</h1>
@@ -139,74 +139,74 @@ function Home() {
         <div className="toolGrid">{filtered.map(t=><ToolCard tool={t} key={t.id}/>)}</div>
       </section>
       <section className="container section about"><h2>Free online tools, kept simple</h2>
-        <p>ToolLoot is a lightweight toolbox designed for useful browser-based utilities. More tools can be added without changing the site structure.</p>
+        <p>ToollooT is a lightweight toolbox designed for useful browser-based utilities. More tools can be added without changing the site structure.</p>
       </section>
     </main>
   </Layout>;
 }
 function Page({ title,description,icon:Icon,children }) {
   return <Layout><Seo title={title} description={description}/><main className="staticPage container">
-    <div className="pageIcon"><ToolLootIcon /></div><h1>{title}</h1><p className="pageLead">{description}</p><div className="pageContent">{children}</div>
+    <div className="pageIcon"><ToollooTIcon /></div><h1>{title}</h1><p className="pageLead">{description}</p><div className="pageContent">{children}</div>
   </main></Layout>;
 }
 function CategoryPage({categoryName,slug}) {
   const matches=tools.filter(t=>t.category===categoryName);
-  return <Page title={categoryName+" Tools ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ToolLoot"} description={"Free "+categoryName.toLowerCase()+" tools from ToolLoot. Simple browser-based utilities designed for everyday tasks."} icon={categories.find(c=>c.name===categoryName)?.icon||Layers3}>
+  return <Page title={categoryName+" Tools ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ToollooT"} description={"Free "+categoryName.toLowerCase()+" tools from ToollooT. Simple browser-based utilities designed for everyday tasks."} icon={categories.find(c=>c.name===categoryName)?.icon||Layers3}>
     <div className="sectionHead"><div><h2>{categoryName} tools</h2><p>{matches.length} available</p></div></div>
-    {matches.length?<div className="toolGrid">{matches.map(t=><ToolCard tool={t} key={t.id}/>)}</div>:<div className="empty"><strong>No tools in this category yet.</strong><p>New ToolLoot tools will appear here as they are added.</p></div>}
+    {matches.length?<div className="toolGrid">{matches.map(t=><ToolCard tool={t} key={t.id}/>)}</div>:<div className="empty"><strong>No tools in this category yet.</strong><p>New ToollooT tools will appear here as they are added.</p></div>}
   </Page>;
 }
 function HowToUsePage() {
   const guides = [{id:"image-compressor",title:"Image Compressor",icon:ImageIcon,desc:"Compress and resize multiple images with individual settings, previews and ZIP download."}];
-  return <Page title="How to Use ToolLoot" description="Getting started guide for ToolLoot and step-by-step instructions for every tool." icon={FileText}>
+  return <Page title="How to Use ToollooT" description="Getting started guide for ToollooT and step-by-step instructions for every tool." icon={FileText}>
     <div className="pageCards">
-      <a className="infoCard" href="#getting-started"><Sparkles size={20}/><strong>Getting Started</strong><span>Learn the basic ToolLoot workflow from choosing a tool to downloading your result.</span></a>
+      <a className="infoCard" href="#getting-started"><Sparkles size={20}/><strong>Getting Started</strong><span>Learn the basic ToollooT workflow from choosing a tool to downloading your result.</span></a>
       <a className="infoCard" href="#privacy"><Shield size={20}/><strong>Privacy & Browser Processing</strong><span>Understand which tools process files directly in your browser.</span></a>
       <a className="infoCard" href="#troubleshooting"><Target size={20}/><strong>Troubleshooting</strong><span>Quick fixes for common upload, processing and download problems.</span></a>
     </div>
     <section id="getting-started" className="guideSection"><h2>Getting Started</h2><ol><li>Open a tool from the Tools page or a category.</li><li>Follow the instructions shown inside that tool.</li><li>Choose your files or enter the required information.</li><li>Adjust settings when available.</li><li>Run the tool and review the result.</li><li>Download or export your finished result.</li></ol></section>
-    <section id="privacy" className="guideSection"><h2>Privacy & Browser Processing</h2><p>When a ToolLoot tool says processing happens in your browser, the work is performed locally on your device. Your files are not uploaded by that browser-based tool.</p></section>
+    <section id="privacy" className="guideSection"><h2>Privacy & Browser Processing</h2><p>When a ToollooT tool says processing happens in your browser, the work is performed locally on your device. Your files are not uploaded by that browser-based tool.</p></section>
     <section id="troubleshooting" className="guideSection"><h2>Troubleshooting</h2><ul><li>Refresh the page if a tool becomes unresponsive.</li><li>Use a modern browser and allow file access when prompted.</li><li>For large files, wait for processing to finish before closing the tab.</li><li>If a download does not start, try the download button again.</li></ul></section>
     <section className="guideSection"><h2>Tool Guides</h2><div className="pageCards">{guides.map(g=>{const Icon=g.icon;return <a className="infoCard" key={g.id} href={link("/how-to-use/"+g.id)}><Icon size={20}/><strong>{g.title}</strong><span>{g.desc}</span><em>Use Image Compressor →</em></a>})}</div></section>
   </Page>;
 }
 function ImageCompressorGuide() {
-  return <Page title="How to Use Image Compressor" description="Step-by-step guide to compressing, resizing and downloading images with ToolLoot." icon={ImageIcon}>
+  return <Page title="How to Use Image Compressor" description="Step-by-step guide to compressing, resizing and downloading images with ToollooT." icon={ImageIcon}>
     <div className="guideAction"><a className="primaryButton" href={link("/tools/image-compressor")}><ImageIcon size={16}/> Use Image Compressor Now</a></div>
-    <div className="guideSteps"><div><b>1</b><h2>Add images</h2><p>Drop images into the upload area or choose multiple image files. JPG, PNG, WebP and other browser-supported image formats can be selected.</p></div><div><b>2</b><h2>Select an image</h2><p>Use the horizontal timeline to select the image you want to edit. Each image has its own independent settings.</p></div><div><b>3</b><h2>Choose format</h2><p>Select WebP, JPG, PNG, AVIF or Original. The available compression controls change according to the selected format.</p></div><div><b>4</b><h2>Adjust quality and width</h2><p>Set quality for lossy formats and optionally choose a maximum width. These settings apply only to the selected image.</p></div><div><b>5</b><h2>Set target size</h2><p>For supported lossy formats, set a target size in KB. ToolLoot will try to reduce quality to reach that target.</p></div><div><b>6</b><h2>Rotate or flip</h2><p>Use Rotate or Flip when needed. Reset returns the selected image to its default settings.</p></div><div><b>7</b><h2>Compress</h2><p>Click Compress image. You can re-compress the same image after changing its settings.</p></div><div><b>8</b><h2>Download</h2><p>Download an individual result or use Compress all followed by Download ZIP for a batch.</p></div></div>
+    <div className="guideSteps"><div><b>1</b><h2>Add images</h2><p>Drop images into the upload area or choose multiple image files. JPG, PNG, WebP and other browser-supported image formats can be selected.</p></div><div><b>2</b><h2>Select an image</h2><p>Use the horizontal timeline to select the image you want to edit. Each image has its own independent settings.</p></div><div><b>3</b><h2>Choose format</h2><p>Select WebP, JPG, PNG, AVIF or Original. The available compression controls change according to the selected format.</p></div><div><b>4</b><h2>Adjust quality and width</h2><p>Set quality for lossy formats and optionally choose a maximum width. These settings apply only to the selected image.</p></div><div><b>5</b><h2>Set target size</h2><p>For supported lossy formats, set a target size in KB. ToollooT will try to reduce quality to reach that target.</p></div><div><b>6</b><h2>Rotate or flip</h2><p>Use Rotate or Flip when needed. Reset returns the selected image to its default settings.</p></div><div><b>7</b><h2>Compress</h2><p>Click Compress image. You can re-compress the same image after changing its settings.</p></div><div><b>8</b><h2>Download</h2><p>Download an individual result or use Compress all followed by Download ZIP for a batch.</p></div></div>
     <div className="guideSection"><h2>Multiple images</h2><p>Settings are stored separately for each image. Select another thumbnail to configure it independently. Use <strong>Apply to all</strong> only when you want the current image's complete settings copied to every image.</p></div>
-    <div className="guideSection"><h2>Browser privacy</h2><p>Image compression is performed locally in your browser, so the selected images are not uploaded by ToolLoot.</p></div>
+    <div className="guideSection"><h2>Browser privacy</h2><p>Image compression is performed locally in your browser, so the selected images are not uploaded by ToollooT.</p></div>
     <div className="guideAction"><a className="primaryButton" href={link("/tools/image-compressor")}><ImageIcon size={16}/> Use Image Compressor Now</a></div>
   </Page>;
 }
 function CategoriesPage() {
-  return <Page title="Tool Categories - ToolLoot" description="Browse free online tool categories for images, documents, developers, calculators and AI." icon={Layers3}>
+  return <Page title="Tool Categories - ToollooT" description="Browse free online tool categories for images, documents, developers, calculators and AI." icon={Layers3}>
     <div className="pageCards">{categories.slice(1).map(({name,icon:Icon,path})=><a className="infoCard" key={name} href={link(path)}><Icon size={20}/><strong>{name}</strong><span>Browse {name.toLowerCase()} tools.</span></a>)}</div>
   </Page>;
 }
 function AboutPage() {
-  return <Page title="About ToolLoot" description="Learn about ToolLoot, a simple collection of useful online browser tools." icon={HomeIcon}>
-    <h2>What is ToolLoot?</h2><p>ToolLoot is a simple web toolbox for everyday tasks. The platform is built around small, focused tools that are easy to discover and use.</p>
+  return <Page title="About ToollooT" description="Learn about ToollooT, a simple collection of useful online browser tools." icon={HomeIcon}>
+    <h2>What is ToollooT?</h2><p>ToollooT is a simple web toolbox for everyday tasks. The platform is built around small, focused tools that are easy to discover and use.</p>
     <h2>Built for the web</h2><p>Tools can run directly in your browser where practical, helping keep the interface fast and straightforward.</p>
   </Page>;
 }
 function PrivacyPage() {
-  return <Page title="Privacy Policy - ToolLoot" description="Read the ToolLoot privacy policy and learn how browser-based tools handle your files and information." icon={Shield}>
+  return <Page title="Privacy Policy - ToollooT" description="Read the ToollooT privacy policy and learn how browser-based tools handle your files and information." icon={Shield}>
     <h2>Browser processing</h2><p>When a tool says it runs locally in your browser, files are processed on your device and are not uploaded by that tool.</p>
-    <h2>Data collection</h2><p>ToolLoot does not need an account to use its basic browser tools. Any future service that requires data will clearly describe what is collected and why.</p>
+    <h2>Data collection</h2><p>ToollooT does not need an account to use its basic browser tools. Any future service that requires data will clearly describe what is collected and why.</p>
     <p>Do not upload sensitive files to any online service unless you understand how that service handles them.</p>
   </Page>;
 }
 function TermsPage() {
-  return <Page title="Terms of Use - ToolLoot" description="Read the basic terms for using ToolLoot online tools." icon={FileCheck}>
-    <h2>Use of tools</h2><p>ToolLoot tools are provided for general-purpose use. Check the result before relying on it for important work.</p>
+  return <Page title="Terms of Use - ToollooT" description="Read the basic terms for using ToollooT online tools." icon={FileCheck}>
+    <h2>Use of tools</h2><p>ToollooT tools are provided for general-purpose use. Check the result before relying on it for important work.</p>
     <h2>Availability</h2><p>Tools may be updated, changed or temporarily unavailable as the platform develops.</p>
   </Page>;
 }
 function ContactPage() {
-  return <Page title="Contact ToolLoot" description="Contact ToolLoot for feedback, bug reports and suggestions for new tools." icon={Mail}>
-    <h2>Feedback and tool requests</h2><p>ToolLoot is designed to grow one useful tool at a time. Suggestions and bug reports can help improve the platform.</p>
-    <p>For now, use the public ToolLoot GitHub repository to report issues or suggest improvements.</p>
+  return <Page title="Contact ToollooT" description="Contact ToollooT for feedback, bug reports and suggestions for new tools." icon={Mail}>
+    <h2>Feedback and tool requests</h2><p>ToollooT is designed to grow one useful tool at a time. Suggestions and bug reports can help improve the platform.</p>
+    <p>For now, use the public ToollooT GitHub repository to report issues or suggest improvements.</p>
   </Page>;
 }
 function ImageCompressor() {
@@ -237,8 +237,8 @@ function ImageCompressor() {
   const compressAll=async()=>{if(!items.length||busy)return;setBusy(true);setProgress(0);const next=[];for(let i=0;i<items.length;i++){try{next.push(await compressOne(items[i]));}catch(e){notify("error","Could not compress "+items[i].file.name)}setProgress(Math.round(((i+1)/items.length)*100));}setItems(prev=>prev.map(x=>{const r=next.find(n=>n.originalUrl===x.preview);return r?{...x,result:r}:x}));setBusy(false);notify("success","Batch compression complete");};
   const compressSingle=async id=>{const item=items.find(x=>x.id===id);if(!item)return;try{const r=await compressOne(item);setItems(prev=>prev.map(x=>x.id===id?{...x,result:r}:x));notify("success","Image compressed");}catch(e){notify("error","Compression failed");}};
   const downloadZip=async()=>{const ready=items.filter(x=>x.result);if(!ready.length)return;const zip=new JSZip();ready.forEach(x=>zip.file(x.result.name,x.result.blob));saveAs(await zip.generateAsync({type:"blob"}),"toolloot-compressed-images.zip");notify("success","ZIP download ready");};
-  return <Layout><Seo title="Image Compressor - Free Online | ToolLoot" description="Compress multiple images with individual settings directly in your browser."/>
-    <main className="toolPage"><div className="container toolPageInner"><a className="backLink" href={link("/")}>Back to ToolLoot</a>
+  return <Layout><Seo title="Image Compressor - Free Online | ToollooT" description="Compress multiple images with individual settings directly in your browser."/>
+    <main className="toolPage"><div className="container toolPageInner"><a className="backLink" href={link("/")}>Back to ToollooT</a>
       <div className="toolTitle"><div className="toolIcon large"><ImageIcon size={24}/></div><div><h1>Image Compressor</h1><p>Select an image from the horizontal timeline. Its controls appear below only when needed.</p></div></div>
       <div className={"compressor compactCompressor "+(drag?"dragging":"")} onDragOver={e=>{e.preventDefault();setDrag(true)}} onDragLeave={()=>setDrag(false)} onDrop={e=>{e.preventDefault();setDrag(false);addFiles(e.dataTransfer.files)}}><div className="dropZone"><Upload size={25}/><strong>{items.length?"Add more images":"Drop images here or choose files"}</strong><span>JPG, PNG, WebP, AVIF • Processing stays in your browser</span><label className="fileButton">Choose images<input type="file" accept="image/*" multiple onChange={e=>addFiles(e.target.files)}/></label></div></div>
       {items.length>0&&<div className="compressWorkspace">
