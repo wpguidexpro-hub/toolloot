@@ -11,8 +11,13 @@
   "dependencies": {
     "@gkzlabs/image-compression": "^1.3.3",
     "@vitejs/plugin-react": "latest",
+    "browser-image-compression": "^2.0.2",
+    "file-saver": "^2.0.5",
+    "idb-keyval": "^6.3.0",
     "jszip": "^3.10.2",
     "lucide-react": "latest",
+    "papaparse": "^5.7.0",
+    "pdf-lib": "^1.17.1",
     "react": "latest",
     "react-dom": "latest",
     "sweetalert2": "^11.26.25",

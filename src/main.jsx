@@ -8,6 +8,8 @@ import {
 import { createRoot } from "react-dom/client";
 import Swal from "sweetalert2";
 import JSZip from "jszip";
+import { saveAs } from "file-saver";
+import { get, set } from "idb-keyval";
 import "sweetalert2/dist/sweetalert2.min.css";
 import "./styles.css";
 
@@ -75,17 +77,20 @@ function Layout({ children }) {
   return <div className={dark ? "app dark" : "app"}><Header dark={dark} setDark={setDark}/>{children}<Footer/></div>;
 }
 function ToolCard({ tool }) {
-  return <a className="toolCard" href={link(tool.path)}>
+  const openTool=async()=>{const recent=(await get("toolloot:recent-tools"))||[];const next=[tool.id,...recent.filter(id=>id!==tool.id)].slice(0,6);await set("toolloot:recent-tools",next)};
+  return <a className="toolCard" href={link(tool.path)} onClick={openTool}>
     <div className="toolIcon"><ImageIcon size={20}/></div><h3>{tool.name}</h3>
     <p>{tool.description}</p><span className="toolLink">Open tool</span>
   </a>;
 }
 function Home() {
-  const [query,setQuery]=useState(""); const [category,setCategory]=useState("All Tools");
+  const [query,setQuery]=useState(""); const [category,setCategory]=useState("All Tools"); const [recentIds,setRecentIds]=useState([]);
+  useEffect(()=>{get("toolloot:recent-tools").then(v=>setRecentIds(v||[]))},[]);
   const filtered=useMemo(()=>tools.filter(t=>
     (category==="All Tools"||t.category===category) &&
     (t.name+" "+t.description).toLowerCase().includes(query.toLowerCase())
   ),[query,category]);
+  const recentTools=recentIds.map(id=>tools.find(t=>t.id===id)).filter(Boolean);
   return <Layout><Seo title="ToolLoot - Free Online Tools" description="ToolLoot provides simple, fast and free online tools for images, documents, developers and everyday work."/>
     <main>
       <section className="hero"><div className="container heroInner">
@@ -93,6 +98,7 @@ function Home() {
         <p>Fast, free and easy-to-use browser tools.</p>
         <label className="searchBox"><Search size={20}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search tools..." aria-label="Search tools"/></label>
       </div></section>
+      {recentTools.length>0&&<section className="container section recentSection"><div className="sectionHead"><div><h2>Recently used</h2><p>Your recent tools are stored only in this browser.</p></div></div><div className="toolGrid">{recentTools.map(t=><ToolCard tool={t} key={t.id}/>)}</div></section>}
       <section className="container section" id="categories"><div className="sectionHead"><div><h2>Categories</h2><p>Browse tools by category.</p></div></div>
         <div className="categoryRow">{categories.map(({name,icon:Icon})=><button key={name} className={category===name?"category active":"category"} onClick={()=>setCategory(name)}><Icon size={17}/>{name}</button>)}</div>
       </section>
@@ -156,7 +162,7 @@ function ImageCompressor() {
   const outputType=()=>format==="jpg"?"image/jpeg":format==="png"?"image/png":format==="avif"?"image/avif":format==="original"?null:"image/webp";
   async function downloadZip(){
     if(!results.length)return; const zip=new JSZip(); results.forEach(item=>zip.file(item.name,item.blob));
-    const blob=await zip.generateAsync({type:"blob"}); const url=URL.createObjectURL(blob); const a=document.createElement("a");a.href=url;a.download="toolloot-compressed-images.zip";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);notify("success","ZIP download ready");
+    const blob=await zip.generateAsync({type:"blob"}); saveAs(blob,"toolloot-compressed-images.zip"); notify("success","ZIP download ready");
   }
   async function compress(){
     if(!files.length)return; setBusy(true); setProgress(0); const output=[];
