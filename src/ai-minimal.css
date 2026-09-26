@@ -217,3 +217,19 @@ body:has(.compressWorkspace) .timelineClearButton{display:inline-flex;align-item
 body:has(.compressWorkspace) .timelineClearButton:disabled{opacity:.5;cursor:default}
 .dark body:has(.compressWorkspace) .timelineClearButton{background:#181b21;border-color:#30343c;color:#f3f4f6}
 @media(max-width:760px){body:has(.compressWorkspace) .timelineClearButton{min-height:23px;padding:3px 8px;font-size:9px}}
+/* Smart AI motion + duplicate-action cleanup */
+body:has(.compressWorkspace) .workspaceMiniFooter .textButton{display:none!important}
+body:has(.compressWorkspace) .workspaceReadyHint{display:inline-flex;align-items:center;gap:4px;opacity:.72}
+body:has(.compressWorkspace) .aiBadge{animation:toollootAiPulse 2.2s ease-in-out infinite}
+body:has(.compressWorkspace) .aiCompressButton svg{animation:toollootSpark 1.8s ease-in-out infinite}
+body:has(.compressWorkspace) .generationImage{animation:toollootAiFloat 2.6s ease-in-out infinite}
+body:has(.compressWorkspace) .generationSweep{animation:toollootAiSweep 1.7s ease-in-out infinite}
+body:has(.compressWorkspace) .generationDots span{animation:toollootDot 1.2s ease-in-out infinite}
+body:has(.compressWorkspace) .generationDots span:nth-child(2){animation-delay:.15s}
+body:has(.compressWorkspace) .generationDots span:nth-child(3){animation-delay:.3s}
+@keyframes toollootAiPulse{0%,100%{transform:scale(1);filter:brightness(1)}50%{transform:scale(1.035);filter:brightness(1.12)}}
+@keyframes toollootSpark{0%,100%{transform:rotate(0) scale(1)}50%{transform:rotate(12deg) scale(1.14)}}
+@keyframes toollootAiFloat{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-3px) scale(1.012)}}
+@keyframes toollootAiSweep{0%{transform:translateX(-120%);opacity:0}20%{opacity:.85}70%{opacity:.45}100%{transform:translateX(120%);opacity:0}}
+@keyframes toollootDot{0%,100%{transform:translateY(0);opacity:.35}50%{transform:translateY(-4px);opacity:1}}
+@media(prefers-reduced-motion:reduce){body:has(.compressWorkspace) .aiBadge,body:has(.compressWorkspace) .aiCompressButton svg,body:has(.compressWorkspace) .generationImage,body:has(.compressWorkspace) .generationSweep,body:has(.compressWorkspace) .generationDots span{animation:none!important}}
