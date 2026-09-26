@@ -11,9 +11,11 @@
   "dependencies": {
     "@gkzlabs/image-compression": "^1.3.3",
     "@vitejs/plugin-react": "latest",
+    "jszip": "^3.10.2",
     "lucide-react": "latest",
     "react": "latest",
     "react-dom": "latest",
+    "sweetalert2": "^11.26.25",
     "vite": "latest"
   }
 }
