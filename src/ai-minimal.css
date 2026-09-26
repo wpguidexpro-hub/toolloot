@@ -15,16 +15,14 @@
 .contextSettings .aiSettingsIntro{display:none!important}
 .aiCompressorControls{margin-top:10px!important;padding:12px!important;border:1px solid #e5e7eb;border-radius:16px;background:#fff}
 .qualityControl{display:grid!important;grid-template-columns:auto auto;gap:7px 10px;align-items:center}
-.qualityControl>div:first-child{display:contents}.qualityControl input{grid-column:1/-1}.qualityControl small{display:none!important}
-.realtimeSize{grid-column:1/-1;display:flex!important;align-items:center;gap:8px;margin-top:2px;padding:7px 9px;border:1px solid #e5e7eb;border-radius:9px;background:#f8fafc;font-size:11px}.realtimeSize span{color:#6b7280}.realtimeSize strong{font-size:12px}.realtimeSize em{font-style:normal;color:#6b7280;margin-left:auto}
-.dark .realtimeSize{background:#181b21;border-color:#30343c}.dark .realtimeSize span,.dark .realtimeSize em{color:#9ca3af}
+.qualityControl>div:first-child{display:contents}.qualityControl input{grid-column:1/-1}.qualityControl small{display:none!important}.realtimeSize{grid-column:1/-1;display:flex!important;align-items:center;gap:8px;margin-top:2px;padding:7px 9px;border:1px solid #e5e7eb;border-radius:9px;background:#f8fafc;font-size:11px}.realtimeSize span{color:#6b7280}.realtimeSize strong{font-size:12px}.realtimeSize em{font-style:normal;color:#6b7280;margin-left:auto}.dark .realtimeSize{background:#181b21;border-color:#30343c}.dark .realtimeSize span,.dark .realtimeSize em{color:#9ca3af}
 .aiCompressorControls .aiCompressButton{margin-top:8px}
 .resultSummary{margin-top:10px!important;padding:12px!important;border-radius:16px!important}
 .dark .aiPreviewCard,.dark .aiQuickControls,.dark .aiCompressorControls{background:#101217;border-color:#30343c}
 .dark .aiPreviewCard .canvasPreview{background:#080a0d}
 @media(max-width:760px){.aiCompressorWorkspace{margin-top:8px}.aiQuickControls{display:block}.aiGenerateButton{width:100%;margin-top:10px}.aiPreviewCard .canvasPreview{min-height:220px}}
 
-/* Unified Image Compressor: timeline + fixed footer */
+/* Unified Image Compressor: one preview surface + timeline selection */
 .compressWorkspace .imageTimeline{display:flex!important}
 .compressWorkspace .workspaceFooter{display:none!important}
 .compressWorkspace{width:100%;max-width:none;margin:6px 0 0}
@@ -36,8 +34,7 @@
 .timelineThumb{position:relative;flex:0 0 52px;width:52px;height:52px;padding:2px;border:2px solid transparent;border-radius:10px;background:#f3f4f6;cursor:pointer;overflow:hidden}
 .timelineThumb img{width:100%;height:100%;display:block;object-fit:cover;border-radius:7px}.timelineThumb.active{border-color:#111827;box-shadow:0 0 0 2px rgba(17,24,39,.08)}
 .timelineThumb>span{position:absolute;left:4px;bottom:3px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:rgba(0,0,0,.68);color:#fff;font-size:9px;line-height:16px}.timelineThumb>b{position:absolute;right:3px;top:3px;width:16px;height:16px;border-radius:50%;background:#111827;color:#fff;font-size:10px;line-height:16px}
-.timelineArrow{width:30px;height:34px;border:0;border-radius:9px;background:#f3f4f6;font-size:22px;cursor:pointer}.timelineArrow:disabled{opacity:.35;cursor:default}
-.timelineAddBar{display:flex;justify-content:center;margin:4px 0 5px}.timelineAddBar .compactAddPicker{width:auto!important;margin:0!important;padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important}.timelineAddBar .compactAddPicker .sourcePickerTitle,.timelineAddBar .compactAddPicker .sourcePickerHint,.timelineAddBar .compactAddPicker .sourcePickerPrivacy{display:none!important}.timelineAddBar .compactAddPicker .sourcePickerChoose{margin:0!important}.timelineAddBar .compactAddPicker .sourceChooseButton{min-height:34px!important;padding:6px 11px!important;font-size:11px!important}
+.timelineArrow{width:30px;height:34px;border:0;border-radius:9px;background:#f3f4f6;font-size:22px;cursor:pointer}.timelineArrow:disabled{opacity:.35;cursor:default}.timelineAddBar{display:flex;justify-content:center;margin:4px 0 5px}.timelineAddBar .compactAddPicker{width:auto!important;margin:0!important;padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important}.timelineAddBar .compactAddPicker .sourcePickerTitle,.timelineAddBar .compactAddPicker .sourcePickerHint,.timelineAddBar .compactAddPicker .sourcePickerPrivacy{display:none!important}.timelineAddBar .compactAddPicker .sourcePickerChoose{margin:0!important}.timelineAddBar .compactAddPicker .sourceChooseButton{min-height:34px!important;padding:6px 11px!important;font-size:11px!important}.timelineCompressBar{display:flex;justify-content:flex-end;margin:5px 0 6px}.timelineCompressBar .primaryButton{min-height:38px;padding:7px 14px;font-size:12px}
 .unifiedPreview{margin:0!important;padding:5px!important;border-radius:12px!important}.unifiedCanvas{position:relative!important;min-height:300px!important;max-height:58vh!important;background:#f5f6f8!important;border-radius:12px!important;display:flex!important;align-items:center!important;justify-content:center!important;overflow:hidden!important}
 .unifiedCanvas>img{max-width:100%;max-height:62vh;width:auto;height:auto;object-fit:contain;display:block}.previewResultBadge{position:absolute;right:10px;top:10px;display:flex;align-items:center;gap:5px;padding:6px 9px;border-radius:999px;background:rgba(255,255,255,.92);box-shadow:0 5px 18px rgba(0,0,0,.12);font-size:11px;font-weight:700}
 .unifiedGeneration{position:absolute!important;inset:0!important;z-index:3;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:18px;background:rgba(245,246,248,.88);backdrop-filter:blur(8px)}
@@ -47,35 +44,5 @@
 .workspaceMiniFooter{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-top:8px;font-size:11px;color:#6b7280}.workspaceMiniFooter>span{margin-right:auto}.workspaceMiniFooter .secondaryButton{padding:7px 10px;font-size:11px}.workspaceMiniFooter .textButton{font-size:11px}
 @keyframes toollootSweep{from{left:-35%}to{left:115%}}
 .dark .imageTimeline{background:#101217;border-color:#30343c}.dark .timelineThumb{background:#181b21}.dark .timelineThumb.active{border-color:#fff}.dark .timelineArrow{background:#20242b;color:#fff}.dark .unifiedCanvas{background:#080a0d!important}.dark .unifiedGeneration{background:rgba(8,10,13,.88)}.dark .previewResultBadge{background:rgba(16,18,23,.92);color:#fff}
+@media(max-width:760px){.app,.toolPage{min-height:100vh!important}.compressWorkspace{margin-top:7px}.imageTimeline{padding:5px}.timelineThumb{flex-basis:48px;width:48px;height:48px}.timelineArrow{width:28px}.unifiedCanvas{min-height:240px!important;max-height:55vh!important}.unifiedCanvas>img{max-height:55vh}.unifiedGeneration .generationImage{width:78%;height:42%}.workspaceMiniFooter{flex-wrap:wrap}.workspaceMiniFooter>span{width:100%}}
 
-/* Timeline footer fixed above the global/mobile footer on every screen */
-.compressWorkspace{padding-bottom:58px!important}
-.workspaceMiniFooter{
-  position:fixed;
-  left:0;
-  right:0;
-  bottom:0;
-  z-index:90;
-  min-height:50px;
-  margin:0!important;
-  padding:8px max(14px,calc((100% - 1440px)/2 + 14px)) calc(8px + env(safe-area-inset-bottom));
-  border-top:1px solid #e5e7eb;
-  background:rgba(255,255,255,.96);
-  box-shadow:0 -5px 18px rgba(15,23,42,.08);
-  backdrop-filter:blur(12px);
-  -webkit-backdrop-filter:blur(12px);
-}
-.dark .workspaceMiniFooter{background:rgba(16,18,23,.96);border-color:#30343c;color:#d1d5db}
-.dark .workspaceMiniFooter .textButton{color:#e5e7eb}
-@media(max-width:760px){
-  .app,.toolPage{min-height:100vh!important}
-  .compressWorkspace{margin-top:7px;padding-bottom:68px!important}
-  .imageTimeline{padding:5px}
-  .timelineThumb{flex-basis:48px;width:48px;height:48px}
-  .timelineArrow{width:28px}
-  .unifiedCanvas{min-height:240px!important;max-height:55vh!important}
-  .unifiedCanvas>img{max-height:55vh}
-  .unifiedGeneration .generationImage{width:78%;height:42%}
-  .workspaceMiniFooter{min-height:58px;padding:8px 12px calc(8px + env(safe-area-inset-bottom));}
-  .workspaceMiniFooter>span{margin-right:auto;width:auto}
-}
