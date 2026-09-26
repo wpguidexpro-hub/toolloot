@@ -50,7 +50,7 @@ function Seo({ title, description }) {
   return null;
 }
 function ToolLootIcon({ className="" }) {
-  return <img className={className} src={link("/favicon.svg")} alt="ToolLoot" aria-hidden="true" />;
+  return <img className={className} src={link("/favicon.png")} alt="ToolLoot" aria-hidden="true" />;
 }
 function Header({ dark, setDark, canInstall, installApp }) {
   const [menu,setMenu] = useState(false);
