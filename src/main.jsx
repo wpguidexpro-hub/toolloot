@@ -49,12 +49,15 @@ function Seo({ title, description }) {
   }, [title, description]);
   return null;
 }
+function ToolLootIcon({ className="" }) {
+  return <img className={className} src={link("/favicon.svg")} alt="ToolLoot" aria-hidden="true" />;
+}
 function Header({ dark, setDark, canInstall, installApp }) {
   const [menu,setMenu] = useState(false);
   const nav = [["Tools","/"],["Categories","/categories"],["How to Use","/how-to-use"],["About","/about"]];
   return <header className="header">
     <a className="brand" href={link("/")} onClick={()=>setMenu(false)}>
-      <span className="brandIcon"><Boxes size={18}/></span>ToolLoot
+      <span className="brandIcon"><ToolLootIcon /></span><span>ToolLoot</span>
     </a>
     <nav className={menu ? "nav open" : "nav"}>
       {nav.map(([name,path])=><a key={name} href={link(path)} onClick={()=>setMenu(false)}>{name}</a>)}
@@ -143,7 +146,7 @@ function Home() {
 }
 function Page({ title,description,icon:Icon,children }) {
   return <Layout><Seo title={title} description={description}/><main className="staticPage container">
-    <div className="pageIcon"><Icon size={24}/></div><h1>{title}</h1><p className="pageLead">{description}</p><div className="pageContent">{children}</div>
+    <div className="pageIcon"><ToolLootIcon /></div><h1>{title}</h1><p className="pageLead">{description}</p><div className="pageContent">{children}</div>
   </main></Layout>;
 }
 function CategoryPage({categoryName,slug}) {
