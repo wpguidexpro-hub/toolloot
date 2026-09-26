@@ -49,7 +49,7 @@ function Seo({ title, description }) {
   }, [title, description]);
   return null;
 }
-function Header({ dark, setDark }) {
+function Header({ dark, setDark, canInstall, installApp }) {
   const [menu,setMenu] = useState(false);
   const nav = [["Tools","/"],["Categories","/categories"],["How to Use","/how-to-use"],["About","/about"]];
   return <header className="header">
@@ -60,6 +60,7 @@ function Header({ dark, setDark }) {
       {nav.map(([name,path])=><a key={name} href={link(path)} onClick={()=>setMenu(false)}>{name}</a>)}
     </nav>
     <div className="headerActions">
+      <button className="installButton" onClick={installApp} aria-label="Install ToolLoot"> <Download size={16}/> Install App</button>
       <button className="iconButton" onClick={()=>setDark(!dark)} aria-label="Toggle theme">{dark?<Sun size={18}/>:<Moon size={18}/>}</button>
       <button className="iconButton mobileMenu" onClick={()=>setMenu(!menu)} aria-label="Menu">{menu?<X size={19}/>:<Menu size={19}/>}</button>
     </div>
@@ -73,6 +74,7 @@ function Footer() {
   </div></footer>;
 }
 function Layout({ children }) {
+  const [installPrompt,setInstallPrompt] = useState(null);
   const [dark,setDark] = useState(() => {
     try {
       const saved = localStorage.getItem("toolloot:theme");
@@ -85,7 +87,24 @@ function Layout({ children }) {
     try { localStorage.setItem("toolloot:theme", dark ? "dark" : "light"); } catch {}
     document.documentElement.dataset.theme = dark ? "dark" : "light";
   }, [dark]);
-  return <div className={dark ? "app dark" : "app"}><Header dark={dark} setDark={setDark}/>{children}<Footer/></div>;
+  useEffect(() => {
+    if ("serviceWorker" in navigator) navigator.serviceWorker.register(link("/sw.js")).catch(()=>{});
+    const handler = e => { e.preventDefault(); setInstallPrompt(e); };
+    window.addEventListener("beforeinstallprompt", handler);
+    return () => window.removeEventListener("beforeinstallprompt", handler);
+  }, []);
+  const installApp = async () => {
+    if (window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone) {
+      notify("info","ToolLoot is already installed"); return;
+    }
+    if (!installPrompt) {
+      notify("info","Use your browser's Install App option to install ToolLoot"); return;
+    }
+    installPrompt.prompt();
+    await installPrompt.userChoice;
+    setInstallPrompt(null);
+  };
+  return <div className={dark ? "app dark" : "app"}><Header dark={dark} setDark={setDark} canInstall={!!installPrompt} installApp={installApp}/>{children}<Footer/></div>;
 }
 function ToolCard({ tool }) {
   const openTool=async()=>{const recent=(await get("toolloot:recent-tools"))||[];const next=[tool.id,...recent.filter(id=>id!==tool.id)].slice(0,6);await set("toolloot:recent-tools",next)};
