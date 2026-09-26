@@ -1,0 +1,23 @@
+/* AI-style minimal Image Compressor */
+.compactToolTitle{margin-bottom:12px!important}
+.aiCompressorWorkspace{max-width:760px;margin:12px auto 0}
+.aiPreviewCard{background:#fff;border:1px solid #e5e7eb;border-radius:18px;padding:10px;box-shadow:0 10px 35px rgba(0,0,0,.06)}
+.aiPreviewHeader{display:flex;align-items:center;justify-content:space-between;padding:2px 4px 9px;gap:10px}
+.aiPreviewHeader strong{font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.aiPreviewCard .canvasPreview{min-height:280px;max-height:58vh;border-radius:13px;background:#f5f6f8;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.aiPreviewCard .canvasPreview img{max-width:100%;max-height:58vh;object-fit:contain}
+.aiQuickControls{display:flex;align-items:center;gap:12px;margin-top:10px;padding:12px;border:1px solid #e5e7eb;border-radius:16px;background:#fff}
+.aiQuickControls label{flex:1;display:grid;grid-template-columns:auto auto;gap:7px 10px;align-items:center}
+.aiQuickControls label span{font-size:13px;font-weight:700}.aiQuickControls label b{justify-self:end;font-size:13px}
+.aiQuickControls input{grid-column:1/-1;width:100%}
+.aiGenerateButton{min-height:44px;white-space:nowrap}
+.compressWorkspace .imageTimeline,.compressWorkspace .workspaceFooter,.privacyNote,.toolHelpLink{display:none!important}
+.contextSettings .aiSettingsIntro{display:none!important}
+.aiCompressorControls{margin-top:10px!important;padding:12px!important;border:1px solid #e5e7eb;border-radius:16px;background:#fff}
+.qualityControl{display:grid!important;grid-template-columns:auto auto;gap:7px 10px;align-items:center}
+.qualityControl>div{display:contents}.qualityControl input{grid-column:1/-1}.qualityControl small{display:none!important}
+.aiCompressorControls .aiCompressButton{margin-top:8px}
+.resultSummary{margin-top:10px!important;padding:12px!important;border-radius:16px!important}
+.dark .aiPreviewCard,.dark .aiQuickControls,.dark .aiCompressorControls{background:#101217;border-color:#30343c}
+.dark .aiPreviewCard .canvasPreview{background:#080a0d}
+@media(max-width:760px){.aiCompressorWorkspace{margin-top:8px}.aiQuickControls{display:block}.aiGenerateButton{width:100%;margin-top:10px}.aiPreviewCard .canvasPreview{min-height:220px}}

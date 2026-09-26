@@ -13,6 +13,7 @@ import { get, set } from "idb-keyval";
 import "sweetalert2/dist/sweetalert2.min.css";
 import "./styles.css";
 import "./generation.css";
+import "./ai-minimal.css";
 import { imageToolMeta, ImageBatchTool, ExactSizeCompressor, ImageToolGuide } from "./imageTools.jsx";
 import { ImageSourcePicker } from "./imageSources.jsx";
 
@@ -219,10 +220,10 @@ function ContactPage() {
   </Page>;
 }
 function ImageCompressor() {
-  const defaults={quality:0.8,maxWidth:0,format:"webp",targetKB:0,rotate:0,flip:false};
-  const [items,setItems]=useState([]),[busy,setBusy]=useState(false),[progress,setProgress]=useState(0),[drag,setDrag]=useState(false),[active,setActive]=useState(0),[generation,setGeneration]=useState(0);
-  const item=items[active]||null;
-  const keyFor=file=>"toolloot:image-settings:"+file.name+":"+file.size+":"+file.lastModified;
+  const defaults={quality:0.8};
+  const [items,setItems]=useState([]),[busy,setBusy]=useState(false),[progress,setProgress]=useState(0),[generation,setGeneration]=useState(0);
+  const item=items[0]||null, active=0;
+  const keyFor=file=>"toolloot:image-quality:"+file.name+":"+file.size+":"+file.lastModified;
   const remembered=file=>{try{return {...defaults,...JSON.parse(localStorage.getItem(keyFor(file))||"{}")}}catch{return {...defaults}}};
   const makeItem=file=>({id:crypto.randomUUID(),file,preview:URL.createObjectURL(file),settings:remembered(file),result:null});
   const addFiles=input=>{const picked=Array.from(input||[]).filter(f=>f.type.startsWith("image/"));if(!picked.length)return;setItems(prev=>[...prev,...picked.map(makeItem)]);setProgress(0);notify("success",picked.length+" image"+(picked.length>1?"s":"")+" added");};
@@ -252,7 +253,7 @@ function ImageCompressor() {
   const downloadZip=async()=>{const ready=items.filter(x=>x.result);if(!ready.length)return;const zip=new JSZip();ready.forEach(x=>zip.file(x.result.name,x.result.blob));saveAs(await zip.generateAsync({type:"blob"}),"toolloot-compressed-images.zip");notify("success","ZIP download ready");};
   return <Layout><Seo title="Image Compressor - Free Online | ToollooT" description="Compress multiple images with individual settings directly in your browser."/>
     <main className="toolPage"><div className="container toolPageInner"><a className="backLink" href={link("/")}>Back to ToollooT</a>
-      <div className="toolTitle"><div className="toolIcon large"><ImageIcon size={24}/></div><div><h1>Image Compressor</h1><p>Select an image from the horizontal timeline. Its controls appear below only when needed.</p></div></div>
+      <div className="toolTitle compactToolTitle"><div className="toolIcon large"><Sparkles size={22}/></div><div><h1>Image Compressor</h1><p>Choose → quality → compress → download.</p></div></div>
       <ImageSourcePicker accept="image/*" multiple={true} onFiles={addFiles} label={items.length?"Add more images":"Choose images"}/>
       {items.length>0&&<div className="compressWorkspace">
         <div className="imageTimeline"><button className="timelineArrow" onClick={()=>setActive(Math.max(0,active-1))} disabled={active===0}>‹</button><div className="timelineTrack">{items.map((x,i)=><button key={x.id} className={"timelineThumb "+(i===active?"active":"")} onClick={()=>setActive(i)}><img src={x.preview} alt={x.file.name}/><span>{i+1}</span>{x.result&&<b>✓</b>}</button>)}</div><button className="timelineArrow" onClick={()=>setActive(Math.min(items.length-1,active+1))} disabled={active===items.length-1}>›</button></div>
@@ -260,7 +261,7 @@ function ImageCompressor() {
           {busy&&<div className="generationOverlay"><div className="generationImage"><img src={item.preview} alt="Generating preview"/><div className="generationSweep"/></div><div className="generationDots"><span/><span/><span/></div><strong>Generating compressed image…</strong><small>Image {generation} of {items.length} • Please wait 5 seconds</small><div className="generationProgress"><i style={{width:progress+"%"}}/></div></div>}
           <div className="contextSettings aiCompressorControls"><div className="aiSettingsIntro"><div className="aiBadge"><Sparkles size={14}/> Smart compression</div><strong>Choose your quality</strong><span>ToollooT automatically picks an efficient browser-safe format and keeps the result from becoming larger.</span></div>
             <label className="qualityControl"><div><span>Quality</span><b>{Math.round(item.settings.quality*100)}%</b></div><input type="range" min=".1" max="1" step=".05" value={item.settings.quality} onChange={e=>update(item.id,"quality",Number(e.target.value))}/><small>Lower = smaller file · Higher = more detail</small></label>
-            <button className="primaryButton compressSelected aiCompressButton" disabled={busy} onClick={()=>compressSingle(item.id)}><Sparkles size={17}/> {busy?"Generating…":item.result?"Compress again":"Compress image"}</button>
+            <button className="primaryButton compressSelected aiCompressButton" disabled={busy} onClick={compressAll}><Sparkles size={17}/> {busy?"Generating…":item.result?"Compress again":"Compress image"}</button>
           </div>
           {item.result&&!busy&&<div className="resultSummary"><span>{item.result.width} × {item.result.height}</span><strong>{formatBytes(item.file.size)} → {formatBytes(item.result.blob.size)}</strong><span>{item.file.size>item.result.blob.size?Math.round((1-item.result.blob.size/item.file.size)*100)+"% smaller":"No size reduction"}</span><a className="downloadButton" href={item.result.url} download={item.result.name}><Download size={15}/> Download</a></div>}
         </div>}
