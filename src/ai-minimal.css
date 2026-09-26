@@ -110,3 +110,47 @@ body:has(.compressWorkspace) .aiCompressorControls .aiCompressButton{min-height:
 body:has(.compressWorkspace) .resultSummary{flex-basis:28px!important;min-height:28px!important;gap:5px!important}
 body:has(.compressWorkspace) .workspaceMiniFooter{flex-basis:20px!important;height:20px!important}
 }
+
+/* Extra-compact compressor density */
+body:has(.compressWorkspace) .toolPageInner{padding-top:4px!important;padding-bottom:4px!important}
+body:has(.compressWorkspace) .backLink{margin-bottom:2px!important;font-size:10px!important}
+body:has(.compressWorkspace) .compactToolTitle{margin-bottom:2px!important;min-height:28px!important}
+body:has(.compressWorkspace) .compactToolTitle .toolIcon{width:26px!important;height:26px!important}
+body:has(.compressWorkspace) .compactToolTitle h1{font-size:15px!important}
+body:has(.compressWorkspace) .compactToolTitle p{display:none!important}
+body:has(.compressWorkspace) .imageTimeline{flex-basis:40px!important;height:40px!important;margin-bottom:2px!important;padding:2px!important}
+body:has(.compressWorkspace) .timelineThumb{width:35px!important;height:35px!important;flex-basis:35px!important}
+body:has(.compressWorkspace) .timelineArrow{height:26px!important;width:24px!important}
+body:has(.compressWorkspace) .timelineAddBar{flex-basis:22px!important;height:22px!important;margin:0 0 2px!important}
+body:has(.compressWorkspace) .timelineAddBar .sourceChooseButton{min-height:21px!important;padding:3px 8px!important;font-size:9px!important}
+body:has(.compressWorkspace) .unifiedPreview{padding:2px!important}
+body:has(.compressWorkspace) .unifiedPreview .previewToolbar{flex-basis:20px!important;height:20px!important;font-size:9px!important}
+body:has(.compressWorkspace) .unifiedPreview .previewToolbar .iconOnly{width:20px!important;height:20px!important}
+body:has(.compressWorkspace) .aiCompressorControls{margin-top:2px!important;padding:3px 5px!important;column-gap:5px!important}
+body:has(.compressWorkspace) .qualityControl{gap:1px 5px!important}
+body:has(.compressWorkspace) .qualityControl input{height:13px!important}
+body:has(.compressWorkspace) .realtimeSize{padding:2px 4px!important;font-size:8px!important}
+body:has(.compressWorkspace) .realtimeSize strong,body:has(.compressWorkspace) .realtimeSize em{font-size:8px!important}
+body:has(.compressWorkspace) .aiCompressorControls .aiCompressButton{min-height:28px!important;padding:3px 8px!important;font-size:9px!important}
+body:has(.compressWorkspace) .resultSummary{flex-basis:25px!important;min-height:25px!important;margin-top:2px!important;padding:3px 5px!important;font-size:8px!important;gap:5px!important}
+body:has(.compressWorkspace) .resultSummary strong{font-size:8px!important}
+body:has(.compressWorkspace) .resultSummary .downloadButton{min-height:21px!important;padding:2px 6px!important;font-size:8px!important}
+body:has(.compressWorkspace) .workspaceMiniFooter{flex-basis:17px!important;height:17px!important;margin-top:2px!important;font-size:8px!important}
+body:has(.compressWorkspace) .workspaceMiniFooter .textButton{font-size:8px!important;padding:1px 4px!important}
+@media(max-width:760px){
+body:has(.compressWorkspace) .toolPageInner{padding:3px 6px!important}
+body:has(.compressWorkspace) .header{flex-basis:46px!important}
+body:has(.compressWorkspace) .compactToolTitle{min-height:25px!important}
+body:has(.compressWorkspace) .compactToolTitle .toolIcon{width:23px!important;height:23px!important}
+body:has(.compressWorkspace) .compactToolTitle h1{font-size:13px!important}
+body:has(.compressWorkspace) .imageTimeline{flex-basis:36px!important;height:36px!important}
+body:has(.compressWorkspace) .timelineThumb{width:31px!important;height:31px!important;flex-basis:31px!important}
+body:has(.compressWorkspace) .timelineArrow{height:23px!important;width:22px!important}
+body:has(.compressWorkspace) .timelineAddBar{flex-basis:20px!important;height:20px!important}
+body:has(.compressWorkspace) .timelineAddBar .sourceChooseButton{min-height:19px!important;font-size:8px!important}
+body:has(.compressWorkspace) .unifiedPreview .previewToolbar{flex-basis:18px!important;height:18px!important;font-size:8px!important}
+body:has(.compressWorkspace) .unifiedPreview .previewToolbar .iconOnly{width:18px!important;height:18px!important}
+body:has(.compressWorkspace) .aiCompressorControls{padding:2px 4px!important}
+body:has(.compressWorkspace) .aiCompressorControls .aiCompressButton{min-height:26px!important;font-size:8px!important;padding:2px 6px!important}
+body:has(.compressWorkspace) .workspaceMiniFooter{flex-basis:15px!important;height:15px!important;font-size:7px!important}
+}
