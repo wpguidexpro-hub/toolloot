@@ -10,8 +10,12 @@ import "./styles.css";
 const BASE = import.meta.env.BASE_URL;
 const link = (path = "") => BASE + path.replace(/^\//, "");
 const categories = [
-  ["All Tools", Boxes], ["AI & Smart", Sparkles], ["Developer", Code2],
-  ["Images", ImageIcon], ["Documents", FileText], ["Calculators", Calculator]
+  {name:"All Tools", icon:Boxes, path:"/"},
+  {name:"AI & Smart", icon:Sparkles, path:"/categories/ai"},
+  {name:"Developer", icon:Code2, path:"/categories/developer"},
+  {name:"Images", icon:ImageIcon, path:"/categories/images"},
+  {name:"Documents", icon:FileText, path:"/categories/documents"},
+  {name:"Calculators", icon:Calculator, path:"/categories/calculators"}
 ];
 const tools = [
   { id:"image-compressor", name:"Image Compressor", description:"Compress JPG, PNG and WebP images in your browser.", category:"Images", path:"/tools/image-compressor" }
@@ -30,6 +34,9 @@ function Seo({ title, description }) {
     let canonical = document.querySelector('link[rel="canonical"]');
     if (!canonical) { canonical = document.createElement("link"); canonical.rel = "canonical"; document.head.appendChild(canonical); }
     canonical.href = "https://wpguidexpro-hub.github.io/toolloot" + (window.location.pathname.split("/toolloot")[1] || "/");
+    let schema = document.getElementById("toolloot-schema");
+    if (!schema) { schema=document.createElement("script"); schema.id="toolloot-schema"; schema.type="application/ld+json"; document.head.appendChild(schema); }
+    schema.textContent = JSON.stringify({"@context":"https://schema.org","@type":"WebSite","name":"ToolLoot","url":"https://wpguidexpro-hub.github.io/toolloot/","description":description});
   }, [title, description]);
   return null;
 }
@@ -80,7 +87,7 @@ function Home() {
         <label className="searchBox"><Search size={20}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search tools..." aria-label="Search tools"/></label>
       </div></section>
       <section className="container section" id="categories"><div className="sectionHead"><div><h2>Categories</h2><p>Browse tools by category.</p></div></div>
-        <div className="categoryRow">{categories.map(([name,Icon])=><button key={name} className={category===name?"category active":"category"} onClick={()=>setCategory(name)}><Icon size={17}/>{name}</button>)}</div>
+        <div className="categoryRow">{categories.map(({name,icon:Icon})=><button key={name} className={category===name?"category active":"category"} onClick={()=>setCategory(name)}><Icon size={17}/>{name}</button>)}</div>
       </section>
       <section className="container section" id="tools"><div className="sectionHead"><div><h2>Tools</h2><p>{filtered.length} available</p></div></div>
         <div className="toolGrid">{filtered.map(t=><ToolCard tool={t} key={t.id}/>)}</div>
@@ -96,9 +103,16 @@ function Page({ title,description,icon:Icon,children }) {
     <div className="pageIcon"><Icon size={24}/></div><h1>{title}</h1><p className="pageLead">{description}</p><div className="pageContent">{children}</div>
   </main></Layout>;
 }
+function CategoryPage({categoryName,slug}) {
+  const matches=tools.filter(t=>t.category===categoryName);
+  return <Page title={categoryName+" Tools — ToolLoot"} description={"Free "+categoryName.toLowerCase()+" tools from ToolLoot. Simple browser-based utilities designed for everyday tasks."} icon={categories.find(c=>c.name===categoryName)?.icon||Layers3}>
+    <div className="sectionHead"><div><h2>{categoryName} tools</h2><p>{matches.length} available</p></div></div>
+    {matches.length?<div className="toolGrid">{matches.map(t=><ToolCard tool={t} key={t.id}/>)}</div>:<div className="empty"><strong>No tools in this category yet.</strong><p>New ToolLoot tools will appear here as they are added.</p></div>}
+  </Page>;
+}
 function CategoriesPage() {
-  return <Page title="Tool Categories — ToolLoot" description="Browse ToolLoot categories for image, document, developer, calculator and AI tools." icon={Layers3}>
-    <div className="pageCards">{categories.slice(1).map(([name,Icon])=><a className="infoCard" key={name} href={link("/")}><Icon size={20}/><strong>{name}</strong><span>Browse {name.toLowerCase()} tools.</span></a>)}</div>
+  return <Page title="Tool Categories — ToolLoot" description="Browse free online tool categories for images, documents, developers, calculators and AI." icon={Layers3}>
+    <div className="pageCards">{categories.slice(1).map(({name,icon:Icon,path})=><a className="infoCard" key={name} href={link(path)}><Icon size={20}/><strong>{name}</strong><span>Browse {name.toLowerCase()} tools.</span></a>)}</div>
   </Page>;
 }
 function AboutPage() {
@@ -161,6 +175,11 @@ function Root(){
   const local=path.replace(BASE.replace(/\/$/,""),"")||"/";
   if(local==="/tools/image-compressor")return <ImageCompressor/>;
   if(local==="/categories")return <CategoriesPage/>;
+  if(local==="/categories/ai")return <CategoryPage categoryName="AI & Smart" slug="ai"/>;
+  if(local==="/categories/developer")return <CategoryPage categoryName="Developer" slug="developer"/>;
+  if(local==="/categories/images")return <CategoryPage categoryName="Images" slug="images"/>;
+  if(local==="/categories/documents")return <CategoryPage categoryName="Documents" slug="documents"/>;
+  if(local==="/categories/calculators")return <CategoryPage categoryName="Calculators" slug="calculators"/>;
   if(local==="/about")return <AboutPage/>;
   if(local==="/privacy")return <PrivacyPage/>;
   if(local==="/terms")return <TermsPage/>;

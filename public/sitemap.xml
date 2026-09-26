@@ -1,10 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 <url><loc>https://wpguidexpro-hub.github.io/toolloot/</loc></url>
-<url><loc>https://wpguidexpro-hub.github.io/toolloot/categories</loc></url>
-<url><loc>https://wpguidexpro-hub.github.io/toolloot/about</loc></url>
-<url><loc>https://wpguidexpro-hub.github.io/toolloot/privacy</loc></url>
-<url><loc>https://wpguidexpro-hub.github.io/toolloot/terms</loc></url>
-<url><loc>https://wpguidexpro-hub.github.io/toolloot/contact</loc></url>
-<url><loc>https://wpguidexpro-hub.github.io/toolloot/tools/image-compressor</loc></url>
+<url><loc>https://wpguidexpro-hub.github.io/toolloot/categories/</loc></url>
+<url><loc>https://wpguidexpro-hub.github.io/toolloot/categories/ai/</loc></url>
+<url><loc>https://wpguidexpro-hub.github.io/toolloot/categories/developer/</loc></url>
+<url><loc>https://wpguidexpro-hub.github.io/toolloot/categories/images/</loc></url>
+<url><loc>https://wpguidexpro-hub.github.io/toolloot/categories/documents/</loc></url>
+<url><loc>https://wpguidexpro-hub.github.io/toolloot/categories/calculators/</loc></url>
+<url><loc>https://wpguidexpro-hub.github.io/toolloot/about/</loc></url>
+<url><loc>https://wpguidexpro-hub.github.io/toolloot/privacy/</loc></url>
+<url><loc>https://wpguidexpro-hub.github.io/toolloot/terms/</loc></url>
+<url><loc>https://wpguidexpro-hub.github.io/toolloot/contact/</loc></url>
+<url><loc>https://wpguidexpro-hub.github.io/toolloot/tools/image-compressor/</loc></url>
 </urlset>
