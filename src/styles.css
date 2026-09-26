@@ -85,7 +85,7 @@ footer{border-top:1px solid #e5e7eb}
 .toolIcon.large{width:48px;height:48px;margin:0}
 .toolCard h3{margin:0 0 7px;font-size:16px}
 .toolLink{display:block;margin-top:16px;font-size:13px;font-weight:600;color:#374151}
-.toolPage{min-height:100vh;background:#fff;color:#111827}
+.toolPage{background:#fff;color:#111827}
 .toolPageInner{padding:34px 0 70px}
 .backLink{display:inline-block;color:#6b7280;font-size:14px;margin-bottom:30px}
 .backLink:hover{color:#111827}
@@ -230,7 +230,7 @@ footer{position:fixed;left:0;right:0;bottom:0;height:var(--footer-h);z-index:19;
 /* App-like responsive shell: desktop + mobile */
 :root{--app-radius:14px;--app-border:#e5e7eb;--app-surface:#fff;--app-muted:#f8fafc;--app-shadow:0 8px 30px rgba(15,23,42,.06)}
 body{background:#f6f7f9;-webkit-tap-highlight-color:transparent}
-.app{background:#f6f7f9;min-height:100vh}
+.app{background:#f6f7f9}
 .header{border-bottom:1px solid var(--app-border);box-shadow:0 2px 14px rgba(15,23,42,.05);gap:18px}
 .brand{padding:6px 10px 6px 4px;border-radius:12px}
 .brand:hover{background:#f3f4f6}
