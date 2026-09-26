@@ -12,6 +12,7 @@ import { saveAs } from "file-saver";
 import { get, set } from "idb-keyval";
 import "sweetalert2/dist/sweetalert2.min.css";
 import "./styles.css";
+import "./generation.css";
 import { imageToolMeta, ImageBatchTool, ExactSizeCompressor, ImageToolGuide } from "./imageTools.jsx";
 import { ImageSourcePicker } from "./imageSources.jsx";
 
@@ -219,7 +220,7 @@ function ContactPage() {
 }
 function ImageCompressor() {
   const defaults={quality:0.8,maxWidth:0,format:"webp",targetKB:0,rotate:0,flip:false};
-  const [items,setItems]=useState([]),[busy,setBusy]=useState(false),[progress,setProgress]=useState(0),[drag,setDrag]=useState(false),[active,setActive]=useState(0);
+  const [items,setItems]=useState([]),[busy,setBusy]=useState(false),[progress,setProgress]=useState(0),[drag,setDrag]=useState(false),[active,setActive]=useState(0),[generation,setGeneration]=useState(0);
   const item=items[active]||null;
   const keyFor=file=>"toolloot:image-settings:"+file.name+":"+file.size+":"+file.lastModified;
   const remembered=file=>{try{return {...defaults,...JSON.parse(localStorage.getItem(keyFor(file))||"{}")}}catch{return {...defaults}}};
@@ -245,17 +246,8 @@ function ImageCompressor() {
     const ext=type==="image/jpeg"?"jpg":type.split("/")[1]||"bin",name=item.file.name.replace(/\.[^.]+$/,"")+"-compressed."+ext;
     return {name,blob,width:canvas.width,height:canvas.height,url:URL.createObjectURL(blob),original:item.file.size,originalUrl:item.preview,settings:{...s},unchanged:false};
   };
-  const compressAll=async()=>{if(!items.length||busy)return;setBusy(true);setProgress(0);const next=[];for(let i=0;i<items.length;i++){try{next.push(await compressOne(items[i]));}catch(e){notify("error","Could not compress "+items[i].file.name)}setProgress(Math.round(((i+1)/items.length)*100));}setItems(prev=>prev.map(x=>{const r=next.find(n=>n.originalUrl===x.preview);return r?{...x,result:r}:x}));setBusy(false);notify("success","Batch compression complete");};
-  const compressSingle=async id=>{const item=items.find(x=>x.id===id);if(!item)return;try{const r=await compressOne(item);setItems(prev=>prev.map(x=>x.id===id?{...x,result:r}:x));notify("success","Image compressed");}catch(e){notify("error","Compression failed");}};
-  useEffect(()=>{
-    if(!item)return;
-    let cancelled=false;
-    const timer=setTimeout(async()=>{
-      try{const r=await compressOne(item);if(!cancelled)setItems(prev=>prev.map(x=>x.id===item.id?{...x,result:r}:x));}
-      catch{}
-    },120);
-    return()=>{cancelled=true;clearTimeout(timer);};
-  },[item?.id,item?.settings.format,item?.settings.quality]);
+  const compressAll=async()=>{if(!items.length||busy)return;setBusy(true);setGeneration(0);setProgress(0);const next=[];for(let i=0;i<items.length;i++){setGeneration(i+1);setProgress(0);await new Promise(r=>setTimeout(r,5000));try{next.push(await compressOne(items[i]));}catch(e){notify("error","Could not compress "+items[i].file.name)}}setItems(prev=>prev.map(x=>{const r=next.find(n=>n.originalUrl===x.preview);return r?{...x,result:r}:x}));setProgress(100);setBusy(false);notify("success","Batch compression complete");};
+  const compressSingle=async id=>{const item=items.find(x=>x.id===id);if(!item||busy)return;setBusy(true);setGeneration(1);setProgress(0);await new Promise(r=>setTimeout(r,5000));try{const r=await compressOne(item);setItems(prev=>prev.map(x=>x.id===id?{...x,result:r}:x));setProgress(100);notify("success","Image compressed");}catch(e){notify("error","Compression failed");}finally{setBusy(false);}};
   const downloadZip=async()=>{const ready=items.filter(x=>x.result);if(!ready.length)return;const zip=new JSZip();ready.forEach(x=>zip.file(x.result.name,x.result.blob));saveAs(await zip.generateAsync({type:"blob"}),"toolloot-compressed-images.zip");notify("success","ZIP download ready");};
   return <Layout><Seo title="Image Compressor - Free Online | ToollooT" description="Compress multiple images with individual settings directly in your browser."/>
     <main className="toolPage"><div className="container toolPageInner"><a className="backLink" href={link("/")}>Back to ToollooT</a>
@@ -263,14 +255,17 @@ function ImageCompressor() {
       <ImageSourcePicker accept="image/*" multiple={true} onFiles={addFiles} label={items.length?"Add more images":"Choose images"}/>
       {items.length>0&&<div className="compressWorkspace">
         <div className="imageTimeline"><button className="timelineArrow" onClick={()=>setActive(Math.max(0,active-1))} disabled={active===0}>‹</button><div className="timelineTrack">{items.map((x,i)=><button key={x.id} className={"timelineThumb "+(i===active?"active":"")} onClick={()=>setActive(i)}><img src={x.preview} alt={x.file.name}/><span>{i+1}</span>{x.result&&<b>✓</b>}</button>)}</div><button className="timelineArrow" onClick={()=>setActive(Math.min(items.length-1,active+1))} disabled={active===items.length-1}>›</button></div>
-        {item&&<div className="editorPanel"><div className="editorPreview"><div className="previewToolbar"><strong title={item.file.name}>{item.file.name}</strong><span>{formatBytes(item.file.size)}</span><button className="iconOnly" onClick={()=>removeItem(item.id)}><Trash2 size={16}/></button></div><div className="canvasPreview"><img src={item.result?.url||item.preview} alt={item.file.name}/></div>{item.result&&<div className="resultSummary"><span>{item.result.width} × {item.result.height}</span><strong>{formatBytes(item.file.size)} → {formatBytes(item.result.blob.size)}</strong><span>{item.file.size>item.result.blob.size?Math.round((1-item.result.blob.size/item.file.size)*100)+"% smaller":"No size reduction"}</span><a className="downloadButton" href={item.result.url} download={item.result.name}><Download size={15}/> Download</a></div>}</div>
+        {item&&<div className="editorPanel"><div className="editorPreview"><div className="previewToolbar"><strong title={item.file.name}>{item.file.name}</strong><span>{formatBytes(item.file.size)}</span><button className="iconOnly" onClick={()=>removeItem(item.id)}><Trash2 size={16}/></button></div><div className="canvasPreview"><img src={item.preview} alt={item.file.name}/></div></div>
+          {busy&&<div className="generationOverlay"><div className="generationImage"><img src={item.preview} alt="Generating preview"/><div className="generationSweep"/></div><div className="generationDots"><span/><span/><span/></div><strong>Generating compressed image…</strong><small>Image {generation} of {items.length} • Please wait 5 seconds</small><div className="generationProgress"><i style={{width:progress+"%"}}/></div></div>}
           <div className="contextSettings"><div className="settingsTitle"><div><strong>Image settings</strong><span>Only this selected image</span></div><button className="secondaryButton" onClick={()=>applySettingsToAll(item.settings)} disabled={items.length<2}>Apply to all</button></div>
             <label>Format<select value={item.settings.format} onChange={e=>update(item.id,"format",e.target.value)}><option value="webp">WebP</option><option value="jpg">JPG</option><option value="png">PNG</option><option value="avif">AVIF</option><option value="original">Original</option></select></label>
             {item.settings.format!=="png"&&<label>Quality <b>{Math.round(item.settings.quality*100)}%</b><input type="range" min=".1" max="1" step=".05" value={item.settings.quality} onChange={e=>update(item.id,"quality",Number(e.target.value))}/></label>}
             {item.settings.format==="png"&&<div className="settingHint">Quality is hidden because PNG uses lossless encoding.</div>}
             <div className="advancedRow"><button className="smallControl" onClick={()=>{Object.entries(defaults).forEach(([k,v])=>update(item.id,k,v))}}>Reset</button></div>
-            <button className="primaryButton compressSelected" disabled={busy} onClick={()=>compressSingle(item.id)}><Gauge size={16}/> {busy?"Compressing "+progress+"%":item.result?"Re-compress":"Compress image"}</button>
-          </div></div>}
+            <button className="primaryButton compressSelected" disabled={busy} onClick={()=>compressSingle(item.id)}><Gauge size={16}/> {busy?"Generating image "+generation+"/"+items.length+"…":item.result?"Compress again":"Compress image"}</button>
+          </div>
+          {item.result&&!busy&&<div className="resultSummary"><span>{item.result.width} × {item.result.height}</span><strong>{formatBytes(item.file.size)} → {formatBytes(item.result.blob.size)}</strong><span>{item.file.size>item.result.blob.size?Math.round((1-item.result.blob.size/item.file.size)*100)+"% smaller":"No size reduction"}</span><a className="downloadButton" href={item.result.url} download={item.result.name}><Download size={15}/> Download</a></div>}
+        </div>}
         <div className="workspaceFooter"><span>{active+1} / {items.length} selected</span><div><button className="secondaryButton" onClick={compressAll} disabled={busy}>{busy?"Compressing "+progress+"%":"Compress all"}</button><button className="secondaryButton" onClick={downloadZip} disabled={!items.some(x=>x.result)}><DownloadCloud size={16}/> Download ZIP</button><button className="textButton" onClick={clearAll}>Clear all</button></div></div>
       </div>}
       <div className="privacyNote"><Shield size={17}/><span>Everything is processed locally in your browser. Your images are not uploaded.</span></div>
