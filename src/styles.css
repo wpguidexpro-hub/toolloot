@@ -226,3 +226,87 @@ footer{position:fixed;left:0;right:0;bottom:0;height:var(--footer-h);z-index:19;
  .container{padding-left:16px;padding-right:16px}
  .header{padding-left:16px;padding-right:16px}
 }
+
+/* App-like responsive shell: desktop + mobile */
+:root{--app-radius:14px;--app-border:#e5e7eb;--app-surface:#fff;--app-muted:#f8fafc;--app-shadow:0 8px 30px rgba(15,23,42,.06)}
+body{background:#f6f7f9;-webkit-tap-highlight-color:transparent}
+.app{background:#f6f7f9;min-height:100vh}
+.header{border-bottom:1px solid var(--app-border);box-shadow:0 2px 14px rgba(15,23,42,.05);gap:18px}
+.brand{padding:6px 10px 6px 4px;border-radius:12px}
+.brand:hover{background:#f3f4f6}
+.nav a{padding:9px 11px;border-radius:9px;transition:background .18s,color .18s}
+.nav a:hover{background:#f3f4f6}
+.headerActions .iconButton,.installButton{box-shadow:0 1px 2px rgba(15,23,42,.04);transition:transform .16s,background .16s,border-color .16s}
+.headerActions button:active{transform:scale(.96)}
+main{min-height:calc(100vh - var(--header-h) - var(--footer-h))}
+.hero{background:linear-gradient(180deg,#fff 0%,#f6f7f9 100%);border-bottom:0}
+.heroInner{padding:70px 24px 52px}
+.section{padding:34px 24px 0}
+.toolGrid{grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:18px}
+.toolCard{border:1px solid var(--app-border);border-radius:var(--app-radius);box-shadow:0 2px 10px rgba(15,23,42,.025);transition:transform .18s,box-shadow .18s,border-color .18s}
+.toolCard:hover{transform:translateY(-2px);box-shadow:var(--app-shadow);border-color:#d1d5db}
+.categoryRow{padding-bottom:4px}
+.category{border-radius:11px;transition:transform .16s,background .16s}
+.category:active{transform:scale(.97)}
+footer{box-shadow:0 -2px 14px rgba(15,23,42,.04)}
+.pageContent,.staticPage,.toolPageInner{padding-left:24px;padding-right:24px}
+.pageContent>.pageHeader,.staticPage>.pageHeader,.toolPageInner>.pageHeader{max-width:none}
+.compressWorkspace{border-radius:var(--app-radius);box-shadow:var(--app-shadow)}
+.imageTimeline{background:#f8fafc}
+.timelineThumb,.timelineArrow{box-shadow:0 1px 3px rgba(15,23,42,.04)}
+.editorPanel{background:#fff}
+.primaryButton,.downloadButton,.secondaryButton,.smallControl{border-radius:10px;transition:transform .16s,box-shadow .16s}
+.primaryButton:hover,.downloadButton:hover{transform:translateY(-1px);box-shadow:0 5px 14px rgba(15,23,42,.1)}
+
+.dark body,.dark{background:#090b0f}
+.dark .app{background:#090b0f}
+.dark .hero{background:linear-gradient(180deg,#0f1115 0%,#090b0f 100%)}
+.dark .toolCard,.dark .guideSection,.dark .guideSteps>div{box-shadow:0 8px 30px rgba(0,0,0,.18)}
+.dark .nav a:hover,.dark .brand:hover{background:#1a1d23}
+
+@media(max-width:760px){
+  :root{--mobile-nav-h:72px}
+  body{padding-top:58px;background:#f4f5f7}
+  .app{min-width:0;overflow-x:hidden}
+  main{min-height:calc(100vh - 58px)}
+  .header{gap:6px;border-bottom:1px solid #e5e7eb;box-shadow:0 3px 16px rgba(15,23,42,.08)}
+  .brand{padding:4px 7px 4px 2px}
+  .nav{position:fixed;display:flex;flex-direction:column;gap:3px;top:64px;left:10px;right:10px;padding:8px;background:rgba(255,255,255,.98);border:1px solid #e5e7eb;z-index:60;transform:translateY(-8px);opacity:0;pointer-events:none;transition:opacity .18s,transform .18s}
+  .nav.open{transform:translateY(0);opacity:1;pointer-events:auto}
+  .nav a{padding:12px 13px;font-size:14px}
+  .heroInner{padding:42px 16px 30px}
+  h1{font-size:32px}
+  .hero p{font-size:14px}
+  .section{padding:28px 16px 0}
+  .sectionHead{align-items:flex-start;gap:10px}
+  .sectionHead h2{font-size:21px}
+  .toolGrid{grid-template-columns:1fr;gap:12px}
+  .toolCard{padding:16px;border-radius:13px}
+  .categoryRow{flex-wrap:nowrap;overflow-x:auto;padding:2px 0 9px;scrollbar-width:none}
+  .categoryRow::-webkit-scrollbar{display:none}
+  .category{flex:0 0 auto}
+  .pageContent,.staticPage,.toolPageInner{padding-left:16px;padding-right:16px}
+  .compressWorkspace{margin-top:12px;border-radius:13px}
+  .imageTimeline{height:96px;padding:9px}
+  .timelineThumb{flex-basis:72px;width:72px;height:70px}
+  .editorPanel{min-height:0}
+  .canvasPreview{height:260px;padding:12px}
+  .contextSettings{gap:13px}
+  .imagePreviewPane{min-height:220px}
+  .imagePreviewPane img{height:200px}
+  .workspaceFooter{padding:10px}
+  .guideSection{padding:18px;margin:20px 0;border-radius:13px}
+  .guideSteps>div{padding:16px;border-radius:13px}
+  footer{display:none}
+  .mobileBottomNav{height:calc(var(--mobile-nav-h) + env(safe-area-inset-bottom));padding-bottom:calc(6px + env(safe-area-inset-bottom));backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+  .mobileBottomNav a{font-size:10px;min-height:54px}
+  .mobileBottomNav a:active{transform:scale(.96)}
+}
+@media(min-width:761px){
+  .heroInner,.section,.pageContent,.staticPage,.toolPageInner{padding-left:32px;padding-right:32px}
+  .heroInner{max-width:1500px;margin:auto}
+}
+@media(min-width:1400px){
+  .toolGrid{grid-template-columns:repeat(5,minmax(0,1fr))}
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}}
