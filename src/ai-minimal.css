@@ -154,3 +154,8 @@ body:has(.compressWorkspace) .aiCompressorControls{padding:2px 4px!important}
 body:has(.compressWorkspace) .aiCompressorControls .aiCompressButton{min-height:26px!important;font-size:8px!important;padding:2px 6px!important}
 body:has(.compressWorkspace) .workspaceMiniFooter{flex-basis:15px!important;height:15px!important;font-size:7px!important}
 }
+
+/* Compact compressor preview height */
+body:has(.compressWorkspace) .unifiedPreview{flex:0 0 auto!important;height:auto!important}
+body:has(.compressWorkspace) .unifiedCanvas{flex:0 0 clamp(180px,42vh,430px)!important;height:clamp(180px,42vh,430px)!important;max-height:clamp(180px,42vh,430px)!important}
+@media(max-width:760px){body:has(.compressWorkspace) .unifiedCanvas{flex-basis:clamp(150px,32vh,300px)!important;height:clamp(150px,32vh,300px)!important;max-height:clamp(150px,32vh,300px)!important}}
