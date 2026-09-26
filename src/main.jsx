@@ -156,7 +156,7 @@ function Page({ title,description,icon:Icon,children }) {
 }
 function CategoryPage({categoryName,slug}) {
   const matches=tools.filter(t=>t.category===categoryName);
-  return <Page title={categoryName+" Tools ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ToollooT"} description={"Free "+categoryName.toLowerCase()+" tools from ToollooT. Simple browser-based utilities designed for everyday tasks."} icon={categories.find(c=>c.name===categoryName)?.icon||Layers3}>
+  return <Page title={categoryName+" Tools"} description={"Free "+categoryName.toLowerCase()+" tools from ToollooT. Simple browser-based utilities designed for everyday tasks."} icon={categories.find(c=>c.name===categoryName)?.icon||Layers3}>
     <div className="sectionHead"><div><h2>{categoryName} tools</h2><p>{matches.length} available</p></div></div>
     {matches.length?<div className="toolGrid">{matches.map(t=><ToolCard tool={t} key={t.id}/>)}</div>:<div className="empty"><strong>No tools in this category yet.</strong><p>New ToollooT tools will appear here as they are added.</p></div>}
   </Page>;
