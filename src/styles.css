@@ -116,3 +116,24 @@ footer{border-top:1px solid #e5e7eb}
  .resultRow{align-items:flex-start;flex-direction:column}
  .downloadButton{width:100%}
 }
+.staticPage{padding:64px 0 90px;min-height:calc(100vh - 128px)}
+.pageIcon{width:48px;height:48px;border:1px solid #e5e7eb;border-radius:8px;display:grid;place-items:center;margin-bottom:20px}
+.staticPage h1{font-size:38px;text-align:left;margin:0 0 10px}
+.pageLead{color:#6b7280;max-width:720px;line-height:1.6;margin:0}
+.pageContent{max-width:760px;margin-top:40px}
+.pageContent h2{font-size:20px;margin:30px 0 8px}
+.pageContent p{font-size:15px;line-height:1.75;color:#4b5563;margin:0 0 16px}
+.pageCards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.infoCard{border:1px solid #e5e7eb;border-radius:9px;padding:18px;display:flex;flex-direction:column;gap:9px}
+.infoCard:hover{border-color:#9ca3af}
+.infoCard strong{font-size:15px}
+.infoCard span{font-size:13px;color:#6b7280}
+.dark .pageIcon,.dark .infoCard{border-color:#30343c}
+.dark .pageContent p{color:#b0b5bf}
+.dark .infoCard span{color:#9ca3af}
+@media(max-width:760px){
+ .staticPage{padding:44px 0 70px}
+ .staticPage h1{font-size:30px}
+ .pageContent{margin-top:30px}
+ .pageCards{grid-template-columns:1fr}
+}
