@@ -495,3 +495,30 @@ button,a,input,select{max-width:100%}
  .toolControls input[type=number],.toolControls select{height:44px;font-size:14px}
  .batchActions{padding-top:6px}
 }
+
+/* Image Compressor full theme sync */
+.compressWorkspace,.imageTimeline,.editorPanel,.contextSettings,.workspaceFooter,.previewToolbar,.resultSummary,.canvasPreview{transition:background-color .18s,border-color .18s,color .18s}
+.contextSettings input[type=range],.toolControls input[type=range]{accent-color:#111827}
+.contextSettings select:focus,.toolControls select:focus,.toolControls input[type=number]:focus{outline:2px solid rgba(17,24,39,.14);outline-offset:1px}
+.dark .compressWorkspace{background:#101217;border-color:#30343c;color:#e5e7eb;box-shadow:0 8px 30px rgba(0,0,0,.28)}
+.dark .imageTimeline{background:#15181e;border-color:#30343c}
+.dark .timelineThumb{background:#101217;border-color:#3b404a;color:#e5e7eb;box-shadow:0 2px 8px rgba(0,0,0,.24)}
+.dark .timelineThumb.active{border-color:#f3f4f6;box-shadow:0 0 0 3px rgba(255,255,255,.08)}
+.dark .timelineArrow{background:#171a20;color:#e5e7eb;border-color:#3b404a}
+.dark .editorPanel{background:#101217}
+.dark .editorPreview{border-color:#30343c}
+.dark .previewToolbar{background:#111318;border-color:#30343c;color:#e5e7eb}
+.dark .previewToolbar span,.dark .settingsTitle span,.dark .resultSummary,.dark .workspaceFooter{color:#9ca3af}
+.dark .canvasPreview{background:#080a0d}
+.dark .contextSettings{background:#101217;color:#e5e7eb}
+.dark .contextSettings label{color:#e5e7eb}
+.dark .contextSettings select{background:#171a20;color:#f3f4f6;border-color:#3b404a}
+.dark .contextSettings input[type=range],.dark .toolControls input[type=range]{accent-color:#f3f4f6}
+.dark .settingHint{background:#171a20;color:#9ca3af;border-color:#30343c}
+.dark .resultSummary{background:#111318;border-color:#30343c}
+.dark .resultSummary strong{color:#f3f4f6}
+.dark .workspaceFooter{background:#15181e;border-color:#30343c}
+.dark .workspaceFooter .secondaryButton{background:#171a20;border-color:#3b404a;color:#e5e7eb}
+.dark .workspaceFooter .textButton{background:transparent;color:#e5e7eb}
+.dark .compressSelected{box-shadow:0 6px 18px rgba(0,0,0,.24)}
+@media(max-width:760px){.dark .editorPreview{border-bottom-color:#30343c}.contextSettings{background:inherit}}
