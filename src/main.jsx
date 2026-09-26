@@ -141,19 +141,22 @@ function ContactPage() {
   </Page>;
 }
 function ImageCompressor() {
-  const [files,setFiles]=useState([]),[quality,setQuality]=useState(.7),[maxWidth,setMaxWidth]=useState(0),[results,setResults]=useState([]),[busy,setBusy]=useState(false);
+  const [files,setFiles]=useState([]),[quality,setQuality]=useState(.72),[maxWidth,setMaxWidth]=useState(0),[format,setFormat]=useState("webp"),[results,setResults]=useState([]),[busy,setBusy]=useState(false);
+  useEffect(()=>()=>results.forEach(r=>URL.revokeObjectURL(r.url)),[results]);
   const addFiles=e=>{setFiles(Array.from(e.target.files||[]));setResults([]);};
+  const removeFile=name=>setFiles(f=>f.filter(x=>x.name!==name));
   async function compress(){
     if(!files.length)return; setBusy(true); const output=[];
     for(const file of files){
       const url=URL.createObjectURL(file),img=new Image(); img.src=url;
-      await new Promise(resolve=>{img.onload=resolve;});
+      await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=reject;});
       const scale=maxWidth&&img.width>maxWidth?maxWidth/img.width:1,canvas=document.createElement("canvas");
       canvas.width=Math.round(img.width*scale); canvas.height=Math.round(img.height*scale);
       canvas.getContext("2d").drawImage(img,0,0,canvas.width,canvas.height);
-      const type=file.type==="image/png"?"image/png":"image/jpeg";
-      const blob=await new Promise(resolve=>canvas.toBlob(resolve,type,quality));
-      output.push({name:file.name.replace(/\.[^.]+$/,"")+"-compressed."+(type==="image/png"?"png":"jpg"),blob,original:file.size});
+      const type=format==="original"?file.type:(format==="jpg"?"image/jpeg":format==="png"?"image/png":"image/webp");
+      const blob=await new Promise((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(new Error("Compression failed")),type,quality));
+      const ext=type==="image/jpeg"?"jpg":type.split("/")[1];
+      output.push({name:file.name.replace(/\.[^.]+$/,"")+"-compressed."+ext,blob,original:file.size,width:canvas.width,height:canvas.height,url:URL.createObjectURL(blob)});
       URL.revokeObjectURL(url);
     }
     setResults(output);setBusy(false);
@@ -161,9 +164,10 @@ function ImageCompressor() {
   return <Layout><Seo title="Image Compressor — Free Online | ToolLoot" description="Compress JPG, PNG and WebP images online for free in your browser. Reduce image size without uploading files."/>
     <main className="toolPage"><div className="container toolPageInner"><a className="backLink" href={link("/")}>← Back to ToolLoot</a>
       <div className="toolTitle"><div className="toolIcon large"><ImageIcon size={24}/></div><div><h1>Image Compressor</h1><p>Reduce image file size directly in your browser. Your images stay on your device.</p></div></div>
-      <div className="compressor"><label className="dropZone"><Upload size={28}/><strong>{files.length?files.length+" image(s) selected":"Choose images"}</strong><span>JPG, PNG or WebP</span><input type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={addFiles}/></label>
-        <div className="settings"><label>Quality <b>{Math.round(quality*100)}%</b><input type="range" min=".1" max="1" step=".05" value={quality} onChange={e=>setQuality(Number(e.target.value))}/></label>
-          <label>Max width <b>{maxWidth?maxWidth+" px":"Original"}</b><input type="range" min="0" max="3000" step="100" value={maxWidth} onChange={e=>setMaxWidth(Number(e.target.value))}/></label>
+      <div className="compressor"><div className="dropZone"><Upload size={28}/><strong>{files.length?files.length+" image(s) selected":"Choose images to compress"}</strong><span>JPG, PNG or WebP • Multiple files</span><label className="fileButton">Choose files<input type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={addFiles}/></label></div>
+        <div className="settings"><label>Output format<select value={format} onChange={e=>setFormat(e.target.value)}><option value="webp">WebP — smaller</option><option value="jpg">JPG — compatible</option><option value="png">PNG — lossless</option><option value="original">Original format</option></select></label>
+          <label>Quality <b>{Math.round(quality*100)}%</b><input type="range" min=".1" max="1" step=".05" value={quality} onChange={e=>setQuality(Number(e.target.value))}/><small>Quality affects JPG/WebP. PNG is lossless.</small></label>
+          <label>Max width <b>{maxWidth?maxWidth+" px":"Original"}</b><input type="range" min="0" max="4000" step="100" value={maxWidth} onChange={e=>setMaxWidth(Number(e.target.value))}/></label>
           <button className="primaryButton" disabled={!files.length||busy} onClick={compress}>{busy?"Compressing...":"Compress images"}</button></div></div>
       {results.length>0&&<div className="results"><h2>Compressed images</h2>{results.map(item=><div className="resultRow" key={item.name}><div><strong>{item.name}</strong><span>{formatBytes(item.original)} → {formatBytes(item.blob.size)}</span></div><a className="downloadButton" href={URL.createObjectURL(item.blob)} download={item.name}><Download size={17}/>Download</a></div>)}</div>}
       <div className="privacyNote"><SlidersHorizontal size={17}/><span>Compression runs locally in your browser. No upload or server is required.</span></div>
