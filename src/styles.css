@@ -440,3 +440,27 @@ button,a,input,select{max-width:100%}
 .dark .imageToolShell{box-shadow:0 8px 30px rgba(0,0,0,.2)}
 .dark .guideSection,.dark .guideSteps>div{box-shadow:0 8px 30px rgba(0,0,0,.18)}
 
+
+/* Easy multi-image workspace */
+.timelineHeader,.settingsMode,.individualSettingsHead{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.timelineHeader{padding:12px 0 8px}
+.timelineHeader>div,.settingsMode>div,.individualSettingsHead>div{display:flex;flex-direction:column;gap:3px}
+.timelineHeader span,.settingsMode span,.individualSettingsHead span{font-size:11px;color:#6b7280}
+.imageTimelineTools{display:flex;gap:9px;overflow-x:auto;padding:8px 2px 14px;scrollbar-width:thin}
+.imageTimelineTools .timelineThumb{position:relative;flex:0 0 82px;width:82px;height:78px;padding:3px;border:2px solid transparent;border-radius:10px;background:#f8fafc;cursor:pointer}
+.imageTimelineTools .timelineThumb.active{border-color:#111827;box-shadow:0 0 0 3px rgba(17,24,39,.08)}
+.imageTimelineTools .timelineThumb img{width:100%;height:100%;object-fit:cover;border-radius:7px}
+.imageTimelineTools .timelineThumb span{position:absolute;left:5px;bottom:5px;min-width:19px;height:19px;padding:0 5px;border-radius:9px;background:rgba(0,0,0,.72);color:#fff;font-size:10px;display:grid;place-items:center}
+.settingsMode{border-top:1px solid #e5e7eb;padding:14px 0 4px}
+.batchSettingsPanel{padding-bottom:4px}
+.individualSettings{margin-top:10px;border:1px solid #d1d5db;border-radius:12px;padding:12px;background:#f8fafc}
+.individualSettings .toolControls{padding:10px 0 0}
+.dark .imageTimelineTools .timelineThumb{background:#171a20}
+.dark .imageTimelineTools .timelineThumb.active{border-color:#f3f4f6}
+.dark .settingsMode{border-color:#30343c}
+.dark .individualSettings{background:#171a20;border-color:#3b404a}
+@media(max-width:760px){
+ .timelineHeader,.settingsMode,.individualSettingsHead{align-items:flex-start}
+ .timelineHeader .secondaryButton,.settingsMode .secondaryButton{white-space:nowrap}
+ .imageTimelineTools .timelineThumb{flex-basis:70px;width:70px;height:68px}
+}

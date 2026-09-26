@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Upload, Download, DownloadCloud, Gauge, Image as ImageIcon, Shield, Trash2 } from "lucide-react";
+import { Upload, Download, DownloadCloud, Gauge, Image as ImageIcon, Shield, Trash2, SlidersHorizontal, Check, Eye, EyeOff } from "lucide-react";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
 
@@ -25,7 +25,7 @@ function BatchItem({item,onRemove}){
 }
 function formatBytesLocal(bytes){if(!bytes)return"0 B";const u=["B","KB","MB","GB"],i=Math.min(Math.floor(Math.log(bytes)/Math.log(1024)),3);return(bytes/1024**i).toFixed(i?2:0)+" "+u[i]}
 
-export function ImageBatchTool({toolId,link,Layout,Seo}){
+export function LegacyImageBatchTool({toolId,link,Layout,Seo}){
   const m=imageToolMeta[toolId], [files,setFiles]=useState([]),[busy,setBusy]=useState(false),[progress,setProgress]=useState(0);
   const [s,setS]=useState({width:0,height:0,percent:100,lock:true,preset:"custom",format:"image/webp",quality:.86,ratio:"free"});
   const set=(k,v)=>setS(x=>({...x,[k]:v}));
@@ -69,6 +69,38 @@ export function ImageBatchTool({toolId,link,Layout,Seo}){
       {files.length>0&&<div className="batchList">{files.map(x=><BatchItem key={x.id} item={x} onRemove={remove}/>)}</div>}
       <div className="privacyNote"><Shield size={17}/><span>Local browser processing. Your images are not uploaded to ToollooT.</span></div></div>
       <div className="toolHelpLink"><a href={link("/how-to-use/"+toolId)}>How to use {m.title} <span>→</span></a></div></div></main></Layout>
+}
+export function ImageBatchTool({toolId,link,Layout,Seo}){
+  const m=imageToolMeta[toolId];
+  const base={width:0,height:0,percent:100,lock:true,preset:"custom",format:toolId==="jpgpng"?"image/png":toolId==="jpgwebp"||toolId==="image-converter"?"image/webp":toolId==="webpjpg"?"image/jpeg":"image/webp",quality:.86,ratio:"free"};
+  const [files,setFiles]=useState([]),[selected,setSelected]=useState(null),[showTimeline,setShowTimeline]=useState(true),[busy,setBusy]=useState(false),[progress,setProgress]=useState(0),[batch,setBatch]=useState(base);
+  const add=e=>setFiles(p=>[...p,...Array.from(e||[]).filter(f=>f.type.startsWith("image/")||m.kind==="heic").map(f=>({id:crypto.randomUUID(),file:f,url:URL.createObjectURL(f),settings:{...batch}}))]);
+  const remove=id=>{setFiles(p=>p.filter(x=>x.id!==id));if(selected===id)setSelected(null)};
+  const updateItem=(id,k,v)=>setFiles(p=>p.map(x=>x.id===id?{...x,settings:{...x.settings,[k]:v}}:x));
+  const applyAll=()=>setFiles(p=>p.map(x=>({...x,settings:{...batch}})));
+  const current=files.find(x=>x.id===selected);
+  const updateBatch=(k,v)=>setBatch(x=>({...x,[k]:v}));
+  const process=async item=>{
+    const s=item.settings||batch;
+    if(m.kind==="heic"){const {default:heic2any}=await import("heic2any");const b=await heic2any({blob:item.file,toType:"image/jpeg",quality:s.quality});return{blob:Array.isArray(b)?b[0]:b,type:"image/jpeg"}}
+    if(m.kind==="background"){const {removeBackground}=await import("@imgly/background-removal");const b=await removeBackground(item.file,{output:{format:"image/png",type:"blob"}});return{blob:b,type:"image/png"}}
+    const img=await loadImage(item.file);let w=img.width,h=img.height;
+    if(m.kind==="resize"){if(s.preset!=="custom"){[w,h]=s.preset.split("x").map(Number)}else if(s.percent!==100){w=Math.max(1,Math.round(w*s.percent/100));h=Math.max(1,Math.round(h*s.percent/100))}else if(s.width){w=s.width;h=s.lock?Math.max(1,Math.round(img.height*s.width/img.width)):(s.height||img.height)}}
+    if(m.kind==="crop"){const ratio=s.ratio==="free"?null:Number(s.ratio);let cw=img.width,ch=img.height;if(ratio){if(cw/ch>ratio)cw=Math.round(ch*ratio);else ch=Math.round(cw/ratio)}const sx=Math.round((img.width-cw)/2),sy=Math.round((img.height-ch)/2),c=document.createElement("canvas");c.width=cw;c.height=ch;c.getContext("2d").drawImage(img,sx,sy,cw,ch,0,0,cw,ch);return{blob:await canvasBlob(c,"image/png",1),type:"image/png"}}
+    const type=m.kind==="convert"?s.format:outputTypeForKind(m.kind),c=document.createElement("canvas");c.width=w;c.height=h;const ctx=c.getContext("2d");if(type==="image/jpeg"){ctx.fillStyle="#fff";ctx.fillRect(0,0,w,h)}ctx.drawImage(img,0,0,w,h);return{blob:await canvasBlob(c,type,s.quality),type}
+  };
+  const run=async()=>{if(!files.length||busy)return;setBusy(true);const out=[];for(let i=0;i<files.length;i++){try{const r=await process(files[i]);out.push({...files[i],result:r,resultUrl:URL.createObjectURL(r.blob),outputName:nameFor(files[i].file,r.type)})}catch(e){out.push({...files[i],error:e?.message||"Processing failed"})}setProgress(Math.round((i+1)/files.length*100))}setFiles(out);setBusy(false)};
+  const downloadZip=async()=>{const ready=files.filter(x=>x.result);if(!ready.length)return;const z=JSZip();ready.forEach(x=>z.file(x.outputName,x.result.blob));saveAs(await z.generateAsync({type:"blob"}),"toolloot-"+m.kind+"-images.zip")};
+  const controls=(s,setter)=>m.kind==="resize"?<div className="toolControls"><label>Preset<select value={s.preset} onChange={e=>setter("preset",e.target.value)}><option value="custom">Custom</option><option value="1080x1080">1080 × 1080</option><option value="1920x1080">1920 × 1080</option><option value="1080x1920">1080 × 1920</option><option value="1280x720">1280 × 720</option></select></label><label>Width<input type="number" min="1" value={s.width||""} onChange={e=>setter("width",Number(e.target.value))}/></label><label>Height<input type="number" min="1" value={s.height||""} onChange={e=>setter("height",Number(e.target.value))}/></label><label>Scale %<input type="number" min="1" max="1000" value={s.percent} onChange={e=>setter("percent",Number(e.target.value))}/></label><label className="checkLine"><input type="checkbox" checked={s.lock} onChange={e=>setter("lock",e.target.checked)}/> Keep ratio</label></div>:m.kind==="convert"?<div className="toolControls"><label>Output format<select value={s.format} onChange={e=>setter("format",e.target.value)}><option value="image/webp">WebP</option><option value="image/jpeg">JPG</option><option value="image/png">PNG</option><option value="image/avif">AVIF</option></select></label><label>Quality<input type="range" min=".1" max="1" step=".05" value={s.quality} onChange={e=>setter("quality",Number(e.target.value))}/></label></div>:m.kind==="crop"?<div className="toolControls"><label>Aspect ratio<select value={s.ratio} onChange={e=>setter("ratio",e.target.value)}><option value="free">Free</option><option value="1">1 : 1</option><option value="1.7777778">16 : 9</option><option value=".5625">9 : 16</option><option value="1.3333333">4 : 3</option><option value=".75">3 : 4</option></select></label></div>:m.kind==="heic"?<div className="toolControls"><label>Quality<input type="range" min=".4" max="1" step=".05" value={s.quality} onChange={e=>setter("quality",Number(e.target.value))}/></label></div>:null;
+  return <Layout><Seo title={m.title+" - Free Online | ToollooT"} description={m.description}/><main className="toolPage"><div className="container toolPageInner"><a className="backLink" href={link("/")}>Back to ToollooT</a><div className="toolTitle"><div className="toolIcon large"><ImageIcon size={24}/></div><div><h1>{m.title}</h1><p>{m.description} Everything is processed locally in your browser.</p></div></div>
+    <div className="imageToolShell"><div className="dropZone"><Upload size={25}/><strong>Drop images here or choose files</strong><span>{m.kind==="heic"?"HEIC / HEIF":"Multiple images supported"} • No upload</span><label className="fileButton">Choose images<input type="file" accept={m.kind==="heic"?".heic,.heif":"image/*"} multiple onChange={e=>add(e.target.files)}/></label></div>
+    {files.length>0&&<div className="timelineHeader"><div><strong>Images</strong><span>{files.length} selected</span></div><button className="secondaryButton" onClick={()=>setShowTimeline(x=>!x)}>{showTimeline?<EyeOff size={15}/>:<Eye size={15}/>} {showTimeline?"Hide timeline":"Show timeline"}</button></div>}
+    {files.length>0&&showTimeline&&<div className="imageTimeline imageTimelineTools">{files.map((x,i)=><button className={"timelineThumb "+(selected===x.id?"active":"")} key={x.id} onClick={()=>setSelected(x.id)}><img src={x.resultUrl||x.url} alt=""/><span>{i+1}</span></button>)}</div>}
+    {files.length>0&&<div className="settingsMode"><div><strong>Batch settings</strong><span>Set once and apply to all images</span></div><button className="secondaryButton" onClick={applyAll}><Check size={15}/> Apply to all</button></div>}
+    {files.length>0&&<div className="batchSettingsPanel">{controls(batch,updateBatch)}</div>}
+    {current&&<div className="individualSettings"><div className="individualSettingsHead"><div><strong>Individual settings</strong><span>{current.file.name}</span></div><button className="secondaryButton" onClick={()=>setSelected(null)}><SlidersHorizontal size={15}/> Close</button></div>{controls(current.settings,(k,v)=>updateItem(current.id,k,v))}</div>}
+    <div className="batchActions"><button className="primaryButton" onClick={run} disabled={!files.length||busy}><Gauge size={16}/>{busy?"Processing "+progress+"%":"Process all"}</button><button className="secondaryButton" onClick={downloadZip} disabled={!files.some(x=>x.result)}><DownloadCloud size={16}/> Download ZIP</button><button className="textButton" onClick={()=>setFiles([])}>Clear all</button></div>
+    {files.length>0&&<div className="batchList">{files.map(x=><BatchItem key={x.id} item={x} onRemove={remove}/>)}</div>}<div className="privacyNote"><Shield size={17}/><span>Local browser processing. Your images are not uploaded to ToollooT.</span></div></div><div className="toolHelpLink"><a href={link("/how-to-use/"+toolId)}>How to use {m.title} <span>→</span></a></div></div></main></Layout>
 }
 export function ImageToolGuide({toolId,link,Layout,Page}){
   const m=toolId==="compress-to-size"?{title:"Compress to Exact KB/MB",kind:"target"}:imageToolMeta[toolId];
