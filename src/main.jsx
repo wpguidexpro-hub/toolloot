@@ -3,7 +3,7 @@ import {
   Search, Boxes, Sparkles, Code2, Image as ImageIcon, FileText, Calculator,
   Menu, X, Sun, Moon, Upload, Download, SlidersHorizontal, Shield,
   FileCheck, Mail, Layers3, Home as HomeIcon, RotateCw, FlipHorizontal2,
-  Maximize2, Trash2, DownloadCloud, Target, Gauge
+  Maximize2, Trash2, DownloadCloud, Target, Gauge, ExternalLink
 } from "lucide-react";
 import { createRoot } from "react-dom/client";
 import Swal from "sweetalert2";
@@ -52,7 +52,7 @@ function Seo({ title, description }) {
 function ToollooTIcon({ className="" }) {
   return <img className={className} src={link("/favicon.png")} alt="ToollooT" aria-hidden="true" />;
 }
-function Header({ dark, setDark, canInstall, installApp }) {
+function Header({ dark, setDark, canInstall, installed, installApp, openApp }) {
   const [menu,setMenu] = useState(false);
   const nav = [["Tools","/"],["Categories","/categories"],["How to Use","/how-to-use"],["About","/about"]];
   return <header className="header">
@@ -64,6 +64,7 @@ function Header({ dark, setDark, canInstall, installApp }) {
     </nav>
     <div className="headerActions">
       {canInstall && <button className="installButton" onClick={installApp} aria-label="Install ToollooT"> <Download size={16}/> Install App</button>}
+      {installed && <button className="installButton openAppButton" onClick={openApp} aria-label="Open ToollooT in app"><ExternalLink size={16}/> Open in App</button>}
       <button className="iconButton" onClick={()=>setDark(!dark)} aria-label="Toggle theme">{dark?<Sun size={18}/>:<Moon size={18}/>}</button>
       <button className="iconButton mobileMenu" onClick={()=>setMenu(!menu)} aria-label="Menu">{menu?<X size={19}/>:<Menu size={19}/>}</button>
     </div>
@@ -95,6 +96,11 @@ function Layout({ children }) {
     if ("serviceWorker" in navigator) navigator.serviceWorker.register(link("/sw.js")).catch(()=>{});
     const standalone = window.matchMedia?.("(display-mode: standalone)")?.matches || window.navigator.standalone === true;
     setInstalled(!!standalone);
+    if (!standalone && typeof navigator.getInstalledRelatedApps === "function") {
+      navigator.getInstalledRelatedApps().then(apps => {
+        if (apps.some(app => app.platform === "webapp")) setInstalled(true);
+      }).catch(()=>{});
+    }
     const handler = e => { e.preventDefault(); setInstallPrompt(e); };
     const installedHandler = () => { setInstalled(true); setInstallPrompt(null); };
     window.addEventListener("beforeinstallprompt", handler);
@@ -115,7 +121,10 @@ function Layout({ children }) {
     await installPrompt.userChoice;
     setInstallPrompt(null);
   };
-  return <div className={dark ? "app dark" : "app"}><Header dark={dark} setDark={setDark} canInstall={!!installPrompt && !installed} installApp={installApp}/>{children}<Footer/><nav className="mobileBottomNav" aria-label="Mobile navigation"><a href={link("/")}><HomeIcon size={19}/><span>Home</span></a><a href={link("/categories")}><Boxes size={19}/><span>Categories</span></a><a href={link("/how-to-use")}><FileText size={19}/><span>How to Use</span></a><a href={link("/about")}><HomeIcon size={19}/><span>About</span></a></nav></div>;
+  const openApp = () => {
+    window.location.assign(link("/"));
+  };
+  return <div className={dark ? "app dark" : "app"}><Header dark={dark} setDark={setDark} canInstall={!!installPrompt && !installed} installed={installed} installApp={installApp} openApp={openApp}/>{children}<Footer/><nav className="mobileBottomNav" aria-label="Mobile navigation"><a href={link("/")}><HomeIcon size={19}/><span>Home</span></a><a href={link("/categories")}><Boxes size={19}/><span>Categories</span></a><a href={link("/how-to-use")}><FileText size={19}/><span>How to Use</span></a><a href={link("/about")}><HomeIcon size={19}/><span>About</span></a></nav></div>;
 }
 function ToolCard({ tool }) {
   const openTool=async()=>{const recent=(await get("toolloot:recent-tools"))||[];const next=[tool.id,...recent.filter(id=>id!==tool.id)].slice(0,6);await set("toolloot:recent-tools",next)};
