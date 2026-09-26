@@ -34,6 +34,6 @@ export function ImageSourcePicker({onFiles,accept="image/*",multiple=true,label=
   <input ref={camera} hidden type="file" accept={accept} capture="environment" onChange={pick}/>
   <input ref={folder} hidden type="file" accept={accept} webkitdirectory="" directory="" multiple onChange={pick}/>
   <input ref={zip} hidden type="file" accept=".zip,application/zip" onChange={zipImport}/>
-  <div className="sourcePickerHint">Drag & drop • Multiple images • Everything stays on your device</div>
+  <div className="sourcePickerHint">Drag & drop • Multiple images • Everything stays on your device</div><div className="sourcePickerPrivacy">Local browser processing. Your images are not uploaded to ToollooT.</div>
  </div>
 }
