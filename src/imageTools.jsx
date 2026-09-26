@@ -74,7 +74,7 @@ export function ImageBatchTool({toolId,link,Layout,Seo}){
   const m=imageToolMeta[toolId];
   const base={width:0,height:0,percent:100,lock:true,preset:"custom",format:toolId==="jpgpng"?"image/png":toolId==="jpgwebp"||toolId==="image-converter"?"image/webp":toolId==="webpjpg"?"image/jpeg":"image/webp",quality:.86,ratio:"free"};
   const [files,setFiles]=useState([]),[selected,setSelected]=useState(null),[showTimeline,setShowTimeline]=useState(true),[busy,setBusy]=useState(false),[progress,setProgress]=useState(0),[batch,setBatch]=useState(base);
-  const add=e=>setFiles(p=>[...p,...Array.from(e||[]).filter(f=>f.type.startsWith("image/")||m.kind==="heic").map(f=>({id:crypto.randomUUID(),file:f,url:URL.createObjectURL(f),settings:{...batch}}))]);
+  const add=e=>{const added=Array.from(e||[]).filter(f=>f.type.startsWith("image/")||m.kind==="heic").map(f=>({id:crypto.randomUUID(),file:f,url:URL.createObjectURL(f),settings:{...batch}}));setFiles(p=>[...p,...added]);if(!selected&&added[0])setSelected(added[0].id)};
   const remove=id=>{setFiles(p=>p.filter(x=>x.id!==id));if(selected===id)setSelected(null)};
   const updateItem=(id,k,v)=>setFiles(p=>p.map(x=>x.id===id?{...x,settings:{...x.settings,[k]:v}}:x));
   const applyAll=()=>setFiles(p=>p.map(x=>({...x,settings:{...batch}})));

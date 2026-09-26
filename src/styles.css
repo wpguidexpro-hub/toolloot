@@ -442,6 +442,8 @@ button,a,input,select{max-width:100%}
 
 
 /* Easy multi-image workspace */
+.easyResizeControls{padding:14px 0 4px}.easyMainLabel{display:flex;flex-direction:column;gap:7px;font-size:13px;font-weight:700;color:#374151}.easyMainLabel select{height:44px;border:1px solid #d1d5db;border-radius:10px;padding:0 12px;background:#fff;color:#111827;font-size:14px}.advancedSettings{margin-top:10px;border:1px solid #e5e7eb;border-radius:10px;background:#fafafa}.advancedSettings summary{cursor:pointer;padding:10px 12px;font-size:12px;font-weight:700;color:#6b7280}.advancedSettings .toolControls{padding:10px 12px}.dark .easyMainLabel{color:#e5e7eb}.dark .easyMainLabel select,.dark .advancedSettings{background:#171a20;color:#e5e7eb;border-color:#30343c}.dark .advancedSettings summary{color:#9ca3af}
+
 .timelineHeader,.settingsMode,.individualSettingsHead{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .timelineHeader{padding:12px 0 8px}
 .timelineHeader>div,.settingsMode>div,.individualSettingsHead>div{display:flex;flex-direction:column;gap:3px}
@@ -463,4 +465,17 @@ button,a,input,select{max-width:100%}
  .timelineHeader,.settingsMode,.individualSettingsHead{align-items:flex-start}
  .timelineHeader .secondaryButton,.settingsMode .secondaryButton{white-space:nowrap}
  .imageTimelineTools .timelineThumb{flex-basis:70px;width:70px;height:68px}
+ .timelineHeader,.settingsMode{padding-top:10px}
+ .settingsMode{flex-direction:column}
+ .settingsMode>div,.settingsMode .secondaryButton{width:100%}
+ .settingsMode .secondaryButton{justify-content:center}
+ .individualSettings{padding:10px}
+ .individualSettingsHead{margin-bottom:2px}
+ .individualSettings .toolControls{grid-template-columns:1fr}
+ .imageTimelineTools{padding-bottom:10px}
+ .batchSettingsPanel{padding-bottom:2px}
+ .toolControls{padding:10px 0}
+ .toolControls label{font-size:13px}
+ .toolControls input[type=number],.toolControls select{height:44px;font-size:14px}
+ .batchActions{padding-top:6px}
 }
