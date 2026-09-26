@@ -3,12 +3,10 @@ import {
   Search, Boxes, Sparkles, Code2, Image as ImageIcon, FileText, Calculator,
   Menu, X, Sun, Moon, Upload, Download, SlidersHorizontal, Shield,
   FileCheck, Mail, Layers3, Home as HomeIcon, RotateCw, FlipHorizontal2,
-  Maximize2, Trash2, DownloadCloud, Target, Gauge
+  Maximize2, Trash2, Target, Gauge
 } from "lucide-react";
 import { createRoot } from "react-dom/client";
 import Swal from "sweetalert2";
-import JSZip from "jszip";
-import { saveAs } from "file-saver";
 import { get, set } from "idb-keyval";
 import "sweetalert2/dist/sweetalert2.min.css";
 import "./styles.css";
@@ -253,9 +251,7 @@ function ImageCompressor() {
     return {name,blob,width:canvas.width,height:canvas.height,url:URL.createObjectURL(blob),original:item.file.size,originalUrl:item.preview,settings:{...s},unchanged:false};
   };
   const waitGeneration=async()=>{setProgress(0);return new Promise(resolve=>{const started=Date.now();const timer=setInterval(()=>{const pct=Math.min(100,Math.round(((Date.now()-started)/5000)*100));setProgress(pct);if(pct>=100){clearInterval(timer);resolve();}},80);});};
-  const compressAll=async()=>{if(!items.length||busy)return;setBusy(true);setGeneration(0);const next=[];for(let i=0;i<items.length;i++){setActive(i);setGeneration(i+1);await waitGeneration();try{next.push(await compressOne(items[i]));}catch(e){notify("error","Could not compress "+items[i].file.name)}}setItems(prev=>prev.map(x=>{const r=next.find(n=>n.originalUrl===x.preview);return r?{...x,result:r}:x}));setBusy(false);setProgress(100);notify("success",items.length>1?"All images compressed":"Image compressed");};
   const compressSingle=async id=>{const selected=items.find(x=>x.id===id);if(!selected||busy)return;setBusy(true);setGeneration(1);await waitGeneration();try{const r=await compressOne(selected);setItems(prev=>prev.map(x=>x.id===id?{...x,result:r}:x));notify("success","Smart compression complete");}catch(e){notify("error","Compression failed");}finally{setBusy(false);}};
-  const downloadZip=async()=>{const ready=items.filter(x=>x.result);if(!ready.length)return;const zip=new JSZip();ready.forEach(x=>zip.file(x.result.name,x.result.blob));saveAs(await zip.generateAsync({type:"blob"}),"toolloot-compressed-images.zip");notify("success","ZIP download ready");};
   return <Layout><Seo title="Image Compressor - Free Online | ToollooT" description="Compress multiple images with individual settings directly in your browser."/>
     <main className="toolPage"><div className="container toolPageInner"><a className="backLink" href={link("/")}>Back to ToollooT</a>
       <div className="toolTitle compactToolTitle"><div className="toolIcon large"><Sparkles size={22}/></div><div><h1>Image Compressor</h1><p>Choose → quality → compress → download.</p></div></div>
@@ -263,15 +259,14 @@ function ImageCompressor() {
       {items.length>0&&<div className="compressWorkspace">
         <div className="imageTimeline"><button className="timelineArrow" onClick={()=>setActive(Math.max(0,active-1))} disabled={active===0}>‹</button><div className="timelineTrack">{items.map((x,i)=><button key={x.id} className={"timelineThumb "+(i===active?"active":"")} onClick={()=>setActive(i)}><img src={x.preview} alt={x.file.name}/><span>{i+1}</span>{x.result&&<b>✓</b>}</button>)}</div><button className="timelineArrow" onClick={()=>setActive(Math.min(items.length-1,active+1))} disabled={active===items.length-1}>›</button></div>
         <div className="timelineAddBar"><ImageSourcePicker className="compactAddPicker" accept="image/*" multiple={true} onFiles={addFiles} label="Add more images"/></div>
-        <div className="timelineCompressBar"><button className="primaryButton" disabled={busy} onClick={compressAll}><Sparkles size={16}/> {busy?"Generating…":items.length>1?"Compress all images":"Compress image"}</button></div>
         {item&&<div className="editorPanel"><div className="editorPreview unifiedPreview"><div className="previewToolbar"><strong title={item.file.name}>{item.file.name}</strong><span>{formatBytes(item.file.size)}</span><button className="iconOnly" onClick={()=>removeItem(item.id)} aria-label="Remove image"><Trash2 size={16}/></button></div><div className="canvasPreview unifiedCanvas"><img className={item.result&&!busy?"compressedVisible":"originalVisible"} src={item.result&&!busy?item.result.url:item.preview} alt={item.result&&!busy?"Compressed "+item.file.name:item.file.name}/>{item.result&&!busy&&<div className="previewResultBadge"><Sparkles size={13}/> Compressed</div>}{busy&&<div className="generationOverlay unifiedGeneration"><div className="generationImage"><img src={item.preview} alt="Generating compressed preview"/><div className="generationSweep"/></div><div className="generationDots"><span/><span/><span/></div><strong>Generating compressed image…</strong><small>Image {generation} of {items.length} • {progress}%</small><div className="generationProgress"><i style={{width:progress+"%"}}/></div></div>}</div></div>
           <div className="contextSettings aiCompressorControls"><div className="aiSettingsIntro"><div className="aiBadge"><Sparkles size={14}/> Smart compression</div><strong>One setting for all images</strong><span>Choose quality once. ToollooT applies it to every selected image automatically.</span></div>
             <label className="qualityControl"><div><span>Quality</span><b>{Math.round(item.settings.quality*100)}%</b></div><input type="range" min=".1" max="1" step=".05" value={item.settings.quality} onChange={e=>updateQuality(Number(e.target.value))}/><div className="realtimeSize"><span>Estimated size</span><strong>{estimating?"Calculating…":estimatedSize!=null?formatBytes(estimatedSize):"—"}</strong>{estimatedSize!=null&&<em>{item.file.size>estimatedSize?Math.round((1-estimatedSize/item.file.size)*100)+"% smaller":"No size reduction"}</em>}</div><small>Lower = smaller file · Higher = more detail</small></label>
             <button className="primaryButton compressSelected aiCompressButton" disabled={busy} onClick={()=>compressSingle(item.id)}><Gauge size={17}/> {busy?"Generating…":item.result?"Compress again":"Compress image"}</button>
           </div>
-          {item.result&&!busy&&<div className="resultSummary"><span>{item.result.width} × {item.result.height}</span><strong>{formatBytes(item.file.size)} → {formatBytes(item.result.blob.size)}</strong><span>{item.file.size>item.result.blob.size?Math.round((1-item.result.blob.size/item.file.size)*100)+"% smaller":"No size reduction"}</span><a className="downloadButton" href={item.result.url} download={item.result.name}><Download size={15}/> Download</a>{items.length>1&&<button className="downloadButton" onClick={downloadZip}><DownloadCloud size={15}/> Download all</button>}</div>}
+          {item.result&&!busy&&<div className="resultSummary"><span>{item.result.width} × {item.result.height}</span><strong>{formatBytes(item.file.size)} → {formatBytes(item.result.blob.size)}</strong><span>{item.file.size>item.result.blob.size?Math.round((1-item.result.blob.size/item.file.size)*100)+"% smaller":"No size reduction"}</span><a className="downloadButton" href={item.result.url} download={item.result.name}><Download size={15}/> Download</a></div>}
         </div>}
-        <div className="workspaceMiniFooter"><span><strong>{items.length}</strong> image{items.length>1?"s":""} selected</span><button className="textButton" onClick={clearAll} disabled={busy}>Clear all</button>{items.length>1&&items.every(x=>x.result)&&<button className="secondaryButton" onClick={downloadZip}><DownloadCloud size={16}/> Download all ZIP</button>}</div>
+        <div className="workspaceMiniFooter"><span><strong>{items.length}</strong> image{items.length>1?"s":""} selected</span><button className="textButton" onClick={clearAll} disabled={busy}>Clear all</button></div>
       </div>}
       <div className="privacyNote"><Shield size={17}/><span>Everything is processed locally in your browser. Your images are not uploaded.</span></div>
       <div className="toolHelpLink"><a href={link("/how-to-use/image-compressor")}>How to use Image Compressor <span>→</span></a></div>
