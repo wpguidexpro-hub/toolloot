@@ -332,11 +332,111 @@ footer{box-shadow:0 -2px 14px rgba(15,23,42,.04)}
 .dark .toolControls input[type=number],.dark .toolControls select{background:#171a20;border-color:#3b404a;color:#f3f4f6}
 .dark .batchItem{background:#171a20;border-color:#30343c}
 @media(max-width:760px){
- .imageToolShell{padding:12px;border-radius:13px}
- .imageToolShell .dropZone{min-height:165px}
- .toolControls{grid-template-columns:1fr 1fr;gap:10px}
- .batchActions{display:grid;grid-template-columns:1fr 1fr}
+ .imageToolShell{padding:12px;border-radius:13px;width:100%;min-width:0}
+ .imageToolShell .dropZone{min-height:165px;padding:18px 12px}
+ .toolControls{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+ .toolControls label{min-width:0}
+ .toolControls input[type=number],.toolControls select{width:100%;min-width:0;max-width:100%}
+ .toolControls input[type=range]{min-width:0}
+ .checkLine{padding-top:8px}
+ .batchActions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%}
+ .batchActions>*{min-width:0;width:100%}
  .batchActions .textButton{grid-column:1/-1}
- .batchItem{padding:8px;gap:8px}
- .batchItem img{width:52px;height:52px}
+ .batchItem{padding:8px;gap:8px;min-width:0}
+ .batchItem img{width:52px;height:52px;flex:0 0 52px}
+ .batchItem .downloadButton,.batchItem .iconOnly{min-width:40px;min-height:40px}
+ .toolPageInner{padding-top:20px;padding-bottom:92px}
+ .toolTitle{gap:10px;margin-bottom:18px;min-width:0}
+ .toolTitle>div{min-width:0}
+ .toolTitle h1{font-size:clamp(24px,7vw,30px);line-height:1.12;overflow-wrap:anywhere}
+ .toolTitle p{font-size:13px;line-height:1.5}
+ .backLink{margin-bottom:18px}
+ .imageToolShell .fileButton{width:100%;max-width:260px}
+ .imageToolShell img{max-width:100%}
 }
+@media(max-width:380px){
+ .toolControls{grid-template-columns:1fr}
+ .batchActions{grid-template-columns:1fr}
+ .batchActions .textButton{grid-column:auto}
+ .batchItem{gap:6px}
+ .batchItem img{width:46px;height:46px;flex-basis:46px}
+ .batchItem strong{font-size:12px}
+ .batchItem span,.batchItem em{font-size:10px}
+ .toolPageInner{padding-left:12px;padding-right:12px}
+ .imageToolShell{padding:10px}
+}
+
+/* Page-level responsive pass for the complete image suite + guides */
+html,body,#root{width:100%;max-width:100%;overflow-x:hidden}
+img,video,canvas,svg{max-width:100%}
+button,a,input,select{max-width:100%}
+.primaryButton,.secondaryButton,.downloadButton,.smallControl,.textButton,.fileButton{min-height:40px}
+.toolPage,.toolPageInner,.imageToolShell,.guideSection,.guideSteps,.guideAction,.toolHelpLink{min-width:0}
+.toolPageInner{max-width:1500px;margin:0 auto}
+.imageToolShell{max-width:1440px;margin-left:auto;margin-right:auto}
+.guideSection,.guideSteps{max-width:1100px;margin-left:auto;margin-right:auto}
+.guideSteps{width:100%}
+.guideSection{width:100%;overflow:hidden}
+.guideSteps>div{min-width:0}
+.guideSteps p,.guideSection p,.guideSection li{overflow-wrap:anywhere}
+
+@media (min-width:761px) and (max-width:1100px){
+ .toolPageInner{padding:26px 20px 82px}
+ .toolTitle h1{font-size:30px}
+ .imageToolShell{padding:18px}
+ .toolControls{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .batchItem{min-width:0}
+ .guideSteps{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+
+@media (min-width:1101px){
+ .toolPageInner{padding:34px 32px 90px}
+}
+
+@media (max-width:760px){
+ .toolPageInner{width:100%;padding:20px 16px 94px}
+ .imageToolShell{margin-top:12px;box-shadow:0 5px 20px rgba(15,23,42,.05)}
+ .imageToolShell .dropZone{width:100%;box-sizing:border-box}
+ .guideAction{margin:4px 0 18px}
+ .guideAction .primaryButton{width:100%;max-width:360px}
+ .guideSection{padding:16px;margin:18px auto;border-radius:13px}
+ .guideSection h2{font-size:19px;line-height:1.25}
+ .guideSection p,.guideSection li{font-size:14px;line-height:1.6}
+ .guideSteps{grid-template-columns:1fr;gap:10px;margin:18px auto}
+ .guideSteps>div{padding:15px;border-radius:13px}
+ .guideSteps h2{font-size:17px}
+ .guideSteps p{font-size:14px}
+ .toolHelpLink{padding-bottom:8px}
+ .toolHelpLink a{max-width:100%;justify-content:center;text-align:center}
+}
+
+@media (max-width:480px){
+ .toolPageInner{padding-left:12px;padding-right:12px}
+ .toolTitle{align-items:flex-start}
+ .toolTitle .toolIcon.large{width:42px;height:42px;flex:0 0 42px}
+ .toolTitle h1{font-size:25px}
+ .imageToolShell{padding:10px;border-radius:12px}
+ .imageToolShell .dropZone{min-height:150px;padding:16px 10px}
+ .toolControls{padding:14px 0}
+ .batchActions{gap:7px}
+ .batchItem{border-radius:10px}
+ .batchItem .downloadButton{padding:7px}
+ .guideSection{padding:14px}
+ .guideSteps>div{padding:14px}
+}
+
+@media (max-width:360px){
+ .toolTitle{gap:8px}
+ .toolTitle .toolIcon.large{width:38px;height:38px;flex-basis:38px}
+ .toolTitle h1{font-size:23px}
+ .toolTitle p{font-size:12px}
+ .imageToolShell .dropZone{min-height:140px}
+ .batchActions>*{grid-column:1/-1}
+ .batchItem .downloadButton{font-size:0;width:40px;padding:0}
+ .batchItem .downloadButton svg{margin:0}
+}
+
+.dark .toolPageInner{color:#e5e7eb}
+.dark .imageToolShell{box-shadow:0 8px 30px rgba(0,0,0,.2)}
+.dark .guideSection,.dark .guideSteps>div{box-shadow:0 8px 30px rgba(0,0,0,.18)}
+
