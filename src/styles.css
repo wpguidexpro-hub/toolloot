@@ -137,3 +137,4 @@ footer{border-top:1px solid #e5e7eb}
  .pageContent{margin-top:30px}
  .pageCards{grid-template-columns:1fr}
 }
+.comparisonCard{margin-top:14px;border:1px solid #e5e7eb;border-radius:10px;padding:14px}.previewGrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.previewGrid img{display:block;width:100%;height:220px;object-fit:contain;background:#f3f4f6;border-radius:8px;margin:7px 0}.previewLabel{font-size:12px;font-weight:700;color:#6b7280}.previewGrid b{font-size:13px}.compareMeta{display:flex;align-items:center;gap:12px;margin-top:12px;font-size:13px}.compareMeta span{color:#6b7280}.compareMeta .downloadButton{margin-left:auto}.dark .comparisonCard{border-color:#30343c}.dark .previewGrid img{background:#1a1d23}@media(max-width:700px){.previewGrid{grid-template-columns:1fr}.previewGrid img{height:180px}.compareMeta{flex-wrap:wrap}.compareMeta .downloadButton{margin-left:0}}

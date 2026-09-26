@@ -142,7 +142,7 @@ function ContactPage() {
 }
 function ImageCompressor() {
   const [files,setFiles]=useState([]),[quality,setQuality]=useState(.72),[maxWidth,setMaxWidth]=useState(0),[format,setFormat]=useState("webp"),[results,setResults]=useState([]),[busy,setBusy]=useState(false);
-  useEffect(()=>()=>results.forEach(r=>URL.revokeObjectURL(r.url)),[results]);
+  useEffect(()=>()=>results.forEach(r=>{URL.revokeObjectURL(r.url);URL.revokeObjectURL(r.originalUrl)}),[results]);
   const addFiles=e=>{setFiles(Array.from(e.target.files||[]));setResults([]);};
   const removeFile=name=>setFiles(f=>f.filter(x=>x.name!==name));
   async function compress(){
@@ -156,7 +156,7 @@ function ImageCompressor() {
       const type=format==="original"?file.type:(format==="jpg"?"image/jpeg":format==="png"?"image/png":"image/webp");
       const blob=await new Promise((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(new Error("Compression failed")),type,quality));
       const ext=type==="image/jpeg"?"jpg":type.split("/")[1];
-      output.push({name:file.name.replace(/\.[^.]+$/,"")+"-compressed."+ext,blob,original:file.size,width:canvas.width,height:canvas.height,url:URL.createObjectURL(blob)});
+      output.push({name:file.name.replace(/\.[^.]+$/,"")+"-compressed."+ext,blob,original:file.size,width:canvas.width,height:canvas.height,url:URL.createObjectURL(blob),originalUrl:url});
       URL.revokeObjectURL(url);
     }
     setResults(output);setBusy(false);
@@ -169,7 +169,7 @@ function ImageCompressor() {
           <label>Quality <b>{Math.round(quality*100)}%</b><input type="range" min=".1" max="1" step=".05" value={quality} onChange={e=>setQuality(Number(e.target.value))}/><small>Quality affects JPG/WebP. PNG is lossless.</small></label>
           <label>Max width <b>{maxWidth?maxWidth+" px":"Original"}</b><input type="range" min="0" max="4000" step="100" value={maxWidth} onChange={e=>setMaxWidth(Number(e.target.value))}/></label>
           <button className="primaryButton" disabled={!files.length||busy} onClick={compress}>{busy?"Compressing...":"Compress images"}</button></div></div>
-      {results.length>0&&<div className="results"><h2>Compressed images</h2>{results.map(item=><div className="resultRow" key={item.name}><div><strong>{item.name}</strong><span>{formatBytes(item.original)} → {formatBytes(item.blob.size)}</span></div><a className="downloadButton" href={URL.createObjectURL(item.blob)} download={item.name}><Download size={17}/>Download</a></div>)}</div>}
+      {results.length>0&&<div className="results"><h2>Preview & Comparison</h2>{results.map(item=><div className="comparisonCard" key={item.name}><div className="previewGrid"><div><span className="previewLabel">Original</span><img src={item.originalUrl} alt={"Original "+item.name}/><b>{formatBytes(item.original)}</b></div><div><span className="previewLabel">Compressed</span><img src={item.url} alt={"Compressed "+item.name}/><b>{formatBytes(item.blob.size)}</b></div></div><div className="compareMeta"><strong>{item.name}</strong><span>{item.width} × {item.height} • {item.original>item.blob.size?Math.round((1-item.blob.size/item.original)*100)+"% smaller":"No size reduction"}</span><a className="downloadButton" href={item.url} download={item.name}><Download size={17}/>Download</a></div></div>)}</div>}
       <div className="privacyNote"><SlidersHorizontal size={17}/><span>Compression runs locally in your browser. No upload or server is required.</span></div>
     </div></main>
   </Layout>;
