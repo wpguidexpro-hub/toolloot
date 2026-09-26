@@ -61,7 +61,7 @@ function Footer() {
   return <footer><div className="container footerInner">
     <div><strong>ToolLoot</strong><span>Simple tools for everyday work.</span></div>
     <nav><a href={link("/about")}>About</a><a href={link("/privacy")}>Privacy</a><a href={link("/terms")}>Terms</a><a href={link("/contact")}>Contact</a></nav>
-    <small>Ã‚© 2026 ToolLoot</small>
+    <small>Ã‚Â© 2026 ToolLoot</small>
   </div></footer>;
 }
 function Layout({ children }) {
@@ -71,7 +71,7 @@ function Layout({ children }) {
 function ToolCard({ tool }) {
   return <a className="toolCard" href={link(tool.path)}>
     <div className="toolIcon"><ImageIcon size={20}/></div><h3>{tool.name}</h3>
-    <p>{tool.description}</p><span className="toolLink">Open tool Ã¢â€ '</span>
+    <p>{tool.description}</p><span className="toolLink">Open tool Ã¢â€ â€™</span>
   </a>;
 }
 function Home() {
@@ -80,7 +80,7 @@ function Home() {
     (category==="All Tools"||t.category===category) &&
     (t.name+" "+t.description).toLowerCase().includes(query.toLowerCase())
   ),[query,category]);
-  return <Layout><Seo title="ToolLoot Ã¢â‚¬" Free Online Tools" description="ToolLoot provides simple, fast and free online tools for images, documents, developers and everyday work."/>
+  return <Layout><Seo title="ToolLoot Ã¢â‚¬â€ Free Online Tools" description="ToolLoot provides simple, fast and free online tools for images, documents, developers and everyday work."/>
     <main>
       <section className="hero"><div className="container heroInner">
         <div className="eyebrow">TOOLLOOT</div><h1>Simple tools that get things done.</h1>
@@ -106,13 +106,13 @@ function Page({ title,description,icon:Icon,children }) {
 }
 function CategoryPage({categoryName,slug}) {
   const matches=tools.filter(t=>t.category===categoryName);
-  return <Page title={categoryName+" Tools Ã¢â‚¬" ToolLoot"} description={"Free "+categoryName.toLowerCase()+" tools from ToolLoot. Simple browser-based utilities designed for everyday tasks."} icon={categories.find(c=>c.name===categoryName)?.icon||Layers3}>
+  return <Page title={categoryName+" Tools Ã¢â‚¬â€ ToolLoot"} description={"Free "+categoryName.toLowerCase()+" tools from ToolLoot. Simple browser-based utilities designed for everyday tasks."} icon={categories.find(c=>c.name===categoryName)?.icon||Layers3}>
     <div className="sectionHead"><div><h2>{categoryName} tools</h2><p>{matches.length} available</p></div></div>
     {matches.length?<div className="toolGrid">{matches.map(t=><ToolCard tool={t} key={t.id}/>)}</div>:<div className="empty"><strong>No tools in this category yet.</strong><p>New ToolLoot tools will appear here as they are added.</p></div>}
   </Page>;
 }
 function CategoriesPage() {
-  return <Page title="Tool Categories Ã¢â‚¬" ToolLoot" description="Browse free online tool categories for images, documents, developers, calculators and AI." icon={Layers3}>
+  return <Page title="Tool Categories Ã¢â‚¬â€ ToolLoot" description="Browse free online tool categories for images, documents, developers, calculators and AI." icon={Layers3}>
     <div className="pageCards">{categories.slice(1).map(({name,icon:Icon,path})=><a className="infoCard" key={name} href={link(path)}><Icon size={20}/><strong>{name}</strong><span>Browse {name.toLowerCase()} tools.</span></a>)}</div>
   </Page>;
 }
@@ -123,14 +123,14 @@ function AboutPage() {
   </Page>;
 }
 function PrivacyPage() {
-  return <Page title="Privacy Policy Ã¢â‚¬" ToolLoot" description="Read the ToolLoot privacy policy and learn how browser-based tools handle your files and information." icon={Shield}>
+  return <Page title="Privacy Policy Ã¢â‚¬â€ ToolLoot" description="Read the ToolLoot privacy policy and learn how browser-based tools handle your files and information." icon={Shield}>
     <h2>Browser processing</h2><p>When a tool says it runs locally in your browser, files are processed on your device and are not uploaded by that tool.</p>
     <h2>Data collection</h2><p>ToolLoot does not need an account to use its basic browser tools. Any future service that requires data will clearly describe what is collected and why.</p>
     <p>Do not upload sensitive files to any online service unless you understand how that service handles them.</p>
   </Page>;
 }
 function TermsPage() {
-  return <Page title="Terms of Use Ã¢â‚¬" ToolLoot" description="Read the basic terms for using ToolLoot online tools." icon={FileCheck}>
+  return <Page title="Terms of Use Ã¢â‚¬â€ ToolLoot" description="Read the basic terms for using ToolLoot online tools." icon={FileCheck}>
     <h2>Use of tools</h2><p>ToolLoot tools are provided for general-purpose use. Check the result before relying on it for important work.</p>
     <h2>Availability</h2><p>Tools may be updated, changed or temporarily unavailable as the platform develops.</p>
   </Page>;
@@ -164,15 +164,15 @@ function ImageCompressor() {
     }
     setResults(output);setBusy(false);
   }
-  return <Layout><Seo title="Image Compressor Ã¢â‚¬" Free Online | ToolLoot" description="Compress JPG, PNG and WebP images online for free in your browser. Reduce image size without uploading files."/>
+  return <Layout><Seo title="Image Compressor Ã¢â‚¬â€ Free Online | ToolLoot" description="Compress JPG, PNG and WebP images online for free in your browser. Reduce image size without uploading files."/>
     <main className="toolPage"><div className="container toolPageInner"><a className="backLink" href={link("/")}>Ã¢â€ Â Back to ToolLoot</a>
       <div className="toolTitle"><div className="toolIcon large"><ImageIcon size={24}/></div><div><h1>Image Compressor</h1><p>Reduce image file size directly in your browser. Your images stay on your device.</p></div></div>
       <div className={"compressor "+(drag?"dragging":"")} onDragOver={e=>{e.preventDefault();setDrag(true)}} onDragLeave={()=>setDrag(false)} onDrop={e=>{e.preventDefault();setDrag(false);addFiles(e.dataTransfer.files)}}><div className="dropZone"><Upload size={28}/><strong>{files.length?files.length+" image(s) selected":"Drop images here or choose files"}</strong><span>JPG, PNG, WebP and other browser-supported images Ã¢â‚¬Â¢ Batch processing</span><label className="fileButton">Choose files<input type="file" accept="image/*" multiple onChange={addFiles}/></label></div>
-        <div className="settings"><label>Output format<select value={format} onChange={e=>setFormat(e.target.value)}><option value="webp">WebP Ã¢â‚¬" smaller</option><option value="jpg">JPG Ã¢â‚¬" compatible</option><option value="png">PNG Ã¢â‚¬" lossless</option><option value="original">Original format</option></select></label>
+        <div className="settings"><label>Output format<select value={format} onChange={e=>setFormat(e.target.value)}><option value="webp">WebP Ã¢â‚¬â€ smaller</option><option value="jpg">JPG Ã¢â‚¬â€ compatible</option><option value="png">PNG Ã¢â‚¬â€ lossless</option><option value="original">Original format</option></select></label>
           <label>Quality <b>{Math.round(quality*100)}%</b><input type="range" min=".1" max="1" step=".05" value={quality} onChange={e=>setQuality(Number(e.target.value))}/><small>Quality affects JPG/WebP. PNG is lossless.</small></label>
           <label>Max width <b>{maxWidth?maxWidth+" px":"Original"}</b><input type="range" min="0" max="6000" step="100" value={maxWidth} onChange={e=>setMaxWidth(Number(e.target.value))}/></label>          <label>Target size <b>{targetKB?targetKB+" KB":"Off"}</b><input type="range" min="0" max="5000" step="100" value={targetKB} onChange={e=>setTargetKB(Number(e.target.value))}/><small>Finds the highest quality that stays under the target.</small></label>
           <div className="advancedRow"><button type="button" className="smallControl" onClick={()=>setRotate((rotate+90)%360)}><RotateCw size={15}/> Rotate {rotate}Â°</button><button type="button" className={"smallControl "+(flip?"selected":"")} onClick={()=>setFlip(!flip)}><FlipHorizontal2 size={15}/> Flip</button></div>          <button className="primaryButton" disabled={!files.length||busy} onClick={compress}>{busy?"Compressing "+progress+"%":"Compress images"}</button></div></div>
-      {files.length>0&&<div className="selectedFiles"><div className="sectionHead"><div><h2>Selected images</h2><p>{files.length} ready to process</p></div><button className="textButton" onClick={()=>{setFiles([]);setResults([])}}>Clear all</button></div><div className="selectedGrid">{files.map(file=><div className="selectedItem" key={file.name}><img src={URL.createObjectURL(file)} alt=""/><div><strong>{file.name}</strong><span>{formatBytes(file.size)}</span></div><button onClick={()=>removeFile(file.name)} aria-label={"Remove "+file.name}><Trash2 size={15}/></button></div>)}</div></div>}      {results.length>0&&<div className="results"><h2>Preview & Comparison</h2>{results.map(item=><div className="comparisonCard" key={item.name}><div className="previewGrid"><div><span className="previewLabel">Original</span><img src={item.originalUrl} alt={"Original "+item.name}/><b>{formatBytes(item.original)}</b></div><div><span className="previewLabel">Compressed</span><img src={item.url} alt={"Compressed "+item.name}/><b>{formatBytes(item.blob.size)}</b></div></div><div className="compareMeta"><strong>{item.name}</strong><span>{item.width} Ãƒ- {item.height} Ã¢â‚¬Â¢ {item.original>item.blob.size?Math.round((1-item.blob.size/item.original)*100)+"% smaller":"No size reduction"}</span><a className="downloadButton" href={item.url} download={item.name}><Download size={17}/>Download</a></div></div>)}</div>}
+      {files.length>0&&<div className="selectedFiles"><div className="sectionHead"><div><h2>Selected images</h2><p>{files.length} ready to process</p></div><button className="textButton" onClick={()=>{setFiles([]);setResults([])}}>Clear all</button></div><div className="selectedGrid">{files.map(file=><div className="selectedItem" key={file.name}><img src={URL.createObjectURL(file)} alt=""/><div><strong>{file.name}</strong><span>{formatBytes(file.size)}</span></div><button onClick={()=>removeFile(file.name)} aria-label={"Remove "+file.name}><Trash2 size={15}/></button></div>)}</div></div>}      {results.length>0&&<div className="results"><h2>Preview & Comparison</h2>{results.map(item=><div className="comparisonCard" key={item.name}><div className="previewGrid"><div><span className="previewLabel">Original</span><img src={item.originalUrl} alt={"Original "+item.name}/><b>{formatBytes(item.original)}</b></div><div><span className="previewLabel">Compressed</span><img src={item.url} alt={"Compressed "+item.name}/><b>{formatBytes(item.blob.size)}</b></div></div><div className="compareMeta"><strong>{item.name}</strong><span>{item.width} Ãƒâ€” {item.height} Ã¢â‚¬Â¢ {item.original>item.blob.size?Math.round((1-item.blob.size/item.original)*100)+"% smaller":"No size reduction"}</span><a className="downloadButton" href={item.url} download={item.name}><Download size={17}/>Download</a></div></div>)}</div>}
       <div className="privacyNote"><SlidersHorizontal size={17}/><span>Compression runs locally in your browser. No upload or server is required.</span></div>
     </div></main>
   </Layout>;
