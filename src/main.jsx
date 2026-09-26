@@ -155,7 +155,8 @@ function ContactPage() {
 }
 function ImageCompressor() {
   const defaults={quality:0.8,maxWidth:0,format:"webp",targetKB:0,rotate:0,flip:false};
-  const [items,setItems]=useState([]),[busy,setBusy]=useState(false),[progress,setProgress]=useState(0),[drag,setDrag]=useState(false);
+  const [items,setItems]=useState([]),[busy,setBusy]=useState(false),[progress,setProgress]=useState(0),[drag,setDrag]=useState(false),[active,setActive]=useState(0);
+  const item=items[active]||null;
   const keyFor=file=>"toolloot:image-settings:"+file.name+":"+file.size+":"+file.lastModified;
   const remembered=file=>{try{return {...defaults,...JSON.parse(localStorage.getItem(keyFor(file))||"{}")}}catch{return {...defaults}}};
   const makeItem=file=>({id:crypto.randomUUID(),file,preview:URL.createObjectURL(file),settings:remembered(file),result:null});
