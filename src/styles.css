@@ -310,3 +310,33 @@ footer{box-shadow:0 -2px 14px rgba(15,23,42,.04)}
   .toolGrid{grid-template-columns:repeat(5,minmax(0,1fr))}
 }
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}}
+/* Image tool suite */
+.imageToolShell{border:1px solid var(--app-border,#e5e7eb);border-radius:16px;background:var(--app-surface,#fff);box-shadow:0 8px 30px rgba(15,23,42,.06);padding:20px;margin-top:18px}
+.imageToolShell .dropZone{min-height:190px}
+.toolControls{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;padding:18px 0}
+.toolControls label{display:flex;flex-direction:column;gap:7px;font-size:12px;font-weight:700;color:#374151}
+.toolControls input[type=number],.toolControls select{height:40px;border:1px solid #d1d5db;border-radius:9px;padding:0 10px;background:#fff;color:#111827}
+.toolControls input[type=range]{width:100%}
+.checkLine{flex-direction:row!important;align-items:center;padding-top:26px}
+.batchActions{display:flex;flex-wrap:wrap;gap:9px;padding:8px 0 16px}
+.batchList{display:grid;gap:8px}
+.batchItem{display:flex;align-items:center;gap:12px;border:1px solid #e5e7eb;border-radius:11px;padding:9px;background:#fafafa}
+.batchItem img{width:58px;height:58px;object-fit:cover;border-radius:8px;background:#f1f5f9}
+.batchItem>div{min-width:0;flex:1;display:flex;flex-direction:column;gap:3px}
+.batchItem strong{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.batchItem span{font-size:11px;color:#6b7280}
+.batchItem em{font-size:11px;color:#b91c1c;font-style:normal}
+.batchItem .downloadButton{flex:0 0 auto;padding:8px}
+.dark .imageToolShell{background:#111318;border-color:#30343c}
+.dark .toolControls label{color:#d1d5db}
+.dark .toolControls input[type=number],.dark .toolControls select{background:#171a20;border-color:#3b404a;color:#f3f4f6}
+.dark .batchItem{background:#171a20;border-color:#30343c}
+@media(max-width:760px){
+ .imageToolShell{padding:12px;border-radius:13px}
+ .imageToolShell .dropZone{min-height:165px}
+ .toolControls{grid-template-columns:1fr 1fr;gap:10px}
+ .batchActions{display:grid;grid-template-columns:1fr 1fr}
+ .batchActions .textButton{grid-column:1/-1}
+ .batchItem{padding:8px;gap:8px}
+ .batchItem img{width:52px;height:52px}
+}

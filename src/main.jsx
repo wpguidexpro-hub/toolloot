@@ -12,6 +12,7 @@ import { saveAs } from "file-saver";
 import { get, set } from "idb-keyval";
 import "sweetalert2/dist/sweetalert2.min.css";
 import "./styles.css";
+import { imageToolMeta, ImageBatchTool, ExactSizeCompressor, ImageToolGuide } from "./imageTools.jsx";
 
 const BASE = import.meta.env.BASE_URL;
 const link = (path = "") => BASE + path.replace(/^\//, "");
@@ -24,7 +25,8 @@ const categories = [
   {name:"Calculators", icon:Calculator, path:"/categories/calculators"}
 ];
 const tools = [
-  { id:"image-compressor", name:"Image Compressor", description:"Compress JPG, PNG and WebP images in your browser.", category:"Images", path:"/tools/image-compressor" }
+  {id:"image-compressor",name:"Image Compressor",description:"Compress JPG, PNG and WebP images in your browser.",category:"Images",path:"/tools/image-compressor"},
+  ...Object.entries(imageToolMeta).map(([id,m])=>({id,name:m.title,description:m.description,category:"Images",path:"/tools/"+id}))
 ];
 
 function formatBytes(bytes) {
@@ -162,7 +164,7 @@ function CategoryPage({categoryName,slug}) {
   </Page>;
 }
 function HowToUsePage() {
-  const guides = [{id:"image-compressor",title:"Image Compressor",icon:ImageIcon,desc:"Compress and resize multiple images with individual settings, previews and ZIP download."}];
+  const guides = [{id:"image-compressor",title:"Image Compressor",icon:ImageIcon,desc:"Compress and resize multiple images with individual settings, previews and ZIP download."},...Object.entries(imageToolMeta).map(([id,m])=>({id,title:m.title,icon:ImageIcon,desc:m.description}))];
   return <Page title="How to Use ToollooT" description="Getting started guide for ToollooT and step-by-step instructions for every tool." icon={FileText}>
     <div className="pageCards">
       <a className="infoCard" href="#getting-started"><Sparkles size={20}/><strong>Getting Started</strong><span>Learn the basic ToollooT workflow from choosing a tool to downloading your result.</span></a>
@@ -289,8 +291,11 @@ function Root(){
   const path=window.location.pathname.replace(/\/+$/,"")||"/";
   const local=path.replace(BASE.replace(/\/$/,""),"")||"/";
   if(local==="/tools/image-compressor")return <ImageCompressor/>;
+  if(local==="/tools/compress-to-size")return <ExactSizeCompressor link={link} Layout={Layout} Seo={Seo}/>;
+  if(local.startsWith("/tools/")){const id=local.split("/").pop();if(imageToolMeta[id])return <ImageBatchTool toolId={id} link={link} Layout={Layout} Seo={Seo}/>;}
   if(local==="/how-to-use")return <HowToUsePage/>;
   if(local==="/how-to-use/image-compressor")return <ImageCompressorGuide/>;
+  if(local.startsWith("/how-to-use/")){const id=local.split("/").pop();if(id==="compress-to-size"||imageToolMeta[id])return <ImageToolGuide toolId={id} link={link} Layout={Layout} Page={Page}/>;}
   if(local==="/categories")return <CategoriesPage/>;
   if(local==="/categories/ai")return <CategoryPage categoryName="AI & Smart" slug="ai"/>;
   if(local==="/categories/developer")return <CategoryPage categoryName="Developer" slug="developer"/>;

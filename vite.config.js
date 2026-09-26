@@ -5,7 +5,7 @@ import { resolve } from "node:path";
 
 const githubPagesSpaFallback = {
   name: "github-pages-spa-fallback",
-  closeBundle() {
+  writeBundle() {
     copyFileSync(resolve("dist/index.html"), resolve("dist/404.html"));
   }
 };
