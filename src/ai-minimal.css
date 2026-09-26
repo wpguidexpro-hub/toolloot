@@ -211,3 +211,9 @@ body:has(.compressWorkspace) .resultSummary strong{font-size:9px!important}
 body:has(.compressWorkspace) .resultSummary .downloadButton{min-height:23px!important;font-size:9px!important}
 body:has(.compressWorkspace) .workspaceMiniFooter{flex-basis:18px!important;height:18px!important;font-size:9px!important}
 }
+/* Timeline actions: Add more + Clear all together */
+body:has(.compressWorkspace) .timelineAddBar{align-items:center;gap:6px}
+body:has(.compressWorkspace) .timelineClearButton{display:inline-flex;align-items:center;justify-content:center;gap:4px;min-height:26px;padding:4px 10px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;color:#374151;font-size:10px;font-weight:700;cursor:pointer}
+body:has(.compressWorkspace) .timelineClearButton:disabled{opacity:.5;cursor:default}
+.dark body:has(.compressWorkspace) .timelineClearButton{background:#181b21;border-color:#30343c;color:#f3f4f6}
+@media(max-width:760px){body:has(.compressWorkspace) .timelineClearButton{min-height:23px;padding:3px 8px;font-size:9px}}
