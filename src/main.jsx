@@ -157,7 +157,7 @@ function ImageCompressor() {
       const blob=await new Promise((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(new Error("Compression failed")),type,quality));
       const ext=type==="image/jpeg"?"jpg":type.split("/")[1];
       output.push({name:file.name.replace(/\.[^.]+$/,"")+"-compressed."+ext,blob,original:file.size,width:canvas.width,height:canvas.height,url:URL.createObjectURL(blob),originalUrl:url});
-      URL.revokeObjectURL(url);
+      // Keep the original preview URL alive until results are cleared.
     }
     setResults(output);setBusy(false);
   }
