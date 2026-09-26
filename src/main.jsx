@@ -92,7 +92,7 @@ function Layout({ children }) {
   }, [dark]);
   useEffect(() => {
     if ("serviceWorker" in navigator) navigator.serviceWorker.register(link("/sw.js")).catch(()=>{});
-    const handler = e => { e.preventDefault(); setInstallPrompt(e); };
+    const handler = e => { setInstallPrompt(e); };
     const installedHandler = () => setInstallPrompt(null);
     window.addEventListener("beforeinstallprompt", handler);
     window.addEventListener("appinstalled", installedHandler);
