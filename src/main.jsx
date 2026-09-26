@@ -45,25 +45,25 @@ function Seo({ title, description }) {
     canonical.href = "https://wpguidexpro-hub.github.io/toolloot" + (window.location.pathname.split("/toolloot")[1] || "/");
     let schema = document.getElementById("toolloot-schema");
     if (!schema) { schema=document.createElement("script"); schema.id="toolloot-schema"; schema.type="application/ld+json"; document.head.appendChild(schema); }
-    schema.textContent = JSON.stringify({"@context":"https://schema.org","@type":"WebSite","name":"ToolLoot","url":"https://wpguidexpro-hub.github.io/toolloot/","description":description});
+    schema.textContent = JSON.stringify({"@context":"https://schema.org","@type":"WebSite","name":"ToollooT","url":"https://wpguidexpro-hub.github.io/toolloot/","description":description});
   }, [title, description]);
   return null;
 }
 function ToolLootIcon({ className="" }) {
-  return <img className={className} src={link("/favicon.png")} alt="ToolLoot" aria-hidden="true" />;
+  return <img className={className} src={link("/favicon.png")} alt="ToollooT" aria-hidden="true" />;
 }
 function Header({ dark, setDark, canInstall, installApp }) {
   const [menu,setMenu] = useState(false);
   const nav = [["Tools","/"],["Categories","/categories"],["How to Use","/how-to-use"],["About","/about"]];
   return <header className="header">
     <a className="brand" href={link("/")} onClick={()=>setMenu(false)}>
-      <span className="brandIcon"><ToolLootIcon /></span><span>ToolLoot</span>
+      <span className="brandIcon"><ToolLootIcon /></span><span>ToollooT</span>
     </a>
     <nav className={menu ? "nav open" : "nav"}>
       {nav.map(([name,path])=><a key={name} href={link(path)} onClick={()=>setMenu(false)}>{name}</a>)}
     </nav>
     <div className="headerActions">
-      <button className="installButton" onClick={installApp} aria-label="Install ToolLoot"> <Download size={16}/> Install App</button>
+      <button className="installButton" onClick={installApp} aria-label="Install ToollooT"> <Download size={16}/> Install App</button>
       <button className="iconButton" onClick={()=>setDark(!dark)} aria-label="Toggle theme">{dark?<Sun size={18}/>:<Moon size={18}/>}</button>
       <button className="iconButton mobileMenu" onClick={()=>setMenu(!menu)} aria-label="Menu">{menu?<X size={19}/>:<Menu size={19}/>}</button>
     </div>
@@ -71,9 +71,9 @@ function Header({ dark, setDark, canInstall, installApp }) {
 }
 function Footer() {
   return <footer><div className="container footerInner">
-    <div><strong>ToolLoot</strong><span>Simple tools for everyday work.</span></div>
+    <div><strong>ToollooT</strong><span>Simple tools for everyday work.</span></div>
     <nav><a href={link("/about")}>About</a><a href={link("/privacy")}>Privacy</a><a href={link("/terms")}>Terms</a><a href={link("/contact")}>Contact</a></nav>
-    <small>(c) 2026 ToolLoot</small>
+    <small>(c) 2026 ToollooT</small>
   </div></footer>;
 }
 function Layout({ children }) {
@@ -98,7 +98,7 @@ function Layout({ children }) {
   }, []);
   const installApp = async () => {
     if (window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone) {
-      notify("info","ToolLoot is already installed"); return;
+      notify("info","ToollooT is already installed"); return;
     }
     if (!installPrompt) {
       notify("info","Use your browser's Install App option to install ToolLoot"); return;
@@ -107,7 +107,7 @@ function Layout({ children }) {
     await installPrompt.userChoice;
     setInstallPrompt(null);
   };
-  return <div className={dark ? "app dark" : "app"}><Header dark={dark} setDark={setDark} canInstall={!!installPrompt} installApp={installApp}/>{children}<Footer/></div>;
+  return <div className={dark ? "app dark" : "app"}><Header dark={dark} setDark={setDark} canInstall={!!installPrompt} installApp={installApp}/>{children}<Footer/><nav className="mobileBottomNav" aria-label="Mobile navigation"><a href={link("/")}><HomeIcon size={19}/><span>Home</span></a><a href={link("/categories")}><Boxes size={19}/><span>Categories</span></a><a href={link("/how-to-use")}><FileText size={19}/><span>How to Use</span></a><a href={link("/about")}><HomeIcon size={19}/><span>About</span></a></nav></div>;
 }
 function ToolCard({ tool }) {
   const openTool=async()=>{const recent=(await get("toolloot:recent-tools"))||[];const next=[tool.id,...recent.filter(id=>id!==tool.id)].slice(0,6);await set("toolloot:recent-tools",next)};
