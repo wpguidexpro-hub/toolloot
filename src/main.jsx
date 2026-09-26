@@ -256,8 +256,6 @@ function ImageCompressor() {
             <label>Format<select value={item.settings.format} onChange={e=>update(item.id,"format",e.target.value)}><option value="webp">WebP</option><option value="jpg">JPG</option><option value="png">PNG</option><option value="avif">AVIF</option><option value="original">Original</option></select></label>
             {item.settings.format!=="png"&&<label>Quality <b>{Math.round(item.settings.quality*100)}%</b><input type="range" min=".1" max="1" step=".05" value={item.settings.quality} onChange={e=>update(item.id,"quality",Number(e.target.value))}/></label>}
             {item.settings.format==="png"&&<div className="settingHint">Quality is hidden because PNG uses lossless encoding.</div>}
-            <label>Width <b>{item.settings.maxWidth?item.settings.maxWidth+" px":"Original"}</b><input type="range" min="0" max="8000" step="100" value={item.settings.maxWidth} onChange={e=>update(item.id,"maxWidth",Number(e.target.value))}/></label>
-            {item.settings.format!=="png"&&<label>Target size <b>{item.settings.targetKB?item.settings.targetKB+" KB":"Off"}</b><input type="range" min="0" max="5000" step="100" value={item.settings.targetKB} onChange={e=>update(item.id,"targetKB",Number(e.target.value))}/></label>}
             <div className="advancedRow"><button className="smallControl" onClick={()=>{Object.entries(defaults).forEach(([k,v])=>update(item.id,k,v))}}>Reset</button></div>
             <button className="primaryButton compressSelected" disabled={busy} onClick={()=>compressSingle(item.id)}><Gauge size={16}/> {busy?"Compressing "+progress+"%":item.result?"Re-compress":"Compress image"}</button>
           </div></div>}
