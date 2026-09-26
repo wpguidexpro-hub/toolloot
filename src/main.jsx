@@ -239,11 +239,23 @@ function ImageCompressor() {
     canvas.width=turn%180?h:w;canvas.height=turn%180?w:h;const ctx=canvas.getContext("2d");ctx.imageSmoothingQuality="high";ctx.save();ctx.translate(canvas.width/2,canvas.height/2);ctx.rotate(turn*Math.PI/180);ctx.scale(s.flip?-1:1,1);ctx.drawImage(img,-w/2,-h/2,w,h);ctx.restore();
     const type=typeFor(item);let blob=await encode(canvas,type,s.quality);
     if(s.targetKB>0&&/jpeg|webp|avif/.test(blob.type)&&blob.size>s.targetKB*1024){let lo=.1,hi=s.quality,best=blob;for(let n=0;n<9;n++){const mid=(lo+hi)/2,b=await encode(canvas,type,mid);if(b.size<=s.targetKB*1024){best=b;lo=mid}else hi=mid}blob=best;}
+    if(blob.size>=item.file.size){
+      return {name:item.file.name,blob:item.file,width:img.width,height:img.height,url:item.preview,original:item.file.size,originalUrl:item.preview,settings:{...s},unchanged:true};
+    }
     const ext=type==="image/jpeg"?"jpg":type.split("/")[1]||"bin",name=item.file.name.replace(/\.[^.]+$/,"")+"-compressed."+ext;
-    return {name,blob,width:canvas.width,height:canvas.height,url:URL.createObjectURL(blob),original:item.file.size,originalUrl:item.preview,settings:{...s}};
+    return {name,blob,width:canvas.width,height:canvas.height,url:URL.createObjectURL(blob),original:item.file.size,originalUrl:item.preview,settings:{...s},unchanged:false};
   };
   const compressAll=async()=>{if(!items.length||busy)return;setBusy(true);setProgress(0);const next=[];for(let i=0;i<items.length;i++){try{next.push(await compressOne(items[i]));}catch(e){notify("error","Could not compress "+items[i].file.name)}setProgress(Math.round(((i+1)/items.length)*100));}setItems(prev=>prev.map(x=>{const r=next.find(n=>n.originalUrl===x.preview);return r?{...x,result:r}:x}));setBusy(false);notify("success","Batch compression complete");};
   const compressSingle=async id=>{const item=items.find(x=>x.id===id);if(!item)return;try{const r=await compressOne(item);setItems(prev=>prev.map(x=>x.id===id?{...x,result:r}:x));notify("success","Image compressed");}catch(e){notify("error","Compression failed");}};
+  useEffect(()=>{
+    if(!item)return;
+    let cancelled=false;
+    const timer=setTimeout(async()=>{
+      try{const r=await compressOne(item);if(!cancelled)setItems(prev=>prev.map(x=>x.id===item.id?{...x,result:r}:x));}
+      catch{}
+    },120);
+    return()=>{cancelled=true;clearTimeout(timer);};
+  },[item?.id,item?.settings.format,item?.settings.quality]);
   const downloadZip=async()=>{const ready=items.filter(x=>x.result);if(!ready.length)return;const zip=new JSZip();ready.forEach(x=>zip.file(x.result.name,x.result.blob));saveAs(await zip.generateAsync({type:"blob"}),"toolloot-compressed-images.zip");notify("success","ZIP download ready");};
   return <Layout><Seo title="Image Compressor - Free Online | ToollooT" description="Compress multiple images with individual settings directly in your browser."/>
     <main className="toolPage"><div className="container toolPageInner"><a className="backLink" href={link("/")}>Back to ToollooT</a>
