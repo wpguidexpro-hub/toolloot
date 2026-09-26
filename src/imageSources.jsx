@@ -21,12 +21,12 @@ export function ImageSourcePicker({onFiles,accept="image/*",multiple=true,label=
   <div className="sourcePickerChoose"><button type="button" className="sourceChooseButton" onClick={()=>setOpen(x=>!x)}><FolderOpen size={18}/><span>{label}</span><ChevronDown size={16}/></button>
    {open&&<div className="sourceMenu">
     <button type="button" onClick={()=>choose(input)}><FolderOpen/><span>Device files</span><small>JPG, PNG, WebP, GIF, HEIC…</small></button>
-    <button type="button" onClick={()=>choose(camera)}><Camera/><span>Camera</span><small>Take a new photo</small></button>
+    <button type="button" className="sourceMobileOnly" onClick={()=>choose(camera)}><Camera/><span>Camera</span><small>Take a new photo</small></button>
     <button type="button" onClick={paste}><Clipboard/><span>Clipboard / Paste</span><small>Paste copied images</small></button>
     <button type="button" onClick={url}><Link2/><span>Image URL</span><small>Direct CORS image URL</small></button>
-    <button type="button" onClick={()=>choose(folder)}><FolderOpen/><span>Folder</span><small>Import an image folder</small></button>
+    <button type="button" className="sourceDesktopOnly" onClick={()=>choose(folder)}><FolderOpen/><span>Folder</span><small>Import an image folder</small></button>
     <button type="button" onClick={()=>choose(zip)}><FolderArchive/><span>ZIP Import</span><small>Extract images locally</small></button>
-    <button type="button" onClick={screenShot}><MonitorUp/><span>Screenshot</span><small>Capture your screen</small></button>
+    <button type="button" className="sourceDesktopOnly" onClick={screenShot}><MonitorUp/><span>Screenshot</span><small>Capture your screen</small></button>
     <button type="button" onClick={()=>choose(input)}><Plus/><span>Add more images</span><small>Append to current batch</small></button>
    </div>}
   </div>
