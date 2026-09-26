@@ -154,44 +154,59 @@ function ContactPage() {
   </Page>;
 }
 function ImageCompressor() {
-  const [files,setFiles]=useState([]),[quality,setQuality]=useState(.72),[maxWidth,setMaxWidth]=useState(0),[format,setFormat]=useState("webp"),[targetKB,setTargetKB]=useState(0),[rotate,setRotate]=useState(0),[flip,setFlip]=useState(false),[results,setResults]=useState([]),[busy,setBusy]=useState(false),[progress,setProgress]=useState(0),[drag,setDrag]=useState(false);
-  useEffect(()=>()=>results.forEach(r=>{URL.revokeObjectURL(r.url);URL.revokeObjectURL(r.originalUrl)}),[results]);
-  const addFiles=e=>{const picked=Array.from(e.target.files||[]).filter(f=>f.type.startsWith("image/"));setFiles(picked);setResults([]);setProgress(0);if(picked.length)notify("success",`${picked.length} image${picked.length>1?"s":""} ready`);};
-  const removeFile=name=>setFiles(f=>f.filter(x=>x.name!==name));
+  const defaults={quality:0.8,maxWidth:0,format:"webp",targetKB:0,rotate:0,flip:false};
+  const [items,setItems]=useState([]),[busy,setBusy]=useState(false),[progress,setProgress]=useState(0),[drag,setDrag]=useState(false);
+  const keyFor=file=>"toolloot:image-settings:"+file.name+":"+file.size+":"+file.lastModified;
+  const remembered=file=>{try{return {...defaults,...JSON.parse(localStorage.getItem(keyFor(file))||"{}")}}catch{return {...defaults}}};
+  const makeItem=file=>({id:crypto.randomUUID(),file,preview:URL.createObjectURL(file),settings:remembered(file),result:null});
+  const addFiles=input=>{const picked=Array.from(input||[]).filter(f=>f.type.startsWith("image/"));if(!picked.length)return;setItems(prev=>[...prev,...picked.map(makeItem)]);setProgress(0);notify("success",picked.length+" image"+(picked.length>1?"s":"")+" added");};
+  const removeItem=id=>setItems(prev=>{const x=prev.find(i=>i.id===id);if(x)URL.revokeObjectURL(x.preview);if(x?.result?.url)URL.revokeObjectURL(x.result.url);return prev.filter(i=>i.id!==id)});
+  const clearAll=()=>{items.forEach(x=>{URL.revokeObjectURL(x.preview);if(x.result?.url)URL.revokeObjectURL(x.result.url)});setItems([]);setProgress(0);};
+  const update=(id,key,value)=>setItems(prev=>prev.map(x=>{if(x.id!==id)return x;const settings={...x.settings,[key]:value};try{localStorage.setItem(keyFor(x.file),JSON.stringify(settings))}catch{}return {...x,settings,result:null}}));
+  const applyAll=key=>{const source=items[0]?.settings;if(!source)return;setItems(prev=>prev.map(x=>({...x,settings:{...x.settings,[key]:source[key]},result:null})));notify("success","Applied "+key+" to all images");};
+  const applySettingsToAll=source=>{if(!source)return;setItems(prev=>prev.map(x=>{try{localStorage.setItem(keyFor(x.file),JSON.stringify(source))}catch{}return {...x,settings:{...source},result:null}}));notify("success","First image settings applied to all");};
   const encode=(canvas,type,q)=>new Promise((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(new Error("Encoding failed")),type,q));
-  const outputType=()=>format==="jpg"?"image/jpeg":format==="png"?"image/png":format==="avif"?"image/avif":format==="original"?null:"image/webp";
-  async function downloadZip(){
-    if(!results.length)return; const zip=new JSZip(); results.forEach(item=>zip.file(item.name,item.blob));
-    const blob=await zip.generateAsync({type:"blob"}); saveAs(blob,"toolloot-compressed-images.zip"); notify("success","ZIP download ready");
-  }
-  async function compress(){
-    if(!files.length)return; setBusy(true); setProgress(0); const output=[];
-    for(const file of files){
-      const url=URL.createObjectURL(file),img=new Image(); img.src=url;
-      await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=reject;});
-      const scale=maxWidth&&img.width>maxWidth?maxWidth/img.width:1,w=Math.max(1,Math.round(img.width*scale)),h=Math.max(1,Math.round(img.height*scale)),turn=rotate%360,canvas=document.createElement("canvas");
-      canvas.width=turn%180?h:w;canvas.height=turn%180?w:h;
-      const ctx=canvas.getContext("2d");ctx.imageSmoothingQuality="high";ctx.save();ctx.translate(canvas.width/2,canvas.height/2);ctx.rotate(turn*Math.PI/180);ctx.scale(flip?-1:1,1);ctx.drawImage(img,-w/2,-h/2,w,h);ctx.restore();
-      const type=outputType()||file.type||"image/webp";
-      let blob=await encode(canvas,type,quality);if(targetKB>0&&/jpeg|webp|avif/.test(blob.type)&&blob.size>targetKB*1024){let lo=.1,hi=quality,best=blob;for(let n=0;n<8;n++){const mid=(lo+hi)/2,b=await encode(canvas,blob.type,mid);if(b.size<=targetKB*1024){best=b;lo=mid}else hi=mid}blob=best}
-      const ext=type==="image/jpeg"?"jpg":type.split("/")[1];
-      output.push({name:file.name.replace(/\.[^.]+$/,"")+"-compressed."+ext,blob,original:file.size,width:canvas.width,height:canvas.height,url:URL.createObjectURL(blob),originalUrl:url});setProgress(Math.round((output.length/files.length)*100));
-      // Keep the original preview URL alive until results are cleared.
-    }
-    setResults(output);setBusy(false);notify("success",output.length+" image"+(output.length>1?"s":"")+" compressed successfully");
-  }
-  return <Layout><Seo title="Image Compressor - Free Online | ToolLoot" description="Compress JPG, PNG and WebP images online for free in your browser. Reduce image size without uploading files."/>
+  const typeFor=(item)=>item.settings.format==="jpg"?"image/jpeg":item.settings.format==="png"?"image/png":item.settings.format==="avif"?"image/avif":item.settings.format==="original"?item.file.type||"image/webp":"image/webp";
+  const compressOne=async item=>{
+    const s=item.settings,url=item.preview,img=new Image();img.src=url;
+    await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=reject;});
+    const scale=s.maxWidth&&img.width>s.maxWidth?s.maxWidth/img.width:1,w=Math.max(1,Math.round(img.width*scale)),h=Math.max(1,Math.round(img.height*scale)),turn=s.rotate%360,canvas=document.createElement("canvas");
+    canvas.width=turn%180?h:w;canvas.height=turn%180?w:h;const ctx=canvas.getContext("2d");ctx.imageSmoothingQuality="high";ctx.save();ctx.translate(canvas.width/2,canvas.height/2);ctx.rotate(turn*Math.PI/180);ctx.scale(s.flip?-1:1,1);ctx.drawImage(img,-w/2,-h/2,w,h);ctx.restore();
+    const type=typeFor(item);let blob=await encode(canvas,type,s.quality);
+    if(s.targetKB>0&&/jpeg|webp|avif/.test(blob.type)&&blob.size>s.targetKB*1024){let lo=.1,hi=s.quality,best=blob;for(let n=0;n<9;n++){const mid=(lo+hi)/2,b=await encode(canvas,type,mid);if(b.size<=s.targetKB*1024){best=b;lo=mid}else hi=mid}blob=best;}
+    const ext=type==="image/jpeg"?"jpg":type.split("/")[1]||"bin",name=item.file.name.replace(/\.[^.]+$/,"")+"-compressed."+ext;
+    return {name,blob,width:canvas.width,height:canvas.height,url:URL.createObjectURL(blob),original:item.file.size,originalUrl:item.preview,settings:{...s}};
+  };
+  const compressAll=async()=>{if(!items.length||busy)return;setBusy(true);setProgress(0);const next=[];for(let i=0;i<items.length;i++){try{next.push(await compressOne(items[i]));}catch(e){notify("error","Could not compress "+items[i].file.name)}setProgress(Math.round(((i+1)/items.length)*100));}setItems(prev=>prev.map(x=>{const r=next.find(n=>n.originalUrl===x.preview);return r?{...x,result:r}:x}));setBusy(false);notify("success","Batch compression complete");};
+  const compressSingle=async id=>{const item=items.find(x=>x.id===id);if(!item)return;try{const r=await compressOne(item);setItems(prev=>prev.map(x=>x.id===id?{...x,result:r}:x));notify("success","Image compressed");}catch(e){notify("error","Compression failed");}};
+  const downloadZip=async()=>{const ready=items.filter(x=>x.result);if(!ready.length)return;const zip=new JSZip();ready.forEach(x=>zip.file(x.result.name,x.result.blob));saveAs(await zip.generateAsync({type:"blob"}),"toolloot-compressed-images.zip");notify("success","ZIP download ready");};
+  return <Layout><Seo title="Image Compressor - Free Online | ToolLoot" description="Compress JPG, PNG and WebP images online for free in your browser. Give every image its own quality, width and format settings."/>
     <main className="toolPage"><div className="container toolPageInner"><a className="backLink" href={link("/")}>Back to ToolLoot</a>
-      <div className="toolTitle"><div className="toolIcon large"><ImageIcon size={24}/></div><div><h1>Image Compressor</h1><p>Reduce image file size directly in your browser. Your images stay on your device.</p></div></div>
-      <div className={"compressor "+(drag?"dragging":"")} onDragOver={e=>{e.preventDefault();setDrag(true)}} onDragLeave={()=>setDrag(false)} onDrop={e=>{e.preventDefault();setDrag(false);addFiles(e.dataTransfer.files)}}><div className="dropZone"><Upload size={28}/><strong>{files.length?files.length+" image(s) selected":"Drop images here or choose files"}</strong><span>JPG, PNG, WebP and other browser-supported images | Batch processing</span><label className="fileButton">Choose files<input type="file" accept="image/*" multiple onChange={addFiles}/></label></div>
-        <div className="settings"><label>Output format<select value={format} onChange={e=>setFormat(e.target.value)}><option value="webp">WebP - smaller</option><option value="jpg">JPG - compatible</option><option value="png">PNG - lossless</option><option value="original">Original format</option></select></label>
-          <label>Quality <b>{Math.round(quality*100)}%</b><input type="range" min=".1" max="1" step=".05" value={quality} onChange={e=>setQuality(Number(e.target.value))}/><small>Quality affects JPG/WebP. PNG is lossless.</small></label>
-          <label>Max width <b>{maxWidth?maxWidth+" px":"Original"}</b><input type="range" min="0" max="6000" step="100" value={maxWidth} onChange={e=>setMaxWidth(Number(e.target.value))}/></label>          <label>Target size <b>{targetKB?targetKB+" KB":"Off"}</b><input type="range" min="0" max="5000" step="100" value={targetKB} onChange={e=>setTargetKB(Number(e.target.value))}/><small>Finds the highest quality that stays under the target.</small></label>
-          <div className="advancedRow"><button type="button" className="smallControl" onClick={()=>setRotate((rotate+90)%360)}><RotateCw size={15}/> Rotate {rotate} deg</button><button type="button" className={"smallControl "+(flip?"selected":"")} onClick={()=>setFlip(!flip)}><FlipHorizontal2 size={15}/> Flip</button></div>          <button className="primaryButton" disabled={!files.length||busy} onClick={compress}>{busy?"Compressing "+progress+"%":"Compress images"}</button></div></div>
-      {files.length>0&&<div className="selectedFiles"><div className="sectionHead"><div><h2>Selected images</h2><p>{files.length} ready to process</p></div><button className="textButton" onClick={()=>{setFiles([]);setResults([])}}>Clear all</button></div><div className="selectedGrid">{files.map(file=><div className="selectedItem" key={file.name}><img src={URL.createObjectURL(file)} alt=""/><div><strong>{file.name}</strong><span>{formatBytes(file.size)}</span></div><button onClick={()=>removeFile(file.name)} aria-label={"Remove "+file.name}><Trash2 size={15}/></button></div>)}</div></div>}      {results.length>0&&<div className="results"><div className="resultsHead"><h2>Preview & Comparison</h2><button className="secondaryButton" onClick={downloadZip}><DownloadCloud size={16}/> Download ZIP</button></div>{results.map(item=><div className="comparisonCard" key={item.name}><div className="previewGrid"><div><span className="previewLabel">Original</span><img src={item.originalUrl} alt={"Original "+item.name}/><b>{formatBytes(item.original)}</b></div><div><span className="previewLabel">Compressed</span><img src={item.url} alt={"Compressed "+item.name}/><b>{formatBytes(item.blob.size)}</b></div></div><div className="compareMeta"><strong>{item.name}</strong><span>{item.width} x {item.height} | {item.original>item.blob.size?Math.round((1-item.blob.size/item.original)*100)+"% smaller":"No size reduction"}</span><a className="downloadButton" href={item.url} download={item.name}><Download size={17}/>Download</a></div></div>)}</div>}
-      <div className="privacyNote"><SlidersHorizontal size={17}/><span>Compression runs locally in your browser. No upload or server is required.</span></div>
+      <div className="toolTitle"><div className="toolIcon large"><ImageIcon size={24}/></div><div><h1>Image Compressor</h1><p>ImageCompressor-style batch workflow: every image keeps its own settings, preview and result.</p></div></div>
+      <div className={"compressor perImageCompressor "+(drag?"dragging":"")} onDragOver={e=>{e.preventDefault();setDrag(true)}} onDragLeave={()=>setDrag(false)} onDrop={e=>{e.preventDefault();setDrag(false);addFiles(e.dataTransfer.files)}}><div className="dropZone"><Upload size={28}/><strong>{items.length?items.length+" image(s) ready":"Drop images here or choose files"}</strong><span>JPG, PNG, WebP, AVIF and other browser-supported images • No upload</span><label className="fileButton">Choose files<input type="file" accept="image/*" multiple onChange={e=>addFiles(e.target.files)}/></label></div>
+        <div className="batchBar"><button className="secondaryButton" disabled={!items.length} onClick={()=>applySettingsToAll(items[0]?.settings)}><Layers3 size={16}/> Apply first settings to all</button><button className="primaryButton" disabled={!items.length||busy} onClick={compressAll}>{busy?"Compressing "+progress+"%":"Compress all"}</button><button className="secondaryButton" disabled={!items.some(x=>x.result)} onClick={downloadZip}><DownloadCloud size={16}/> Download ZIP</button><button className="textButton" disabled={!items.length} onClick={clearAll}>Clear all</button></div></div>
+      {items.length>0&&<div className="perImageList"><div className="sectionHead"><div><h2>Images & individual settings</h2><p>Change one image without changing the others. Use Apply first settings to all only when needed.</p></div></div>
+        {items.map((item,index)=><ImageItem key={item.id} item={item} index={index} busy={busy} update={update} applyAll={applyAll} compressSingle={compressSingle} removeItem={removeItem}/>)}
+      </div>}
+      {items.some(x=>x.result)&&<div className="results"><div className="resultsHead"><h2>Compressed results</h2><button className="secondaryButton" onClick={downloadZip}><DownloadCloud size={16}/> Download ZIP</button></div></div>}
+      <div className="privacyNote"><Shield size={17}/><span>Everything is processed locally in your browser. Your images are not uploaded.</span></div>
     </div></main>
   </Layout>;
+}
+function ImageItem({item,index,busy,update,applyAll,compressSingle,removeItem}) {
+  const s=item.settings,r=item.result;
+  return <article className="imageItem"><div className="imageItemTop"><div className="imageIdentity"><span className="imageNumber">{index+1}</span><div><strong title={item.file.name}>{item.file.name}</strong><span>{formatBytes(item.file.size)}</span></div></div><button className="iconOnly" onClick={()=>removeItem(item.id)} aria-label={"Remove "+item.file.name}><Trash2 size={16}/></button></div>
+    <div className="imageWorkGrid"><div className="imagePreviewPane"><span className="previewLabel">Original preview</span><img src={item.preview} alt={item.file.name}/><div className="previewStats">{item.file.type||"image"} • {item.file.size?formatBytes(item.file.size):"0 B"}</div></div>
+      <div className="imageSettingsPane"><div className="settingsHeader"><strong>Individual settings</strong><button className="smallControl" onClick={()=>applyAll("format")}>Use first format</button></div>
+        <label>Format<select value={s.format} onChange={e=>update(item.id,"format",e.target.value)}><option value="webp">WebP</option><option value="jpg">JPG</option><option value="png">PNG</option><option value="avif">AVIF</option><option value="original">Original</option></select></label>
+        <label>Quality <b>{Math.round(s.quality*100)}%</b><input type="range" min=".1" max="1" step=".05" value={s.quality} onChange={e=>update(item.id,"quality",Number(e.target.value))}/><small>For JPG/WebP/AVIF. PNG uses lossless encoding.</small></label>
+        <label>Width <b>{s.maxWidth?s.maxWidth+" px":"Original"}</b><input type="range" min="0" max="8000" step="100" value={s.maxWidth} onChange={e=>update(item.id,"maxWidth",Number(e.target.value))}/></label>
+        <label>Target size <b>{s.targetKB?s.targetKB+" KB":"Off"}</b><input type="range" min="0" max="5000" step="100" value={s.targetKB} onChange={e=>update(item.id,"targetKB",Number(e.target.value))}/></label>
+        <div className="advancedRow"><button className={"smallControl "+(s.rotate?"selected":"")} onClick={()=>update(item.id,"rotate",(s.rotate+90)%360)}><RotateCw size={15}/> {s.rotate}°</button><button className={"smallControl "+(s.flip?"selected":"")} onClick={()=>update(item.id,"flip",!s.flip)}><FlipHorizontal2 size={15}/> Flip</button><button className="smallControl" onClick={()=>{update(item.id,"quality",.8);update(item.id,"maxWidth",0);update(item.id,"format","webp");update(item.id,"targetKB",0);update(item.id,"rotate",0);update(item.id,"flip",false)}}>Reset</button></div>
+        <div className="imageActions"><button className="primaryButton" disabled={busy} onClick={()=>compressSingle(item.id)}><Gauge size={16}/> {r?"Re-compress":"Compress"}</button>{r&&<a className="downloadButton" href={r.url} download={r.name}><Download size={16}/> Download</a>}</div>
+      </div></div>
+    {r&&<div className="itemResult"><div className="miniResultPreview"><span className="previewLabel">Compressed preview</span><img src={r.url} alt={"Compressed "+item.file.name}/></div><div className="resultInfo"><strong>{r.name}</strong><span>{r.width} × {r.height} • {formatBytes(r.original)} → {formatBytes(r.blob.size)} • {r.original>r.blob.size?Math.round((1-r.blob.size/r.original)*100)+"% smaller":"No size reduction"}</span><button className="textButton" onClick={()=>{}}>Settings stay with this image</button></div></div>}
+  </article>;
 }
 function Root(){
   const path=window.location.pathname.replace(/\/+$/,"")||"/";
