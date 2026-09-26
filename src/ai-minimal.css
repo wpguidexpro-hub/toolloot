@@ -15,7 +15,7 @@
 .contextSettings .aiSettingsIntro{display:none!important}
 .aiCompressorControls{margin-top:10px!important;padding:12px!important;border:1px solid #e5e7eb;border-radius:16px;background:#fff}
 .qualityControl{display:grid!important;grid-template-columns:auto auto;gap:7px 10px;align-items:center}
-.qualityControl>div{display:contents}.qualityControl input{grid-column:1/-1}.qualityControl small{display:none!important}
+.qualityControl>div:first-child{display:contents}.qualityControl input{grid-column:1/-1}.qualityControl small{display:none!important}.realtimeSize{grid-column:1/-1;display:flex!important;align-items:center;gap:8px;margin-top:2px;padding:7px 9px;border:1px solid #e5e7eb;border-radius:9px;background:#f8fafc;font-size:11px}.realtimeSize span{color:#6b7280}.realtimeSize strong{font-size:12px}.realtimeSize em{font-style:normal;color:#6b7280;margin-left:auto}.dark .realtimeSize{background:#181b21;border-color:#30343c}.dark .realtimeSize span,.dark .realtimeSize em{color:#9ca3af}
 .aiCompressorControls .aiCompressButton{margin-top:8px}
 .resultSummary{margin-top:10px!important;padding:12px!important;border-radius:16px!important}
 .dark .aiPreviewCard,.dark .aiQuickControls,.dark .aiCompressorControls{background:#101217;border-color:#30343c}
