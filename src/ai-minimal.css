@@ -50,24 +50,24 @@
 body:has(.compressWorkspace){overflow:hidden!important}
 body:has(.compressWorkspace) .app{height:100dvh!important;min-height:0!important;overflow:hidden!important;display:flex;flex-direction:column}
 body:has(.compressWorkspace) .header{flex:0 0 56px!important}
-body:has(.compressWorkspace) .toolPage{flex:1 1 auto!important;min-height:0!important;height:auto!important;overflow:hidden!important}
-body:has(.compressWorkspace) .toolPageInner{height:100%!important;min-height:0!important;box-sizing:border-box;padding-top:8px!important;padding-bottom:8px!important;display:flex;flex-direction:column;overflow:hidden!important}
+body:has(.compressWorkspace) .toolPage{flex:1 1 auto!important;min-height:0!important;height:auto!important;overflow:auto!important}
+body:has(.compressWorkspace) .toolPageInner{min-height:0!important;box-sizing:border-box;padding-top:8px!important;padding-bottom:8px!important;display:flex;flex-direction:column}
 body:has(.compressWorkspace) .backLink{margin-bottom:5px!important;font-size:11px!important}
 body:has(.compressWorkspace) .compactToolTitle{margin-bottom:5px!important;gap:8px!important;min-height:34px}
 body:has(.compressWorkspace) .compactToolTitle .toolIcon{width:32px!important;height:32px!important}
 body:has(.compressWorkspace) .compactToolTitle h1{font-size:17px!important;line-height:1.1!important}
 body:has(.compressWorkspace) .compactToolTitle p{font-size:10px!important;margin-top:2px!important}
-body:has(.compressWorkspace) .compressWorkspace{flex:1 1 auto!important;min-height:0!important;height:auto!important;margin:2px 0 0!important;display:flex!important;flex-direction:column!important;overflow:hidden!important}
+body:has(.compressWorkspace) .compressWorkspace{flex:1 1 auto!important;min-height:0!important;height:auto!important;margin:2px 0 0!important;display:flex!important;flex-direction:column!important;overflow:visible!important}
 body:has(.compressWorkspace) .imageTimeline{flex:0 0 48px!important;height:48px!important;margin:0 0 3px!important;padding:3px!important}
 body:has(.compressWorkspace) .timelineThumb{width:42px!important;height:42px!important;flex-basis:42px!important}
 body:has(.compressWorkspace) .timelineArrow{height:30px!important;width:27px!important}
 body:has(.compressWorkspace) .timelineAddBar{flex:0 0 28px!important;height:28px!important;margin:1px 0 3px!important}
 body:has(.compressWorkspace) .timelineAddBar .sourceChooseButton{min-height:27px!important;padding:4px 9px!important;font-size:10px!important}
-body:has(.compressWorkspace) .compressWorkspace .editorPanel{flex:1 1 auto!important;min-height:0!important;height:auto!important;display:flex!important;flex-direction:column!important;overflow:hidden!important}
-body:has(.compressWorkspace) .unifiedPreview{flex:1 1 auto!important;min-height:0!important;height:auto!important;padding:3px!important;border-radius:9px!important;display:flex!important;flex-direction:column!important;overflow:hidden!important}
+body:has(.compressWorkspace) .compressWorkspace .editorPanel{flex:1 1 auto!important;min-height:0!important;height:auto!important;display:flex!important;flex-direction:column!important;overflow:visible!important}
+body:has(.compressWorkspace) .unifiedPreview{flex:0 0 auto!important;min-height:0!important;height:auto!important;padding:3px!important;border-radius:9px!important;display:flex!important;flex-direction:column!important;overflow:hidden!important}
 body:has(.compressWorkspace) .unifiedPreview .previewToolbar{flex:0 0 24px!important;height:24px!important;padding:0 4px!important;font-size:10px!important}
 body:has(.compressWorkspace) .unifiedPreview .previewToolbar .iconOnly{width:23px!important;height:23px!important}
-body:has(.compressWorkspace) .unifiedCanvas{flex:1 1 auto!important;min-height:0!important;height:auto!important;max-height:none!important;border-radius:8px!important}
+body:has(.compressWorkspace) .unifiedCanvas{flex:0 0 clamp(210px,calc(100dvh - 430px),390px)!important;height:clamp(210px,calc(100dvh - 430px),390px)!important;max-height:clamp(210px,calc(100dvh - 430px),390px)!important;border-radius:8px!important}
 body:has(.compressWorkspace) .unifiedCanvas>img{max-height:100%!important;max-width:100%!important}
 body:has(.compressWorkspace) .unifiedGeneration{padding:8px!important}
 body:has(.compressWorkspace) .unifiedGeneration .generationImage{width:min(42%,300px)!important;height:45%!important}
@@ -88,7 +88,7 @@ body:has(.compressWorkspace) .resultSummary strong{font-size:9px!important}
 body:has(.compressWorkspace) .resultSummary .downloadButton{min-height:24px!important;padding:3px 7px!important;font-size:9px!important;margin-left:auto!important}
 body:has(.compressWorkspace) .workspaceMiniFooter{flex:0 0 23px!important;height:23px!important;margin-top:3px!important;font-size:9px!important}
 body:has(.compressWorkspace) .workspaceMiniFooter .textButton{font-size:9px!important;padding:2px 5px!important}
-body:has(.compressWorkspace) .privacyNote,body:has(.compressWorkspace) .toolHelpLink,body:has(.compressWorkspace) footer,body:has(.compressWorkspace) .mobileBottomNav{display:none!important}
+body:has(.compressWorkspace) .privacyNote,body:has(.compressWorkspace) .toolHelpLink{display:none!important}
 @media(max-width:760px){
 body:has(.compressWorkspace) .header{flex-basis:50px!important}
 body:has(.compressWorkspace) .toolPageInner{padding:5px 8px!important}
@@ -103,7 +103,7 @@ body:has(.compressWorkspace) .timelineArrow{width:24px!important;height:27px!imp
 body:has(.compressWorkspace) .timelineAddBar{flex-basis:25px!important;height:25px!important}
 body:has(.compressWorkspace) .timelineAddBar .sourceChooseButton{min-height:24px!important;font-size:9px!important}
 body:has(.compressWorkspace) .unifiedPreview .previewToolbar{flex-basis:21px!important;height:21px!important;font-size:9px!important}
-body:has(.compressWorkspace) .unifiedCanvas{min-height:0!important}
+body:has(.compressWorkspace) .unifiedCanvas{min-height:clamp(165px,calc(100dvh - 360px),270px)!important;height:clamp(165px,calc(100dvh - 360px),270px)!important;max-height:clamp(165px,calc(100dvh - 360px),270px)!important}
 body:has(.compressWorkspace) .unifiedGeneration .generationImage{width:52%!important;height:42%!important}
 body:has(.compressWorkspace) .aiCompressorControls{grid-template-columns:minmax(0,1fr) auto;padding:4px 6px!important}
 body:has(.compressWorkspace) .aiCompressorControls .aiCompressButton{min-height:31px!important;padding:4px 8px!important}
@@ -138,7 +138,7 @@ body:has(.compressWorkspace) .resultSummary .downloadButton{min-height:21px!impo
 body:has(.compressWorkspace) .workspaceMiniFooter{flex-basis:17px!important;height:17px!important;margin-top:2px!important;font-size:8px!important}
 body:has(.compressWorkspace) .workspaceMiniFooter .textButton{font-size:8px!important;padding:1px 4px!important}
 @media(max-width:760px){
-body:has(.compressWorkspace) .toolPageInner{padding:3px 6px!important}
+body:has(.compressWorkspace) .toolPageInner{padding:3px 6px 10px!important}
 body:has(.compressWorkspace) .header{flex-basis:46px!important}
 body:has(.compressWorkspace) .compactToolTitle{min-height:25px!important}
 body:has(.compressWorkspace) .compactToolTitle .toolIcon{width:23px!important;height:23px!important}
