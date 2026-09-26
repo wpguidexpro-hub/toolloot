@@ -27,7 +27,7 @@ jobs:
         run: npm run build
       - name: Prepare route pages
         run: |
-          for route in about categories privacy terms contact tools/image-compressor; do
+          for route in about categories privacy terms contact how-to-use how-to-use/image-compressor tools/image-compressor; do
             mkdir -p "dist/$route"
             cp dist/index.html "dist/$route/index.html"
           done
