@@ -1,6 +1,6 @@
 export const MODEL_KEY="toolloot:ai:model";
 export const MODEL_REGISTRY=[
- {id:"onnx-community/Qwen3-0.6B-ONNX",name:"Qwen3 0.6B • Smart",size:"quantized",license:"Apache-2.0",speed:"PC + capable mobile",default:true},
+ {id:"onnx-community/Qwen3-0.6B-ONNX",name:"Qwen3 0.6B • Smart",size:"~570 MB q4f16",license:"Apache-2.0",speed:"PC + capable mobile",default:true},
  {id:"onnx-community/SmolLM2-135M-Instruct-ONNX-MHA",name:"SmolLM2 135M • Fast",size:"~182 MB q4",license:"Apache-2.0",speed:"mobile + PC"}
 ];
 export const DATASET_REGISTRY=[
@@ -15,27 +15,20 @@ export const recommendedModel=()=>MODEL_REGISTRY[0];
 export const runtimeInfo=()=>({mobile:isMobile(),device:navigator.gpu?"webgpu":"wasm",deviceLabel:navigator.gpu?"WebGPU":"WASM",cores:navigator.hardwareConcurrency||1,memory:navigator.deviceMemory||0});
 export function modelUrl(id,file=""){return `https://huggingface.co/${id}/resolve/main/${file}`}
 export async function getDtypes(id){try{const {ModelRegistry}=await getTransformers();return await ModelRegistry.get_available_dtypes(id)}catch{return ["q4"]}}
-const directReply=(prompt)=>{
- const p=prompt.trim().toLowerCase().replace(/[!?.,]+$/,"");
- const greetings=["hi","hello","hey","namaste","नमस्ते","नमस्कार","good morning","good afternoon","good evening"];
- if(greetings.includes(p))return "Hello! 👋 Main ToollooT AI hoon. Aap mujhse Hindi, English ya Hinglish mein baat kar sakte hain. Aaj kya karna hai?";
- if(/^(how are you|kaise ho|कैसे हो)$/.test(p))return "Main ready hoon, sir. Aapka task bataiye.";
- return "";
-};
 export async function loadLocalLLM(id=recommendedModel().id,onProgress){
  if(generator&&loadedId===id)return generator;
  const {pipeline,env}=await getTransformers();
  env.allowLocalModels=false;env.useBrowserCache=true;
  const info=runtimeInfo();
- try{generator=await pipeline("text-generation",id,{device:info.device,dtype:"q4",progress_callback:onProgress})}
+ const dtype=id==="onnx-community/Qwen3-0.6B-ONNX"?"q4f16":"q4";
+ try{generator=await pipeline("text-generation",id,{device:info.device,dtype,progress_callback:onProgress})}
  catch(first){
-  if(info.device!=="wasm")generator=await pipeline("text-generation",id,{device:"wasm",dtype:"q4",progress_callback:onProgress});
+  if(info.device!=="wasm")generator=await pipeline("text-generation",id,{device:"wasm",dtype,progress_callback:onProgress});
   else{generator=null;throw first}
  }
  loadedId=id;return generator;
 }
 export async function generateLocal(prompt,{id=recommendedModel().id,max_new_tokens,onProgress,history=[]}={}){
- const instant=directReply(prompt);if(instant)return instant;
  const pipe=await loadLocalLLM(id,onProgress),tokens=max_new_tokens??(runtimeInfo().mobile?128:256);
  const context=history.filter(m=>m?.role&&m?.content).slice(-10).map(m=>({role:m.role,content:String(m.content).slice(0,4000)}));
  const messages=[
