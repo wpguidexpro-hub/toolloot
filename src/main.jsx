@@ -133,9 +133,7 @@ function Layout({ children }) {
     setInstallPrompt(null);
   };
   return <div className={dark ? "app dark" : "app"}>
-    <Header dark={dark} setDark={setDark} canInstall={!!installPrompt} installApp={installApp}/>
     {children}
-    <Footer/>
   </div>;
 }
 function ToolCard({ tool }) {
