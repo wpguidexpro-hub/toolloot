@@ -1,0 +1,30 @@
+name: Prepare ToollooT GitHub AI model
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/ai-model.yml"]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  model:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - name: Download open model assets
+        run: |
+          set -euo pipefail
+          mkdir -p model
+          base="https://huggingface.co/onnx-community/Qwen3-0.6B-ONNX/resolve/main"
+          for f in config.json generation_config.json chat_template.jinja special_tokens_map.json tokenizer.json tokenizer_config.json; do
+            curl -L --fail --retry 3 --retry-delay 2 -o "model/$f" "$base/$f"
+          done
+          curl -L --fail --retry 3 --retry-delay 2 -o model/model_q4f16.onnx "$base/onnx/model_q4f16.onnx"
+          curl -L --fail --retry 3 --retry-delay 2 -o model/model_q4.onnx "$base/onnx/model_q4.onnx"
+      - name: Publish model assets to GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh release create toolloot-ai-v1 --repo "${{ github.repository }}" --target "${{ github.sha }}" --title "ToollooT AI Model v1" --notes "Qwen3 0.6B ONNX assets for ToollooT browser inference." --latest || true
+          gh release upload toolloo-ai-v1 model/* --repo "${{ github.repository }}" --clobber
