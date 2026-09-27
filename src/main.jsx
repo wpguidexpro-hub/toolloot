@@ -15,6 +15,7 @@ import "./generation.css";
 import "./ai-minimal.css";
 import { imageToolMeta, ImageBatchTool, ExactSizeCompressor, ImageToolGuide } from "./imageTools.jsx";
 import { ImageSourcePicker } from "./imageSources.jsx";
+import { ToolFileTimeline } from "./components/ToolTimeline.jsx";
 
 const BASE = import.meta.env.BASE_URL;
 const link = (path = "") => BASE + path.replace(/^\//, "");
@@ -258,7 +259,7 @@ function ImageCompressor() {
       <div className="toolTitle compactToolTitle"><div className="toolIcon large"><Sparkles size={22}/></div><div><h1>Image Compressor</h1><p>Choose → quality → compress → download.</p></div></div>
       {items.length===0&&<ImageSourcePicker accept="image/*" multiple={true} onFiles={addFiles} label="Choose images"/>}
       {items.length>0&&<div className="compressWorkspace">
-        <div className="imageTimeline"><button className="timelineArrow" onClick={()=>setActive(Math.max(0,active-1))} disabled={active===0}>‹</button><div className="timelineTrack">{items.map((x,i)=><button key={x.id} className={"timelineThumb "+(i===active?"active":"")} onClick={()=>setActive(i)}><img src={x.preview} alt={x.file.name}/><span>{i+1}</span>{x.result&&<b>✓</b>}</button>)}</div><button className="timelineArrow" onClick={()=>setActive(Math.min(items.length-1,active+1))} disabled={active===items.length-1}>›</button></div>
+        <ToolFileTimeline items={items} activeIndex={active} onSelect={setActive} onRemove={removeItem}/>
         <div className="timelineAddBar"><ImageSourcePicker className="compactAddPicker" accept="image/*" multiple={true} onFiles={addFiles} label="Add more images"/><button type="button" className="timelineClearButton" onClick={clearAll} disabled={busy}><Trash2 size={13}/> Clear all</button></div>
         {item&&<div className="editorPanel"><div className="editorPreview unifiedPreview"><div className="previewToolbar"><strong title={item.file.name}>{item.file.name}</strong><span>{formatBytes(item.file.size)}</span><button className="iconOnly" onClick={()=>removeItem(item.id)} aria-label="Remove image"><Trash2 size={16}/></button></div><div className="canvasPreview unifiedCanvas"><img className={item.result&&!busy?"compressedVisible":"originalVisible"} src={item.result&&!busy?item.result.url:item.preview} alt={item.result&&!busy?"Compressed "+item.file.name:item.file.name}/>{item.result&&!busy&&<div className="previewResultBadge"><Sparkles size={13}/> Compressed</div>}{busy&&<div className="generationOverlay unifiedGeneration"><div className="generationImage"><img src={item.preview} alt="Generating compressed preview"/><div className="generationSweep"/></div><div className="generationDots"><span/><span/><span/></div><strong>Generating compressed image…</strong><small>Image {generation} of {items.length} • {progress}%</small><div className="generationProgress"><i style={{width:progress+"%"}}/></div></div>}</div></div>
           <div className="contextSettings aiCompressorControls"><div className="aiSettingsIntro"><div className="aiBadge"><Sparkles size={14}/> Smart compression</div><strong>One setting for all images</strong><span>Choose quality once. ToollooT applies it to every selected image automatically.</span></div>
