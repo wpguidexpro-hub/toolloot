@@ -29,7 +29,7 @@
 .compressWorkspace .editorPanel,.compressWorkspace .unifiedPreview{width:100%}
 .imageTimeline{display:flex;align-items:center;gap:5px;margin:0 0 5px;padding:4px;border:1px solid #e5e7eb;border-radius:10px;background:#fff}
 .timelineTrack{display:flex;align-items:center;gap:6px;overflow-x:auto;flex:1;scrollbar-width:thin;padding:1px 2px}
-.timelineThumb{position:relative;flex:0 0 48px;width:48px;height:48px;padding:2px;border:2px solid transparent;border-radius:10px;background:#f3f4f6;cursor:pointer;overflow:hidden}
+.timelineThumb{position:relative;flex:0 0 58px;width:58px;height:58px;padding:2px;border:2px solid transparent;border-radius:10px;background:#f3f4f6;cursor:pointer;overflow:hidden}
 .timelineThumb img{width:100%;height:100%;display:block;object-fit:cover;border-radius:7px}.timelineThumb.active{border-color:#111827;box-shadow:0 0 0 2px rgba(17,24,39,.08)}
 .timelineThumb>span{position:absolute;left:4px;bottom:3px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:rgba(0,0,0,.68);color:#fff;font-size:9px;line-height:16px}.timelineThumb>b{position:absolute;right:3px;top:3px;width:16px;height:16px;border-radius:50%;background:#111827;color:#fff;font-size:10px;line-height:16px}
 .timelineArrow{width:30px;height:32px;border:0;border-radius:9px;background:#f3f4f6;font-size:20px;cursor:pointer}.timelineArrow:disabled{opacity:.35;cursor:default}
@@ -76,7 +76,7 @@ body:has(.compressWorkspace) .compactToolTitle{min-height:28px!important;margin-
 body:has(.compressWorkspace) .compactToolTitle .toolIcon{width:26px!important;height:26px!important}
 body:has(.compressWorkspace) .compactToolTitle h1{font-size:15px!important}.compactToolTitle p{font-size:9px!important}
 body:has(.compressWorkspace) .imageTimeline{flex-basis:42px!important;height:42px!important;padding:3px!important}
-body:has(.compressWorkspace) .timelineThumb{width:36px!important;height:36px!important;flex-basis:36px!important}.timelineArrow{width:24px!important;height:27px!important}
+body:has(.compressWorkspace) .timelineThumb{width:44px!important;height:44px!important;flex-basis:44px!important}.timelineArrow{width:26px!important;height:30px!important}
 body:has(.compressWorkspace) .timelineAddBar{margin:2px 0 3px!important}.timelineAddBar .sourceChooseButton{min-height:25px!important;font-size:9px!important}.timelineClearButton{min-height:25px;padding:4px 8px;font-size:9px}
 body:has(.compressWorkspace) .unifiedCanvas{height:clamp(165px,31vh,300px)!important}
 body:has(.compressWorkspace) .unifiedPreview .previewToolbar{height:22px!important;flex-basis:22px!important;font-size:9px!important}.unifiedPreview .previewToolbar .iconOnly{width:21px!important;height:21px!important}
