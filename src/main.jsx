@@ -140,8 +140,9 @@ function ToolCard({ tool }) {
     <p>{tool.description}</p><span className="toolLink">Open tool</span>
   </a>;
 }
-function Home() {  return <Layout><Seo title="ToollooT - Free Online Tools" description="Free browser-based tools for images, documents and everyday tasks."/><main className="homePage container"><section className="hero"><div className="pageIcon"><ToollooTIcon /></div><h1>Simple tools. Fast results.</h1><p>Free browser-based utilities for everyday work. Your files stay on your device whenever processing is local.</p></section><div className="toolGrid">{tools.map(t=><ToolCard tool={t} key={t.id}/>)}</div></main></Layout>;}
-function Page({ title,description,icon:Icon,children }) {
+function Home() {
+  return <Layout><Seo title="ToollooT - Free Online Tools" description="Free browser-based tools for images, documents and everyday tasks."/><main className="homePage"><section className="hero"><div className="heroInner"><div className="eyebrow">TOOLLOOT · FREE ONLINE TOOLS</div><h1>Simple tools.<br/><em>Fast results.</em></h1><p>Powerful browser tools for images, documents and everyday work. Your files stay on your device whenever processing is local.</p><div className="heroActions"><a className="primaryButton" href={link("/tools/image-compressor")}>Start with Image Compressor</a><a className="secondaryButton" href="#tools">Explore all tools</a></div></div></section><section id="tools" className="toolsSection container"><div className="sectionHead"><div><span className="brandKicker">TOOLBOX</span><h2>Choose a tool</h2><p>Fast, private and built for the browser.</p></div><span className="toolCount">{tools.length} tools</span></div><div className="toolGrid">{tools.map(t=><ToolCard tool={t} key={t.id}/>)}</div></section></main></Layout>;
+}function Page({ title,description,icon:Icon,children }) {
   return <Layout><Seo title={title} description={description}/><main className="staticPage container">
     <div className="pageIcon"><ToollooTIcon /></div><h1>{title}</h1><p className="pageLead">{description}</p><div className="pageContent">{children}</div>
   </main></Layout>;
@@ -338,6 +339,7 @@ function Root(){
   return <Home/>;
 }
 createRoot(document.getElementById("root")).render(<App/>);
+
 
 
 
