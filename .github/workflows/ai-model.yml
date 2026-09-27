@@ -26,7 +26,8 @@ jobs:
           curl -L --fail --retry 3 --retry-delay 2 -o /tmp/model_q4.onnx "$base/onnx/model_q4.onnx"
           split -b 90M -d -a 3 /tmp/model_q4.onnx models/github-ai/q4/model_q4.part-
           count=$(find models/github-ai/q4 -name 'model_q4.part-*' | wc -l)
-          test "$count" -eq 11
+          test "$count" -ge 10
+          printf '{"parts":%s}\n' "$count" > models/github-ai/q4/model_q4.manifest.json
       - name: Commit model chunks
         run: |
           set -euo pipefail
