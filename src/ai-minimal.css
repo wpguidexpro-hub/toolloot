@@ -96,14 +96,27 @@ body:has(.compressWorkspace) .generationDots span:nth-child(2){animation-delay:.
 @keyframes toollootAiFloat{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-3px) scale(1.012)}}
 @keyframes toollootAiSweep{0%{transform:translateX(-120%);opacity:0}20%{opacity:.85}70%{opacity:.45}100%{transform:translateX(120%);opacity:0}}
 @keyframes toollootDot{0%,100%{transform:translateY(0);opacity:.35}50%{transform:translateY(-4px);opacity:1}}
-/* Compressor timeline: fixed desktop rail above footer, mobile menu tab */
+/* Compressor timeline: full-width desktop rail + themed mobile tab */
+.compressorFixedTimeline{font-size:inherit;color:inherit}
+.compressorFixedTimeline .toolFileTimeline{border-color:var(--app-border,#e5e7eb);background:var(--app-surface,#fff);color:var(--app-text,#111827)}
+.compressorFixedTimeline .toolFileTimelineTrack{scrollbar-width:thin}
+.compressorFixedTimeline .toolFileTimelineItem{width:72px;height:72px;flex-basis:72px;background:var(--app-muted,#f3f4f6);border-color:transparent}
+.compressorFixedTimeline .toolFileTimelineItem.active{border-color:var(--app-text,#111827);box-shadow:0 0 0 3px color-mix(in srgb,var(--app-text,#111827) 12%,transparent)}
+.compressorFixedTimeline .timelineArrow{width:42px;height:42px;display:grid;place-items:center;border:1px solid var(--app-border,#e5e7eb);background:var(--app-muted,#f3f4f6);color:var(--app-text,#111827)}
+.compressorFixedTimeline .toolFileTimelineItem i{background:color-mix(in srgb,var(--app-text,#111827) 82%,transparent)}
+.compressorFixedTimeline .toolFileTimelineItem b{background:var(--app-text,#111827)}
 @media(min-width:761px){
-  .compressorFixedTimeline{position:fixed;left:12px;right:12px;bottom:calc(var(--footer-h) + 8px);z-index:95;display:flex;justify-content:center;pointer-events:none}
-  .compressorFixedTimeline .toolFileTimeline{width:min(1100px,calc(100vw - 24px));box-shadow:0 8px 28px rgba(0,0,0,.12);pointer-events:auto}
+  .compressorFixedTimeline{position:fixed;left:0;right:0;bottom:calc(var(--footer-h) + 6px);z-index:95;display:flex;justify-content:center;pointer-events:none}
+  .compressorFixedTimeline .toolFileTimeline{width:100%;max-width:none;border-radius:0;border-left:0;border-right:0;padding:8px 20px;box-shadow:0 -8px 26px rgba(15,23,42,.10);pointer-events:auto}
+  .compressorFixedTimeline .toolFileTimelineTrack{gap:10px;justify-content:flex-start}
 }
 @media(max-width:760px){
-  .compressorFixedTimeline{position:fixed;right:8px;bottom:calc(var(--mobile-nav-h) + env(safe-area-inset-bottom) + 8px);z-index:105}
-  .compressorFixedTimeline .toolFileTimeline{width:52px;height:52px;padding:4px;border-radius:14px;display:block;box-shadow:0 8px 24px rgba(0,0,0,.18);overflow:hidden;transition:width .2s ease}
-  .compressorFixedTimeline .toolFileTimeline:focus-within,.compressorFixedTimeline .toolFileTimeline:hover{width:min(330px,calc(100vw - 16px))}
-  .compressorFixedTimeline .toolFileTimelineTrack{min-width:0}
+  .compressorFixedTimeline{position:fixed;left:8px;right:8px;bottom:calc(var(--mobile-nav-h) + env(safe-area-inset-bottom) + 8px);z-index:105;display:flex;justify-content:center}
+  .compressorFixedTimeline .toolFileTimeline{width:100%;max-width:100%;padding:5px;border-radius:16px;box-shadow:0 10px 28px rgba(15,23,42,.16)}
+  .compressorFixedTimeline .toolFileTimelineItem{width:54px;height:54px;flex-basis:54px}
+  .compressorFixedTimeline .timelineArrow{width:34px;height:34px}
 }
+.dark .compressorFixedTimeline .toolFileTimeline{background:#111318;border-color:#30343c;color:#f3f4f6;box-shadow:0 -8px 28px rgba(0,0,0,.35)}
+.dark .compressorFixedTimeline .toolFileTimelineItem{background:#20242b}
+.dark .compressorFixedTimeline .toolFileTimelineItem.active{border-color:#f3f4f6}
+.dark .compressorFixedTimeline .timelineArrow{background:#20242b;border-color:#3b404a;color:#f3f4f6}
