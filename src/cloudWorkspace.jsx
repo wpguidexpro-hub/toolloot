@@ -38,7 +38,7 @@ export function CloudWorkspace(){
     <div className="cloudSideBottom"><a href="/toolloot/account"><Shield size={16}/>Account</a><button onClick={()=>{saveAccount(null);location.href="/toolloot/account"}}><Trash2 size={16}/>Sign out</button></div>
   </aside>
   <main className="cloudMain"><button className="cloudMobileMenu" onClick={()=>setMobileOpen(true)}><Menu size={19}/></button>
-    <header className="cloudTop"><div><small>TOOLLOOT CLOUD</small><h1>{title}</h1><p>{team?.name||"Team workspace"}</p></div><div className="cloudTopRight"><button onClick={()=>loadTeams()}><RefreshCw size={16}/>Refresh</button><span className="cloudAvatar">{(account.name||account.email||"U").slice(0,1).toUpperCase()}</span></div></header>
+    <header className="cloudTop"><div><small>TOOLLOOT CLOUD</small><h1>Workspace</h1><p>{team?.name||"Team workspace"}</p></div><div className="cloudTopRight"><button onClick={()=>loadTeams()}><RefreshCw size={16}/>Refresh</button><span className="cloudAvatar">{(account.name||account.email||"U").slice(0,1).toUpperCase()}</span></div></header>
     <section className="cloudContent">
       {!team?<div className="cloudEmpty"><Users size={40}/><h2>Create your first team</h2><p>Teams keep shared chats, members and server-side memory together.</p></div>:<>
       {view==="overview"&&<div className="cloudDashboard">
