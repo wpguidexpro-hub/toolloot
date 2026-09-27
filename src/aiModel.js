@@ -7,7 +7,7 @@ export const DATASET_REGISTRY=[
 {id:"HuggingFaceTB/smoltalk",name:"SmolTalk • everyday conversations",size:"946 KB",license:"Apache-2.0",file:"data/everyday-conversations/train-00000-of-00001.parquet"}];
 
 const RAW_ROOT="https://raw.githubusercontent.com/wpguidexpro-hub/toolloot/main/models/github-ai/q4";
-const PART_COUNT=10;
+const PART_COUNT=15;
 let generator=null,generatorMode="",loading=null,modelBlobPromise=null;
 
 env.allowLocalModels=false;
