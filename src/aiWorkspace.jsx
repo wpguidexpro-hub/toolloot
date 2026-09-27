@@ -3,7 +3,7 @@ import { get, set, del } from "idb-keyval";
 import Swal from "sweetalert2";
 import { Plus, Search, Menu, X, Send, Paperclip, Image as ImageIcon, FileText, Download, Sparkles, Brain, BrainCircuit, Users, Settings, MessageSquare, Shield, UserPlus, BarChart3, Loader2 } from "lucide-react";
 import { imageCompressLocal, parseToolCommand } from "./aiTools.js";
-import { generateLocal, MODEL_KEY, MODEL_REGISTRY } from "./aiModel.js";
+import { generateLocal, MODEL_KEY, MODEL_REGISTRY, recommendedModel, runtimeInfo } from "./aiModel.js";
 import { AILab } from "./aiLab.jsx";
 import "./aiWorkspace.css";
 
@@ -17,11 +17,11 @@ const bytes=n=>{if(!n)return"0 B";const u=["B","KB","MB","GB"],i=Math.min(Math.f
 function Logo(){return <span className="tlAiLogo"><b>T</b><i>AI</i></span>}
 
 export function ToollooTAI(){
- const [user,setUser]=useState(null),[chats,setChats]=useState([]),[activeId,setActiveId]=useState(null),[memory,setMemory]=useState({facts:[]}),[teams,setTeams]=useState([]),[processing,setProcessing]=useState(false),[showLab,setShowLab]=useState(false),[modelId,setModelId]=useState(MODEL_REGISTRY[0].id);
+ const [user,setUser]=useState(null),[chats,setChats]=useState([]),[activeId,setActiveId]=useState(null),[memory,setMemory]=useState({facts:[]}),[teams,setTeams]=useState([]),[processing,setProcessing]=useState(false),[showLab,setShowLab]=useState(false),[modelId,setModelId]=useState(recommendedModel().id);
  const [search,setSearch]=useState(""),[text,setText]=useState(""),[file,setFile]=useState(null),[busy,setBusy]=useState(false),[mobile,setMobile]=useState(false);
  const input=useRef(null),fileInput=useRef(null),messageListRef=useRef(null);
  useEffect(()=>{(async()=>{let u=await load(USER_KEY,null);if(!u){u={id:uid(),name:"Guest User",email:"local@toolloot.app",mode:"guest"};await save(USER_KEY,u)}
-   let c=await load(CHAT_KEY,[]);if(!c.length)c=[emptyChat()];setUser(u);setChats(c);setActiveId(c[0].id);setMemory(await load(MEMORY_KEY,{facts:[]}));setTeams(await load(TEAM_KEY,[]));setModelId(await load(MODEL_KEY,MODEL_REGISTRY[0].id));sessionStorage.setItem("tl-session",sessionStorage.getItem("tl-session")||uid());track("app_open")})()},[]);
+   let c=await load(CHAT_KEY,[]);if(!c.length)c=[emptyChat()];setUser(u);setChats(c);setActiveId(c[0].id);setMemory(await load(MEMORY_KEY,{facts:[]}));setTeams(await load(TEAM_KEY,[]));{const savedModel=await load(MODEL_KEY,null);const safeModel=runtimeInfo().mobile&&savedModel===MODEL_REGISTRY[1].id?recommendedModel().id:(savedModel||recommendedModel().id);setModelId(safeModel);if(safeModel!==savedModel)save(MODEL_KEY,safeModel)}sessionStorage.setItem("tl-session",sessionStorage.getItem("tl-session")||uid());track("app_open")})()},[]);
  useEffect(()=>{if(chats.length)save(CHAT_KEY,chats)},[chats]);
  const active=chats.find(c=>c.id===activeId)||chats[0];
  useEffect(()=>{const el=messageListRef.current;if(!el)return;requestAnimationFrame(()=>{el.scrollTo({top:el.scrollHeight,behavior:"smooth"})})},[active?.messages?.length,busy]);
@@ -34,7 +34,7 @@ export function ToollooTAI(){
    update(c=>({...c,messages:[...c.messages,um],title:c.messages.length?c.title:(promptText||f?.name||"New task").slice(0,42),updatedAt:now()}));await track("message_sent",{hasAttachment:!!f,command:promptText});
    try{const cmd=parseToolCommand(promptText,f);let result=null;let content="";if(cmd.tool==="image.compress"&&f)result=await imageCompressLocal(f,cmd.targetBytes);
      if(result)content="Done. "+bytes(f.size)+" -> "+bytes(result.blob.size);
-     else if(cmd.tool==="general"){try{content=await generateLocal(promptText,{id:modelId,max_new_tokens:180})}catch(e){content="Local LLM is not loaded yet. Open AI Lab to download the model, then ask again.";}}
+     else if(cmd.tool==="general"){try{content=await generateLocal(promptText,{id:modelId,max_new_tokens:runtimeInfo().mobile?96:160})}catch(e){content="Local LLM is not loaded yet. Open AI Lab to download the model, then ask again.";}}
      else content="I can handle this task once the matching local tool is connected. Open AI Lab to manage the neural LLM runtime.";
      const msg={id:uid(),role:"assistant",content,tool:cmd.tool,result,createdAt:now()};
      update(c=>({...c,messages:[...c.messages,msg],updatedAt:now()}));await track("tool_completed",{tool:cmd.tool,success:!!result});
