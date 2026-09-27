@@ -1,5 +1,0 @@
-{
-  "name":"toolloot-chat-server","private":true,"type":"module",
-  "scripts":{"start":"node server.js","dev":"node --watch server.js"},
-  "dependencies":{"express":"^5.1.0","socket.io":"^4.8.1","cors":"^2.8.5","bcryptjs":"^3.0.2","jsonwebtoken":"^9.0.2","mariadb":"^3.4.5","dotenv":"^17.2.2","nodemailer":"^7.0.6"}
-}
