@@ -14,10 +14,19 @@ export function ToolPreview({item,busy=false,generation=0,progress=0,onRemove,sh
       <img className={result&&!busy?"compressedVisible":"originalVisible"} src={result&&!busy?result.url:item.preview} alt={result&&!busy?"Compressed "+item.file.name:item.file.name}/>
       {result&&!busy&&<div className="toolPreviewBadge"><Sparkles size={13}/> Compressed</div>}
       {busy&&<div className="toolPreviewGeneration">
-        <div className="toolPreviewGenerationImage"><img src={item.preview} alt="Generating compressed preview"/><div className="toolPreviewSweep"/></div>
-        <div className="generationDots"><span/><span/><span/></div>
-        <strong>Generating compressed image…</strong>
-        <small>Image {generation} • {progress}%</small>
+        <div className="toolPreviewGenerationImage">
+          <img className="aiWorkingImage" src={item.preview} alt="AI is processing the image"/>
+          <div className="aiScanGrid" aria-hidden="true"/>
+          <div className="toolPreviewSweep" aria-hidden="true"/>
+          <div className="aiFocusRing" aria-hidden="true"><span/><span/></div>
+          <div className="aiPulseDot" aria-hidden="true"/>
+          <div className="aiProcessingLabel"><Sparkles size={12}/> AI WORKING</div>
+        </div>
+        <div className="aiThinking">
+          <div className="generationDots"><span/><span/><span/></div>
+          <strong>{progress<20?"Analyzing image…":progress<45?"Optimizing pixels…":progress<70?"Balancing quality…":progress<90?"Comparing result…":"Finalizing image…"}</strong>
+        </div>
+        <small>Image {generation} · {progress}% · processing locally</small>
         <div className="toolPreviewProgress"><i style={{width:progress+"%"}}/></div>
       </div>}
     </div>
