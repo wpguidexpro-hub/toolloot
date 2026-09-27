@@ -345,7 +345,7 @@ footer{box-shadow:0 -2px 14px rgba(15,23,42,.04)}
  .batchItem{padding:8px;gap:8px;min-width:0}
  .batchItem img{width:52px;height:52px;flex:0 0 52px}
  .batchItem .downloadButton,.batchItem .iconOnly{min-width:40px;min-height:40px}
- .toolPageInner{padding-top:20px;padding-bottom:92px}
+ .toolPageInner{padding-top:0!important;padding-bottom:0!important}
  .toolTitle{gap:10px;margin-bottom:18px;min-width:0}
  .toolTitle>div{min-width:0}
  .toolTitle h1{font-size:clamp(24px,7vw,30px);line-height:1.12;overflow-wrap:anywhere}
@@ -394,7 +394,7 @@ button,a,input,select{max-width:100%}
 }
 
 @media (max-width:760px){
- .toolPageInner{width:100%;padding:20px 16px 94px}
+ .toolPageInner{width:100%;padding-top:0!important;padding-bottom:0!important;padding-left:16px;padding-right:16px}
  .imageToolShell{margin-top:12px;box-shadow:0 5px 20px rgba(15,23,42,.05)}
  .imageToolShell .dropZone{width:100%;box-sizing:border-box}
  .guideAction{margin:4px 0 18px}
