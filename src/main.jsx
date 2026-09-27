@@ -18,6 +18,7 @@ import "./brand.css";
 import "./components/CompressorGuide.css";
 import { ToollooTAI } from "./aiWorkspace.jsx";
 import { AnalyticsPage } from "./analyticsPage.jsx";
+import { AccountPage } from "./account.jsx";
 import { imageToolMeta, ImageBatchTool, ExactSizeCompressor, ImageToolGuide } from "./imageTools.jsx";
 import { ChooseImage } from "./components/ChooseImage.jsx";
 import { ToolFileTimeline } from "./components/ToolTimeline.jsx";
@@ -298,6 +299,7 @@ function Root(){
   if(local==="/categories/images")return <CategoryPage categoryName="Images" slug="images"/>;
   if(local==="/categories/documents")return <CategoryPage categoryName="Documents" slug="documents"/>;
   if(local==="/categories/calculators")return <CategoryPage categoryName="Calculators" slug="calculators"/>;
+  if(local==="/account")return <Layout><Seo title="ToollooT Account" description="Free ToollooT account and workspace identity."/><main className="staticPage"><AccountPage/></main></Layout>;
   if(local==="/analytics")return <Layout><Seo title="ToollooT Analytics" description="ToollooT site analytics dashboard."/><main className="staticPage"><AnalyticsPage/></main></Layout>;
   if(local==="/about")return <AboutPage/>;
   if(local==="/privacy")return <PrivacyPage/>;
