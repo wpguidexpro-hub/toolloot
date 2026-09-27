@@ -13,6 +13,7 @@ import "./styles.css";
 import "./styles.mobile-shell.css";
 import "./generation.css";
 import "./ai-minimal.css";
+import "./future-ui.css";
 import "./components/CompressorGuide.css";
 import { imageToolMeta, ImageBatchTool, ExactSizeCompressor, ImageToolGuide } from "./imageTools.jsx";
 import { ChooseImage } from "./components/ChooseImage.jsx";
@@ -141,8 +142,8 @@ function Home() {
   return <Layout><Seo title="ToollooT - Free Online Tools" description="ToollooT provides simple, fast and free online tools for images, documents, developers and everyday work."/>
     <main>
       <section className="hero"><div className="container heroInner">
-        <div className="eyebrow">TOOLLOOT</div><h1>Simple tools that get things done.</h1>
-        <p>Fast, free and easy-to-use browser tools.</p>
+        <div className="eyebrow">TOOLLOOT • FUTURE WORKSPACE</div><h1>Your tools. Your flow. A smarter web workspace.</h1>
+        <p>Fast, free and local-first utilities that remember your recent workflow in this browser and help you get to the result with less effort.</p>
         <label className="searchBox"><Search size={20}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search tools..." aria-label="Search tools"/></label>
       </div></section>
       {recentTools.length>0&&<section className="container section recentSection"><div className="sectionHead"><div><h2>Recently used</h2><p>Your recent tools are stored only in this browser.</p></div></div><div className="toolGrid">{recentTools.map(t=><ToolCard tool={t} key={t.id}/>)}</div></section>}
@@ -152,8 +153,9 @@ function Home() {
       <section className="container section" id="tools"><div className="sectionHead"><div><h2>Tools</h2><p>{filtered.length} available</p></div></div>
         <div className="toolGrid">{filtered.map(t=><ToolCard tool={t} key={t.id}/>)}</div>
       </section>
-      <section className="container section about"><h2>Free online tools, kept simple</h2>
-        <p>ToollooT is a lightweight toolbox designed for useful browser-based utilities. More tools can be added without changing the site structure.</p>
+      <section className="container section about"><h2>Built around the way you work</h2>
+        <p>ToollooT turns repetitive web tasks into focused mini-workspaces. Recent tools, local preferences and in-progress browser sessions can stay on this device so you can continue without starting from zero.</p>
+        <div className="aboutGrid"><div><strong>⚡ Instant</strong><span>Open a tool, bring in your files and get straight to the useful controls.</span></div><div><strong>🧠 Context-aware</strong><span>Each workspace exposes the settings that matter instead of overwhelming you.</span></div><div><strong>🔒 Local-first</strong><span>Browser processing is used wherever practical, keeping files on your device.</span></div></div>
       </section>
     </main>
   </Layout>;
