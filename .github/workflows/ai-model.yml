@@ -14,32 +14,26 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
-      - name: Download lightweight SmolLM2 q4 and split for GitHub Raw
+      - name: Download lightweight SmolLM2 q4
         run: |
           set -euo pipefail
           rm -rf models/github-ai/q4
           mkdir -p models/github-ai/q4
           base="https://huggingface.co/onnx-community/SmolLM2-360M-ONNX/resolve/main"
-          for f in config.json generation_config.json special_tokens_map.json tokenizer.json tokenizer_config.json; do
+          for f in config.json generation_config.json merges.txt quantize_config.json special_tokens_map.json tokenizer.json tokenizer_config.json vocab.json; do
             curl -L --fail --retry 3 --retry-delay 2 -o "models/github-ai/q4/$f" "$base/$f"
           done
           curl -L --fail --retry 3 --retry-delay 2 -o /tmp/model_q4.onnx "$base/onnx/model_q4.onnx"
           split -b 60M -d -a 3 /tmp/model_q4.onnx models/github-ai/q4/model_q4.part-
           count=$(find models/github-ai/q4 -name 'model_q4.part-*' | wc -l)
-          test "$count" -ge 7
-          printf '{"parts":%s}\n' "$count" > models/github-ai/q4/model_q4.manifest.json
-      - name: Commit model chunks
+          test "$count" -eq 7
+          printf '{"parts":%s,"model":"SmolLM2-360M-ONNX","dtype":"q4"}\n' "$count" > models/github-ai/q4/model_q4.manifest.json
+      - name: Commit model
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add models/github-ai/q4/config.json models/github-ai/q4/generation_config.json models/github-ai/q4/special_tokens_map.json models/github-ai/q4/tokenizer.json models/github-ai/q4/tokenizer_config.json models/github-ai/q4/model_q4.manifest.json
-          git commit -m "add lightweight SmolLM2 q4 metadata"
+          git add -A models/github-ai/q4
+          git commit -m "rebuild ToollooT SmolLM2 q4 model"
           git pull --rebase origin main
           git push origin main
-          for part in models/github-ai/q4/model_q4.part-*; do
-            git add "$part"
-            git commit -m "add lightweight SmolLM2 q4 model chunk $(basename "$part")"
-            git pull --rebase origin main
-            git push origin main
-          done
