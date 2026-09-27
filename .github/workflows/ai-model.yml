@@ -26,5 +26,18 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          gh release create toolloot-ai-v1 --repo "${{ github.repository }}" --target "${{ github.sha }}" --title "ToollooT AI Model v1" --notes "Qwen3 0.6B ONNX assets for ToollooT browser inference." --latest || true
-          gh release upload toolloo-ai-v1 model/* --repo "${{ github.repository }}" --clobber
+          repo="${{ github.repository }}"
+          release_id="$(gh api "repos/$repo/releases/tags/toolloot-ai-v1" --jq .id 2>/dev/null || true)"
+          if [ -z "$release_id" ]; then
+            gh release create toolloot-ai-v1 --repo "$repo" --target "${{ github.sha }}" --title "ToollooT AI Model v1" --notes "Qwen3 0.6B ONNX assets for ToollooT browser inference." --latest
+            for _ in $(seq 1 20); do
+              release_id="$(gh api "repos/$repo/releases/tags/toolloot-ai-v1" --jq .id 2>/dev/null || true)"
+              [ -n "$release_id" ] && break
+              sleep 2
+            done
+          fi
+          test -n "$release_id"
+          for file in model/*; do
+            name="$(basename "$file")"
+            curl -L --fail --retry 3 --retry-delay 2               -X POST               -H "Authorization: Bearer $GH_TOKEN"               -H "Accept: application/vnd.github+json"               -H "Content-Type: application/octet-stream"               --data-binary @"$file"               "https://uploads.github.com/repos/$repo/releases/$release_id/assets?name=$name"
+          done
