@@ -1,5 +1,5 @@
 import React,{useEffect,useState} from "react";
-import {Users,UserPlus,Copy,Shield,MessageSquare,Brain,RefreshCw,Plus,Send,Trash2,CheckCircle2,Activity,Database} from "lucide-react";
+import {Users,UserPlus,Copy,Shield,MessageSquare,Brain,RefreshCw,Plus,Send,Trash2,CheckCircle2,Activity,Database,Menu} from "lucide-react";
 import Swal from "sweetalert2";
 import {api,getAccount,cloudEnabled,saveAccount} from "./cloudWorkspace.js";
 import "./cloudWorkspace.css";
@@ -10,7 +10,7 @@ const copy=async text=>{await navigator.clipboard?.writeText(text);notify("succe
 
 export function CloudWorkspace(){
  const [account,setAccount]=useState(getAccount()),[teams,setTeams]=useState([]),[team,setTeam]=useState(null),[members,setMembers]=useState([]),[chats,setChats]=useState([]),[chat,setChat]=useState(null),[messages,setMessages]=useState([]),[memory,setMemory]=useState([]),[busy,setBusy]=useState(false),[draft,setDraft]=useState(""),[invite,setInvite]=useState(null);
- const [teamName,setTeamName]=useState(""),[memoryKey,setMemoryKey]=useState(""),[memoryValue,setMemoryValue]=useState(""),[view,setView]=useState("overview");
+ const [teamName,setTeamName]=useState(""),[memoryKey,setMemoryKey]=useState(""),[memoryValue,setMemoryValue]=useState(""),[view,setView]=useState("overview"),[mobileOpen,setMobileOpen]=useState(false);
  const loadTeams=async()=>{const d=await api("/api/teams");setTeams(d.teams||[]);if(!team&&d.teams?.[0])setTeam(d.teams[0])};
  const loadTeam=async t=>{if(!t)return;const d=await api("/api/teams/"+t.id);setTeam({...t,...d.team});setMembers(d.members||[]);const c=await api("/api/teams/"+t.id+"/chats");setChats(c.chats||[]);const m=await api("/api/memory?teamId="+encodeURIComponent(t.id));setMemory(m.memories||[])};
  useEffect(()=>{if(!account?.token||!cloudEnabled())return;loadTeams().catch(e=>notify("error",e.message))},[]);
@@ -26,18 +26,18 @@ export function CloudWorkspace(){
  if(!cloudEnabled())return <div className="cloudEmpty"><CloudIcon/><h2>Cloud workspace is not connected</h2><p>Set <code>VITE_TOOLLOOT_API</code> to your deployed ToollooT API to enable real multi-user storage.</p></div>;
  if(!account?.token)return <div className="cloudEmpty"><Shield/><h2>Sign in to use Cloud Workspace</h2><a href="/toolloot/account" className="cloudPrimary">Open Account</a></div>;
  return <div className="cloudWorkspace cloudApp">
-  <aside className="cloudSidebar">
+  <aside className={"cloudSidebar "+(mobileOpen?"open":"")}>
     <div className="cloudBrand"><span>TT</span><div><b>ToollooT</b><small>Cloud Workspace</small></div></div>
     <div className="cloudWorkspaceName"><small>WORKSPACE</small><b>{team?.name||"Select a team"}</b></div>
     <nav>
-      {[["overview","Overview",Users],["chats","Team chats",MessageSquare],["memory","Shared memory",Brain],["members","Members",UserPlus]].map(([id,label,I])=><button className={view===id?"active":""} onClick={()=>setView(id)} key={id}><I size={17}/>{label}</button>)}
+      {[["overview","Overview",Users],["chats","Team chats",MessageSquare],["memory","Shared memory",Brain],["members","Members",UserPlus]].map(([id,label,I])=><button className={view===id?"active":""} onClick={()=>{setView(id);setMobileOpen(false)}} key={id}><I size={17}/>{label}</button>)}
     </nav>
     <div className="cloudTeamArea"><small>TEAMS</small>{teams.map(t=><button className={team?.id===t.id?"selected":""} key={t.id} onClick={()=>setTeam(t)}><span>{t.name.slice(0,1).toUpperCase()}</span><b>{t.name}</b><em>{t.role}</em></button>)}
       <div className="cloudNewTeam"><input value={teamName} onChange={e=>setTeamName(e.target.value)} placeholder="New team" onKeyDown={e=>e.key==="Enter"&&createTeam()}/><button onClick={createTeam}><Plus size={15}/></button></div>
     </div>
     <div className="cloudSideBottom"><a href="/toolloot/account"><Shield size={16}/>Account</a><button onClick={()=>{saveAccount(null);location.href="/toolloot/account"}}><Trash2 size={16}/>Sign out</button></div>
   </aside>
-  <main className="cloudMain">
+  <main className="cloudMain"><button className="cloudMobileMenu" onClick={()=>setMobileOpen(true)}><Menu size={19}/></button>
     <header className="cloudTop"><div><small>TOOLLOOT CLOUD</small><h1>{title}</h1><p>{team?.name||"Team workspace"}</p></div><div className="cloudTopRight"><button onClick={()=>loadTeams()}><RefreshCw size={16}/>Refresh</button><span className="cloudAvatar">{(account.name||account.email||"U").slice(0,1).toUpperCase()}</span></div></header>
     <section className="cloudContent">
       {!team?<div className="cloudEmpty"><Users size={40}/><h2>Create your first team</h2><p>Teams keep shared chats, members and server-side memory together.</p></div>:<>
