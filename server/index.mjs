@@ -278,10 +278,9 @@ async function main(req, res) {
       if (!u) return json(res, 401, { error: "Unauthorized" });
       const teamId = url.searchParams.get("teamId");
       if (teamId && !(await requireTeamMember(u.id, teamId))) return json(res, 403, { error: "Team access denied" });
-      const rows = await pool.query(
-        "SELECT id,memory_key,memory_value,team_id,created_at,updated_at FROM memories WHERE user_id=? AND ((team_id IS NULL AND ? IS NULL) OR team_id=?) ORDER BY updated_at DESC",
-        [u.id, teamId, teamId]
-      );
+      const rows = teamId
+        ? await pool.query("SELECT m.id,m.memory_key,m.memory_value,m.team_id,m.created_at,m.updated_at,u.name AS created_by FROM memories m JOIN users u ON u.id=m.user_id WHERE m.team_id=? ORDER BY m.updated_at DESC",[teamId])
+        : await pool.query("SELECT id,memory_key,memory_value,team_id,created_at,updated_at FROM memories WHERE user_id=? AND team_id IS NULL ORDER BY updated_at DESC",[u.id]);
       return json(res, 200, { memories: rows });
     }
     if (memoryRoute && req.method === "POST") {
@@ -292,11 +291,10 @@ async function main(req, res) {
       const key = String(b.key || "").trim().slice(0,160);
       if (!key) return json(res,400,{error:"Memory key required"});
       const value = String(b.value ?? "");
-      const existing = await pool.query(
-        "SELECT id FROM memories WHERE user_id=? AND ((team_id IS NULL AND ? IS NULL) OR team_id=?) AND memory_key=? LIMIT 1",
-        [u.id,teamId,teamId,key]
-      );
-      if (existing[0]) await pool.query("UPDATE memories SET memory_value=?,updated_at=? WHERE id=?", [value,now(),existing[0].id]);
+      const existing = teamId
+        ? await pool.query("SELECT id FROM memories WHERE team_id=? AND memory_key=? LIMIT 1",[teamId,key])
+        : await pool.query("SELECT id FROM memories WHERE user_id=? AND team_id IS NULL AND memory_key=? LIMIT 1",[u.id,key]);
+      if (existing[0]) await pool.query("UPDATE memories SET memory_value=?,updated_at=? WHERE id=?",[value,now(),existing[0].id]);
       else await pool.query("INSERT INTO memories(id,user_id,team_id,memory_key,memory_value,created_at,updated_at) VALUES(?,?,?,?,?,?,?)",[id(),u.id,teamId,key,value,now(),now()]);
       return json(res,200,{ok:true});
     }
