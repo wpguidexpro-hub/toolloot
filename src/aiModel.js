@@ -4,7 +4,7 @@ export const DATASET_REGISTRY=[
 {id:"OpenRL/daily_dialog",name:"DailyDialog",size:"4.28 MB",license:"CC BY-NC-SA 4.0",file:"data/train-00000-of-00001-f151c79abb2c1fd5.parquet"},
 {id:"HuggingFaceTB/smoltalk",name:"SmolTalk",size:"946 KB",license:"Apache-2.0",file:"data/everyday-conversations/train-00000-of-00001.parquet"}];
 
-const apiBase=()=>String(import.meta.env.VITE_AI_API_URL||"http://127.0.0.1:5186").replace(/\/$/,"");
+const apiBase=()=>String(import.meta.env.VITE_AI_API_URL||"https://align-separated-gst-updates.trycloudflare.com").replace(/\/$/,"");
 export const recommendedModel=()=>MODEL_REGISTRY[0];
 export const runtimeInfo=()=>({mobile:/Android|iPhone|iPad|iPod/i.test(navigator.userAgent),device:"local-pc",deviceLabel:"ASI-Core Local PC",cores:navigator.hardwareConcurrency||1,memory:navigator.deviceMemory||0});
 export function modelUrl(id,file=""){return file?"https://huggingface.co/"+id+"/resolve/main/"+file:"https://huggingface.co/"+id}
