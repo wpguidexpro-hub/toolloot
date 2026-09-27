@@ -1,8 +1,9 @@
 import React,{useEffect,useState} from "react";
-import {Users,UserPlus,Copy,Shield,MessageSquare,Brain,RefreshCw,Plus,Send,Trash2,CheckCircle2} from "lucide-react";
+import {Users,UserPlus,Copy,Shield,MessageSquare,Brain,RefreshCw,Plus,Send,Trash2,CheckCircle2,Activity,Database} from "lucide-react";
 import Swal from "sweetalert2";
-import {api,getAccount,cloudEnabled} from "./cloudWorkspace.js";
+import {api,getAccount,cloudEnabled,saveAccount} from "./cloudWorkspace.js";
 import "./cloudWorkspace.css";
+import "./cloudWorkspaceViews.css";
 
 const notify=(icon,title)=>Swal.fire({icon,title,toast:true,position:"bottom-end",showConfirmButton:false,timer:1800});
 const copy=async text=>{await navigator.clipboard?.writeText(text);notify("success","Invite link copied");};
