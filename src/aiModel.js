@@ -12,67 +12,33 @@ let transformersPromise=null;
 const getTransformers=()=>transformersPromise||(transformersPromise=import("@huggingface/transformers"));
 const isMobile=()=>/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)||Math.min(screen.width,screen.height)<700;
 export const recommendedModel=()=>MODEL_REGISTRY[0];
-export const runtimeInfo=()=>({
- mobile:isMobile(),
- device:navigator.gpu?"webgpu":"wasm",
- deviceLabel:navigator.gpu?"WebGPU":"WASM",
- cores:navigator.hardwareConcurrency||1,
- memory:navigator.deviceMemory||0
-});
+export const runtimeInfo=()=>({mobile:isMobile(),device:navigator.gpu?"webgpu":"wasm",deviceLabel:navigator.gpu?"WebGPU":"WASM",cores:navigator.hardwareConcurrency||1,memory:navigator.deviceMemory||0});
 export function modelUrl(id,file=""){return `https://huggingface.co/${id}/resolve/main/${file}`}
-export async function getDtypes(id){
- try{
-  const {AutoConfig}=await getTransformers();
-  await AutoConfig.from_pretrained(id);
-  return ["q4"];
- }catch{return ["q4"]}
-}
+export async function getDtypes(id){try{const {AutoConfig}=await getTransformers();await AutoConfig.from_pretrained(id);return ["q4"]}catch{return ["q4"]}}
 export async function loadLocalLLM(id=recommendedModel().id,onProgress){
  if(generator&&loadedId===id)return generator;
  const {pipeline,env}=await getTransformers();
- env.allowLocalModels=false;
- env.useBrowserCache=true;
+ env.allowLocalModels=false;env.useBrowserCache=true;
  const info=runtimeInfo();
- try{
-  generator=await pipeline("text-generation",id,{
-   device:info.device,
-   dtype:"q4",
-   progress_callback:onProgress
-  });
- }catch(first){
-  // Some browsers/devices reject WebGPU/q4. Fall back to WASM automatically.
-  if(info.device!=="wasm"){
-   generator=await pipeline("text-generation",id,{
-    device:"wasm",
-    dtype:"q4",
-    progress_callback:onProgress
-   });
-  }else{
-   generator=null;
-   throw first;
-  }
+ try{generator=await pipeline("text-generation",id,{device:info.device,dtype:"q4",progress_callback:onProgress})}
+ catch(first){
+  if(info.device!=="wasm")generator=await pipeline("text-generation",id,{device:"wasm",dtype:"q4",progress_callback:onProgress});
+  else{generator=null;throw first}
  }
- loadedId=id;
- return generator;
+ loadedId=id;return generator;
 }
 export async function generateLocal(prompt,{id=recommendedModel().id,max_new_tokens,onProgress}={}){
- const pipe=await loadLocalLLM(id,onProgress);
- const mobile=runtimeInfo().mobile;
- const tokens=max_new_tokens??(mobile?96:160);
- const messages=[
-  {role:"system",content:"You are ToollooT AI. Be helpful, concise and natural. Reply in the user's language. Do not claim internet access."},
-  {role:"user",content:prompt}
- ];
- const out=await pipe(messages,{max_new_tokens:tokens,temperature:.65,do_sample:true,top_p:.9});
- const text=out?.[0]?.generated_text;
+ const pipe=await loadLocalLLM(id,onProgress),tokens=max_new_tokens??(runtimeInfo().mobile?96:160);
+ const messages=[{role:"system",content:"You are ToollooT AI. Be helpful, concise and natural. Reply in the user's language. Do not claim internet access."},{role:"user",content:prompt}];
+ const out=await pipe(messages,{max_new_tokens:tokens,temperature:.65,do_sample:true,top_p:.9}),text=out?.[0]?.generated_text;
  return Array.isArray(text)?text.at(-1)?.content||"":String(text||"");
 }
-
-// Background warm-up: no model button is required for the normal user.
-// The browser cache keeps the model for later chats after the first site visit.
 export function preloadRecommendedModel(onProgress){
  if(typeof window==="undefined")return Promise.resolve(null);
- const start=()=>loadLocalLLM(recommendedModel().id,onProgress).catch(()=>null);
- if("requestIdleCallback" in window)return new Promise(resolve=>window.requestIdleCallback(()=>resolve(start()),{timeout:2500}));
- return new Promise(resolve=>setTimeout(()=>resolve(start()),1800));
+ const warm=()=>{
+  try{if("serviceWorker" in navigator){const base=import.meta.env.BASE_URL||"/";navigator.serviceWorker.register(base+"sw.js",{scope:base}).catch(()=>{})}}catch{}
+  return loadLocalLLM(recommendedModel().id,onProgress).catch(()=>null);
+ };
+ if("requestIdleCallback" in window)return new Promise(resolve=>window.requestIdleCallback(()=>resolve(warm()),{timeout:2500}));
+ return new Promise(resolve=>setTimeout(()=>resolve(warm()),1800));
 }
