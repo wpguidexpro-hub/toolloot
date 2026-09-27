@@ -1,7 +1,7 @@
 import { env, pipeline } from "@huggingface/transformers";
 
 export const MODEL_KEY="toolloot:ai:model";
-export const MODEL_REGISTRY=[{id:"onnx-community/SmolLM2-360M-ONNX",name:"SmolLM2 360M • Local Browser AI",size:"~386 MB q4",license:"Apache-2.0",speed:"WebGPU / WASM",default:true}];
+export const MODEL_REGISTRY=[{id:"onnx-community/SmolLM2-135M-Instruct-ONNX-MHA",name:"SmolLM2 135M Instruct • Instant Local Browser AI",size:"~182 MB q4",license:"Apache-2.0",speed:"WebGPU / WASM",default:true}];
 export const DATASET_REGISTRY=[
 {id:"OpenRL/daily_dialog",name:"DailyDialog",size:"4.28 MB",license:"CC BY-NC-SA 4.0",file:"data/train-00000-of-00001-f151c79abb2c1fd5.parquet"},
 {id:"HuggingFaceTB/smoltalk",name:"SmolTalk • everyday conversations",size:"946 KB",license:"Apache-2.0",file:"data/everyday-conversations/train-00000-of-00001.parquet"}];
@@ -13,7 +13,7 @@ env.allowRemoteModels=true;
 env.useBrowserCache=true;
 env.useFSCache=false;
 // Bump this whenever the model/runtime changes so an old or partial ONNX cache can never be reused.
-env.cacheKey="toolloot-ai-smollm2-official-v5";
+env.cacheKey="toolloot-ai-smollm2-instruct-135m-v1";
 
 export const recommendedModel=()=>MODEL_REGISTRY[0];
 export const runtimeInfo=()=>({mobile:/Android|iPhone|iPad|iPod/i.test(navigator.userAgent),device:generatorMode||"browser",deviceLabel:generatorMode==="webgpu"?"WebGPU":generatorMode==="wasm"?"CPU/WASM":"Browser AI",cores:navigator.hardwareConcurrency||1,memory:navigator.deviceMemory||0});
