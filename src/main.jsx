@@ -109,6 +109,35 @@ function StandaloneLayout({ children }) {
 }
 function Layout({ children }) {
   const [installPrompt,setInstallPrompt] = useState(null);
+  const [dark,setDark] = useState(() => {
+    try {
+      const saved = localStorage.getItem("toolloot:theme");
+      if (saved === "dark") return true;
+      if (saved === "light") return false;
+      return window.matchMedia?.("(prefers-color-scheme: dark)")?.matches ?? false;
+    } catch { return false; }
+  });
+  useEffect(() => {
+    const onBeforeInstall = e => { e.preventDefault(); setInstallPrompt(e); };
+    window.addEventListener("beforeinstallprompt", onBeforeInstall);
+    return () => window.removeEventListener("beforeinstallprompt", onBeforeInstall);
+  }, []);
+  useEffect(() => {
+    try { localStorage.setItem("toolloot:theme", dark ? "dark" : "light"); } catch {}
+    document.documentElement.dataset.theme = dark ? "dark" : "light";
+  }, [dark]);
+  const installApp = async () => {
+    if (!installPrompt) return;
+    installPrompt.prompt();
+    try { await installPrompt.userChoice; } catch {}
+    setInstallPrompt(null);
+  };
+  return <div className={dark ? "app dark" : "app"}>
+    <Header dark={dark} setDark={setDark} canInstall={!!installPrompt} installApp={installApp}/>
+    {children}
+    <Footer/>
+  </div>;
+}
 function ToolCard({ tool }) {
   const openTool=async()=>{const recent=(await get("toolloot:recent-tools"))||[];const next=[tool.id,...recent.filter(id=>id!==tool.id)].slice(0,6);await set("toolloot:recent-tools",next)};
   return <a className="toolCard" href={link(tool.path)} onClick={openTool}>
