@@ -23,7 +23,7 @@ async function fetchChunkedModel(init){
   const urls=Array.from({length:PART_COUNT},(_,i)=>RAW_ROOT+"/model_q4.part-"+String(i).padStart(3,"0"));
   const parts=new Array(urls.length);
   let next=0;
-  const worker=async()=>{while(true){const i=next++;if(i>=urls.length)return;const r=await fetch(urls[i],init);if(!r.ok)throw new Error("AI model chunk "+(i+1)+" failed ("+r.status+")");parts[i]=await r.blob()}};
+  const worker=async()=>{while(true){const i=next++;if(i>=PART_COUNT)return;const r=await fetch(urls[i],init);if(!r.ok)throw new Error("AI model chunk "+(i+1)+" failed ("+r.status+")");parts[i]=await r.blob()}};
   await Promise.all([worker(),worker(),worker(),worker()]);
   return new Blob(parts,{type:"application/octet-stream"});
  })().catch(e=>{modelBlobPromise=null;throw e});
