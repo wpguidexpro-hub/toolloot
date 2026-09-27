@@ -36,3 +36,5 @@ jobs:
           git add models/github-ai/q4
           git commit -m "add GitHub-hosted q4 AI model chunks" || exit 0
           git push origin main
+
+# q4 chunked GitHub Raw delivery
