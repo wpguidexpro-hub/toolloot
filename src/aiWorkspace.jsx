@@ -22,7 +22,7 @@ export function ToollooTAI(){
  const input=useRef(null),fileInput=useRef(null),messageListRef=useRef(null);
  useEffect(()=>{(async()=>{let u=await load(USER_KEY,null);if(!u){u={id:uid(),name:"Guest User",email:"local@toolloot.app",mode:"guest"};await save(USER_KEY,u)}
    let c=await load(CHAT_KEY,[]);if(!c.length)c=[emptyChat()];setUser(u);setChats(c);setActiveId(c[0].id);setMemory(await load(MEMORY_KEY,{facts:[]}));setTeams(await load(TEAM_KEY,[]));
-   const savedModel=await load(MODEL_KEY,null);const safeModel=runtimeInfo().mobile&&savedModel===MODEL_REGISTRY[1].id?recommendedModel().id:(savedModel||recommendedModel().id);setModelId(safeModel);if(safeModel!==savedModel)save(MODEL_KEY,safeModel);
+   const savedModel=await load(MODEL_KEY,null);const legacyModel=savedModel==="onnx-community/SmolLM2-135M-Instruct-ONNX-MHA"||savedModel==="onnx-community/Qwen2.5-0.5B-Instruct";const safeModel=legacyModel?recommendedModel().id:(savedModel||recommendedModel().id);setModelId(safeModel);if(safeModel!==savedModel)save(MODEL_KEY,safeModel);
    sessionStorage.setItem("tl-session",sessionStorage.getItem("tl-session")||uid());track("app_open");
    // Prepare the default local model automatically in the background; no manual download step.
    preloadRecommendedModel().catch(()=>{});
@@ -39,7 +39,7 @@ export function ToollooTAI(){
    update(c=>({...c,messages:[...c.messages,um],title:c.messages.length?c.title:(promptText||f?.name||"New task").slice(0,42),updatedAt:now()}));await track("message_sent",{hasAttachment:!!f,command:promptText});
    try{const cmd=parseToolCommand(promptText,f);let result=null;let content="";if(cmd.tool==="image.compress"&&f)result=await imageCompressLocal(f,cmd.targetBytes);
      if(result)content="Done. "+bytes(f.size)+" -> "+bytes(result.blob.size);
-     else if(cmd.tool==="general"){try{content=await generateLocal(promptText,{id:modelId,max_new_tokens:runtimeInfo().mobile?96:160})}catch(e){content="ToollooT AI is preparing its local model. Please try again in a moment."}}
+     else if(cmd.tool==="general"){try{content=await generateLocal(promptText,{id:modelId,max_new_tokens:runtimeInfo().mobile?128:256,history:active?.messages||[]})}catch(e){content="ToollooT AI is preparing its local model. Please try again in a moment."}}
      else content="I can handle this task once the matching local tool is connected.";
      const msg={id:uid(),role:"assistant",content,tool:cmd.tool,result,createdAt:now()};update(c=>({...c,messages:[...c.messages,msg],updatedAt:now()}));await track("tool_completed",{tool:cmd.tool,success:!!result});
    }catch(e){update(c=>({...c,messages:[...c.messages,{id:uid(),role:"assistant",content:"I couldn't finish that task locally. Please try again.",createdAt:now()}],updatedAt:now()}));await track("tool_failed")}
