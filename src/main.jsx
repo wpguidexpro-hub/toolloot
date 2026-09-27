@@ -19,6 +19,8 @@ import "./components/CompressorGuide.css";
 import { ToollooTAI } from "./aiWorkspace.jsx";
 import { AnalyticsPage } from "./analyticsPage.jsx";
 import { AccountPage } from "./account.jsx";
+import { CloudWorkspace } from "./cloudWorkspace.jsx";
+import { OwnerAnalyticsPage } from "./ownerAnalyticsPage.jsx";
 import { imageToolMeta, ImageBatchTool, ExactSizeCompressor, ImageToolGuide } from "./imageTools.jsx";
 import { ChooseImage } from "./components/ChooseImage.jsx";
 import { ToolFileTimeline } from "./components/ToolTimeline.jsx";
@@ -68,7 +70,7 @@ function ToollooTIcon({ className="" }) {
 }
 function Header({ dark, setDark, canInstall, installApp }) {
   const [menu,setMenu] = useState(false);
-  const nav = [["Tools","/"],["Categories","/categories"],["How to Use","/how-to-use"],["About","/about"]];
+  const nav = [["Tools","/"],["Workspace","/workspace"],["Categories","/categories"],["How to Use","/how-to-use"],["Account","/account"]];
   return <header className="header">
     <a className="brand" href={link("/")} onClick={()=>setMenu(false)}>
       <span className="brandMark" aria-hidden="true"><i>T</i><b>•</b><i>T</i></span><span className="brandWord">ToollooT</span>
@@ -90,8 +92,7 @@ function Footer() {
     <small>(c) 2026 ToollooT</small>
   </div></footer>;
 }
-function Layout({ children }) {
-  const [installPrompt,setInstallPrompt] = useState(null);
+function StandaloneLayout({ children }) {
   const [dark,setDark] = useState(() => {
     try {
       const saved = localStorage.getItem("toolloot:theme");
@@ -104,30 +105,10 @@ function Layout({ children }) {
     try { localStorage.setItem("toolloot:theme", dark ? "dark" : "light"); } catch {}
     document.documentElement.dataset.theme = dark ? "dark" : "light";
   }, [dark]);
-  useEffect(() => {
-    if ("serviceWorker" in navigator) navigator.serviceWorker.register(link("/sw.js")).catch(()=>{});
-    const handler = e => { setInstallPrompt(e); };
-    const installedHandler = () => setInstallPrompt(null);
-    window.addEventListener("beforeinstallprompt", handler);
-    window.addEventListener("appinstalled", installedHandler);
-    return () => {
-      window.removeEventListener("beforeinstallprompt", handler);
-      window.removeEventListener("appinstalled", installedHandler);
-    };
-  }, []);
-  const installApp = async () => {
-    if (window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone) {
-      notify("info","ToollooT is already installed"); return;
-    }
-    if (!installPrompt) {
-      notify("info","Use your browser's Install App option to install ToollooT"); return;
-    }
-    installPrompt.prompt();
-    await installPrompt.userChoice;
-    setInstallPrompt(null);
-  };
-  return <div className={dark ? "app dark" : "app"}><Header dark={dark} setDark={setDark} canInstall={!!installPrompt} installApp={installApp}/>{children}<Footer/><nav className="mobileBottomNav" aria-label="Mobile navigation"><a href={link("/")}><HomeIcon size={19}/><span>Home</span></a><a href={link("/categories")}><Boxes size={19}/><span>Categories</span></a><a href={link("/how-to-use")}><FileText size={19}/><span>How to Use</span></a><a href={link("/about")}><HomeIcon size={19}/><span>About</span></a></nav></div>;
+  return <div className={dark ? "app dark standaloneRoute" : "app standaloneRoute"}>{children}</div>;
 }
+function Layout({ children }) {
+  const [installPrompt,setInstallPrompt] = useState(null);
 function ToolCard({ tool }) {
   const openTool=async()=>{const recent=(await get("toolloot:recent-tools"))||[];const next=[tool.id,...recent.filter(id=>id!==tool.id)].slice(0,6);await set("toolloot:recent-tools",next)};
   return <a className="toolCard" href={link(tool.path)} onClick={openTool}>
@@ -300,6 +281,8 @@ function Root(){
   if(local==="/categories/documents")return <CategoryPage categoryName="Documents" slug="documents"/>;
   if(local==="/categories/calculators")return <CategoryPage categoryName="Calculators" slug="calculators"/>;
   if(local==="/account")return <Layout><Seo title="ToollooT Account" description="Free ToollooT account and workspace identity."/><main className="staticPage"><AccountPage/></main></Layout>;
+  if(local==="/workspace")return <StandaloneLayout><Seo title="ToollooT Cloud Workspace" description="Multi-user ToollooT workspace with teams, shared chats, permissions and server-side memory."/><CloudWorkspace/></StandaloneLayout>;
+  if(local==="/owner-analytics")return <StandaloneLayout><Seo title="ToollooT Owner Analytics" description="Owner-only ToollooT platform analytics and advertising revenue dashboard."/><OwnerAnalyticsPage/></StandaloneLayout>;
   if(local==="/analytics")return <Layout><Seo title="ToollooT Analytics" description="ToollooT site analytics dashboard."/><main className="staticPage"><AnalyticsPage/></main></Layout>;
   if(local==="/about")return <AboutPage/>;
   if(local==="/privacy")return <PrivacyPage/>;
