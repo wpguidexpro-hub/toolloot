@@ -14,7 +14,7 @@ import "./styles.mobile-shell.css";
 import "./generation.css";
 import "./ai-minimal.css";
 import { imageToolMeta, ImageBatchTool, ExactSizeCompressor, ImageToolGuide } from "./imageTools.jsx";
-import { ImageSourcePicker } from "./imageSources.jsx";
+import { ChooseImage } from "./components/ChooseImage.jsx";
 import { ToolFileTimeline } from "./components/ToolTimeline.jsx";
 import { ToolPreview } from "./components/ToolPreview.jsx";
 
@@ -258,10 +258,10 @@ function ImageCompressor() {
   return <Layout><Seo title="Image Compressor - Free Online | ToollooT" description="Compress multiple images with individual settings directly in your browser."/>
     <main className="toolPage"><div className="container toolPageInner"><a className="backLink" href={link("/")}>Back to ToollooT</a>
       <div className="toolTitle compactToolTitle"><div className="toolIcon large"><Sparkles size={22}/></div><div><h1>Image Compressor</h1><p>Choose → quality → compress → download.</p></div></div>
-      {items.length===0&&<ImageSourcePicker accept="image/*" multiple={true} onFiles={addFiles} label="Choose images"/>}
+      {items.length===0&&<ChooseImage accept="image/*" multiple={true} onFiles={addFiles} label="Choose images"/>}
       {items.length>0&&<div className="compressWorkspace">
         <div className="compressorFixedTimeline"><ToolFileTimeline items={items} activeIndex={active} onSelect={setActive} onRemove={removeItem}/></div>
-        <div className="timelineAddBar"><ImageSourcePicker className="compactAddPicker" accept="image/*" multiple={true} onFiles={addFiles} label="Add more images"/><button type="button" className="timelineClearButton" onClick={clearAll} disabled={busy}><Trash2 size={13}/> Clear all</button></div>
+        <div className="timelineAddBar"><ChooseImage className="compactAddPicker" accept="image/*" multiple={true} onFiles={addFiles} label="Add more images"/><button type="button" className="timelineClearButton" onClick={clearAll} disabled={busy}><Trash2 size={13}/> Clear all</button></div>
         {item&&<div className="editorPanel"><ToolPreview item={item} busy={busy} generation={generation+" of "+items.length} progress={progress} onRemove={removeItem}/>
           <div className="contextSettings aiCompressorControls"><div className="aiSettingsIntro"><div className="aiBadge"><Sparkles size={14}/> Smart compression</div><strong>One setting for all images</strong><span>Choose quality once. ToollooT applies it to every selected image automatically.</span></div>
             <label className="qualityControl"><div><span>Quality</span><b>{Math.round(item.settings.quality*100)}%</b></div><input type="range" min=".1" max="1" step=".05" value={item.settings.quality} onChange={e=>updateQuality(Number(e.target.value))}/><div className="realtimeSize"><span>Estimated size</span><strong>{estimating?"Calculating…":estimatedSize!=null?formatBytes(estimatedSize):"—"}</strong>{estimatedSize!=null&&<em>{item.file.size>estimatedSize?Math.round((1-estimatedSize/item.file.size)*100)+"% smaller":"No size reduction"}</em>}</div><small>Lower = smaller file Â· Higher = more detail</small></label>
