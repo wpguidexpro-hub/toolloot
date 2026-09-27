@@ -16,6 +16,7 @@ env.remoteHost=RAW_ROOT;
 env.remotePathTemplate="{file}";
 env.useBrowserCache=true;
 env.useFSCache=false;
+env.cacheKey="toolloot-ai-q4-v2";
 
 async function fetchChunkedModel(init){
  if(modelBlobPromise)return modelBlobPromise;
@@ -23,9 +24,10 @@ async function fetchChunkedModel(init){
   const urls=Array.from({length:PART_COUNT},(_,i)=>RAW_ROOT+"/model_q4.part-"+String(i).padStart(3,"0"));
   const parts=new Array(urls.length);
   let next=0;
-  const worker=async()=>{while(true){const i=next++;if(i>=PART_COUNT)return;const r=await fetch(urls[i],init);if(!r.ok)throw new Error("AI model chunk "+(i+1)+" failed ("+r.status+")");parts[i]=await r.blob()}};
+  const worker=async()=>{while(true){const i=next++;if(i>=PART_COUNT)return;const r=await fetch(urls[i],{...init,cache:"no-store"});if(!r.ok)throw new Error("AI model chunk "+(i+1)+" failed ("+r.status+")");parts[i]=await r.arrayBuffer()}};
   await Promise.all([worker(),worker(),worker(),worker()]);
-  return new Blob(parts,{type:"application/octet-stream"});
+  const blob=new Blob(parts,{type:"application/octet-stream"});
+  return {blob,size:blob.size};
  })().catch(e=>{modelBlobPromise=null;throw e});
  return modelBlobPromise;
 }
@@ -33,7 +35,14 @@ async function fetchChunkedModel(init){
 env.fetch=async(input,init)=>{
  const source=input instanceof Request?input.url:String(input);
  const decoded=decodeURIComponent(source);
- if(decoded.includes("/onnx/model_q4.onnx"))return new Response(await fetchChunkedModel(init),{status:200,headers:{"content-type":"application/octet-stream"}});
+ if(decoded.includes("/onnx/model_q4.onnx")){
+  const result=await fetchChunkedModel(init);
+  return new Response(result.blob,{status:200,headers:{
+   "content-type":"application/octet-stream",
+   "content-length":String(result.size),
+   "cache-control":"public, max-age=31536000, immutable"
+  }});
+ }
  if(decoded.includes("/%7Bfile%7D/")||decoded.includes("/{file}/")){
   const file=decoded.split("/").filter(Boolean).at(-1);
   if(file)return fetch(RAW_ROOT+"/"+file,init);
