@@ -267,7 +267,7 @@ function ImageCompressor() {
           </div>
           {item.result&&!busy&&<div className="resultSummary"><span>{item.result.width} Ã— {item.result.height}</span><strong>{formatBytes(item.file.size)} → {formatBytes(item.result.blob.size)}</strong><span>{item.file.size>item.result.blob.size?Math.round((1-item.result.blob.size/item.file.size)*100)+"% smaller":"No size reduction"}</span><a className="downloadButton" href={item.result.url} download={item.result.name}><Download size={15}/> Download</a></div>}
         </div>}
-        <div className="workspaceMiniFooter"><span><strong>{items.length}</strong> image{items.length>1?"s":""} selected</span><button className="textButton" onClick={clearAll} disabled={busy}>Clear all</button></div>
+        <div className="workspaceMiniFooter"><span><strong>{items.length}</strong> image{items.length>1?"s":""} selected</span><span className="workspaceReadyHint"><Sparkles size={12}/> Individual processing • local only</span></div>
       </div>}
       <div className="privacyNote"><Shield size={17}/><span>Everything is processed locally in your browser. Your images are not uploaded.</span></div>
       <div className="toolHelpLink"><a href={link("/how-to-use/image-compressor")}>How to use Image Compressor <span>→</span></a></div>

@@ -11,7 +11,7 @@
 .aiQuickControls label span{font-size:13px;font-weight:700}.aiQuickControls label b{justify-self:end;font-size:13px}
 .aiQuickControls input{grid-column:1/-1;width:100%}
 .aiGenerateButton{min-height:44px;white-space:nowrap}
-.compressWorkspace .imageTimeline,.compressWorkspace .workspaceFooter,.privacyNote,.toolHelpLink{display:none!important}
+.compressWorkspace .workspaceFooter,.privacyNote,.toolHelpLink{display:none!important}
 .contextSettings .aiSettingsIntro{display:none!important}
 .aiCompressorControls{margin-top:10px!important;padding:12px!important;border:1px solid #e5e7eb;border-radius:16px;background:#fff}
 .qualityControl{display:grid!important;grid-template-columns:auto auto;gap:7px 10px;align-items:center}
