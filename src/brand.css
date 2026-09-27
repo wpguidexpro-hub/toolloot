@@ -18,3 +18,33 @@ footer{background:rgba(248,249,250,.82)!important;border-top:1px solid rgba(8,9,
 .dark .app{background:#07090d!important;color:#f5f7fa!important}.dark .header{background:rgba(7,9,13,.76)!important;border-color:rgba(255,255,255,.09)!important}.dark .brandWord{color:#fff}.dark .toolPage{background:#07090d!important}.dark .toolCard,.dark .compressWorkspace,.dark .imageToolShell,.dark .sourcePicker{background:rgba(15,18,27,.86)!important;border-color:rgba(255,255,255,.09)!important}.dark .category{background:rgba(15,18,27,.8)!important;border-color:rgba(255,255,255,.09)!important;color:#c5cad3}.dark footer{background:rgba(7,9,13,.8)!important;border-color:rgba(255,255,255,.09)!important}
 @media(max-width:760px){.header{height:58px!important}.brandWord{font-size:18px!important}.hero{min-height:520px}.heroInner{width:100%;padding:72px 18px 70px!important}.hero h1{font-size:clamp(42px,13vw,60px)!important;line-height:.98!important}.hero p{font-size:15px!important;margin:18px 0 24px!important}.searchBox{height:56px!important}.section{padding-top:38px!important}.toolCard{border-radius:14px!important}.toolGrid{gap:10px!important}.toolIcon{width:36px;height:36px}.mobileBottomNav{background:rgba(248,249,250,.9)!important;border-top:1px solid rgba(8,9,12,.08)!important}.dark .mobileBottomNav{background:rgba(7,9,13,.92)!important;border-color:rgba(255,255,255,.09)!important}}
 .heroActions{display:flex;gap:10px;flex-wrap:wrap}.primaryButton,.secondaryButton{display:inline-flex;align-items:center;justify-content:center;min-height:46px;padding:0 18px;border-radius:12px;text-decoration:none;font-weight:800}.primaryButton{background:#d7ff3f;color:#08090c}.secondaryButton{color:#fff;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.05)}.toolsSection{padding-top:46px;padding-bottom:70px}.sectionHead{display:flex;align-items:end;justify-content:space-between;gap:20px;margin-bottom:18px}.sectionHead h2{margin:7px 0 4px;font-size:30px;letter-spacing:-.04em}.sectionHead p{margin:0;color:#737985}.toolCount{font-size:13px;color:#737985;padding-bottom:7px}
+/* Final adaptive product UI polish */
+.dashboardHome .hero{position:relative;overflow:hidden}
+.dashboardHome .heroInner{position:relative;z-index:2}
+.dashboardHome .heroInner:after{content:"";position:absolute;right:3%;top:18%;width:240px;height:240px;border:1px solid rgba(215,255,63,.13);border-radius:50%;box-shadow:0 0 0 34px rgba(128,104,255,.025),0 0 0 70px rgba(69,230,255,.018);pointer-events:none}
+.dashboardHome .heroActions .primaryButton{background:#d7ff3f;color:#08090c!important}
+.dashboardHome .heroActions .secondaryButton{border-color:rgba(255,255,255,.14)!important}
+.dashboardHome .toolsSection{position:relative}
+.dashboardHome .toolsSection:before{content:"";position:absolute;left:0;right:0;top:0;height:1px;background:linear-gradient(90deg,transparent,rgba(8,9,12,.1),transparent)}
+.dashboardHome .toolGrid{grid-template-columns:repeat(4,minmax(0,1fr))}
+.dashboardHome .toolCard{min-height:176px;display:flex;flex-direction:column}
+.dashboardHome .toolCard .toolLink{margin-top:auto}
+.dashboardHome .toolCard:nth-child(3n+1) .toolIcon{box-shadow:0 8px 24px rgba(128,104,255,.18)}
+.dashboardHome .toolCard:nth-child(3n+2) .toolIcon{box-shadow:0 8px 24px rgba(69,230,255,.14)}
+.dashboardHome .toolCard:nth-child(3n) .toolIcon{box-shadow:0 8px 24px rgba(215,255,63,.13)}
+@media(max-width:1000px) and (min-width:761px){.dashboardHome .toolGrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:760px){
+ .dashboardHome .heroInner:after{right:-95px;top:10%;width:180px;height:180px}
+ .dashboardHome .hero{min-height:calc(100dvh - 58px)!important}
+ .dashboardHome .heroInner{display:flex;flex-direction:column;justify-content:center}
+ .dashboardHome .toolGrid{grid-template-columns:1fr!important}
+ .dashboardHome .toolCard{min-height:88px}
+}
+.dark .dashboardHome .toolsSection:before{background:linear-gradient(90deg,transparent,rgba(255,255,255,.09),transparent)}
+
+/* Native-feeling mobile cards */
+@media(max-width:760px){
+ .dashboardHome .toolCard{box-shadow:0 7px 22px rgba(8,9,12,.045)!important}
+ .dashboardHome .toolCard:active{transform:scale(.985)}
+ .dashboardHome .toolsSection{padding-bottom:46px}
+}
