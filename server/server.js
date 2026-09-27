@@ -1,0 +1,14 @@
+import express from express;
+import http from http;
+import cors from cors;
+import { Server } from socket.io;
+import bcrypt from bcryptjs;
+import jwt from jsonwebtoken;
+const app=express();const server=http.createServer(app);const io=new Server(server,{cors:{origin:*}});app.use(cors());app.use(express.json());
+const users=new Map();const messages=new Map();const JWT_SECRET=process.env.JWT_SECRET||change-this-secret;
+app.get(/api/health,(_,res)=>res.json({ok:true,service:ToollooT Chat}));
+app.post(/api/register,async(req,res)=>{const {name,email,password}=req.body||{};if(!name||!email||!password)return res.status(400).json({error:Name email and password are required});const key=email.toLowerCase();if(users.has(key))return res.status(409).json({error:Account already exists});const hash=await bcrypt.hash(password,12);users.set(key,{id:crypto.randomUUID(),name,email:key,hash});res.status(201).json({ok:true})});
+app.post(/api/login,async(req,res)=>{const {email,password}=req.body||{};const u=users.get(String(email||).toLowerCase());if(!u||!(await bcrypt.compare(password||,u.hash)))return res.status(401).json({error:Invalid email or password});const token=jwt.sign({id:u.id,email:u.email,name:u.name},JWT_SECRET,{expiresIn:7d});res.json({token,user:{id:u.id,name:u.name,email:u.email}})});
+io.use((socket,next)=>{try{const token=socket.handshake.auth?.token;socket.user=jwt.verify(token,JWT_SECRET);next()}catch{next(new Error(Unauthorized))}});
+io.on(connection,socket=>{socket.join(socket.user.id);socket.on(message:send,msg=>{const out={...msg,id:crypto.randomUUID(),senderId:socket.user.id,createdAt:new Date().toISOString()};const room=msg.conversationId;if(!messages.has(room))messages.set(room,[]);messages.get(room).push(out);io.to(room).emit(message:new,out)});socket.on(conversation:join,id=>socket.join(id));socket.on(typing,({conversationId,isTyping})=>socket.to(conversationId).emit(typing,{userId:socket.user.id,isTyping}))});
+server.listen(process.env.PORT||5186,0.0.0.0,()=>console.log(ToollooT Chat server on 5186));
