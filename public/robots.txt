@@ -1,3 +1,0 @@
-User-agent: *
-Allow: /
-Sitemap: https://wpguidexpro-hub.github.io/toolloot/sitemap.xml
