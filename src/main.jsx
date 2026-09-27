@@ -16,6 +16,8 @@ import "./ai-minimal.css";
 import "./future-ui.css";
 import "./brand.css";
 import "./components/CompressorGuide.css";
+import { ToollooTAI } from "./aiWorkspace.jsx";
+import { AnalyticsPage } from "./analyticsPage.jsx";
 import { imageToolMeta, ImageBatchTool, ExactSizeCompressor, ImageToolGuide } from "./imageTools.jsx";
 import { ChooseImage } from "./components/ChooseImage.jsx";
 import { ToolFileTimeline } from "./components/ToolTimeline.jsx";
@@ -133,33 +135,7 @@ function ToolCard({ tool }) {
   </a>;
 }
 function Home() {
-  const [query,setQuery]=useState(""); const [category,setCategory]=useState("All Tools"); const [recentIds,setRecentIds]=useState([]);
-  useEffect(()=>{get("toolloot:recent-tools").then(v=>setRecentIds(v||[]))},[]);
-  const filtered=useMemo(()=>tools.filter(t=>
-    (category==="All Tools"||t.category===category) &&
-    (t.name+" "+t.description).toLowerCase().includes(query.toLowerCase())
-  ),[query,category]);
-  const recentTools=recentIds.map(id=>tools.find(t=>t.id===id)).filter(Boolean);
-  return <Layout><Seo title="ToollooT - Free Online Tools" description="ToollooT provides simple, fast and free online tools for images, documents, developers and everyday work."/>
-    <main>
-      <section className="hero"><div className="container heroInner">
-        <div className="brandKicker"><span className="brandPulse"></span> TOOLLOOT INTELLIGENCE WORKSPACE</div><h1>Tools that feel <em>ahead.</em></h1>
-        <p>One place for the things you make, fix, convert and calculate. Fast, local-first and designed to feel almost effortless.</p>
-        <label className="searchBox"><Search size={20}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search tools..." aria-label="Search tools"/></label>
-      </div></section>
-      {recentTools.length>0&&<section className="container section recentSection"><div className="sectionHead"><div><h2>Recently used</h2><p>Your recent tools are stored only in this browser.</p></div></div><div className="toolGrid">{recentTools.map(t=><ToolCard tool={t} key={t.id}/>)}</div></section>}
-      <section className="container section" id="categories"><div className="sectionHead"><div><h2>Categories</h2><p>Browse tools by category.</p></div></div>
-        <div className="categoryRow">{categories.map(({name,icon:Icon})=><button key={name} className={category===name?"category active":"category"} onClick={()=>setCategory(name)}><Icon size={17}/>{name}</button>)}</div>
-      </section>
-      <section className="container section" id="tools"><div className="sectionHead"><div><h2>Tools</h2><p>{filtered.length} available</p></div></div>
-        <div className="toolGrid">{filtered.map(t=><ToolCard tool={t} key={t.id}/>)}</div>
-      </section>
-      <section className="container section about"><h2>Built around the way you work</h2>
-        <p>ToollooT turns repetitive web tasks into focused mini-workspaces. Recent tools, local preferences and in-progress browser sessions can stay on this device so you can continue without starting from zero.</p>
-        <div className="aboutGrid"><div><strong>⚡ Instant</strong><span>Open a tool, bring in your files and get straight to the useful controls.</span></div><div><strong>🧠 Context-aware</strong><span>Each workspace exposes the settings that matter instead of overwhelming you.</span></div><div><strong>🔒 Local-first</strong><span>Browser processing is used wherever practical, keeping files on your device.</span></div></div>
-      </section>
-    </main>
-  </Layout>;
+  return <Layout><Seo title="ToollooT AI - Free AI Utility Workspace" description="ToollooT AI is a free multi-user utility workspace where natural-language commands run local tools for images, PDFs and files."/><main className="aiRoute"><ToollooTAI/></main></Layout>;
 }
 function Page({ title,description,icon:Icon,children }) {
   return <Layout><Seo title={title} description={description}/><main className="staticPage container">
@@ -322,6 +298,7 @@ function Root(){
   if(local==="/categories/images")return <CategoryPage categoryName="Images" slug="images"/>;
   if(local==="/categories/documents")return <CategoryPage categoryName="Documents" slug="documents"/>;
   if(local==="/categories/calculators")return <CategoryPage categoryName="Calculators" slug="calculators"/>;
+  if(local==="/analytics")return <Layout><Seo title="ToollooT Analytics" description="ToollooT site analytics dashboard."/><main className="staticPage"><AnalyticsPage/></main></Layout>;
   if(local==="/about")return <AboutPage/>;
   if(local==="/privacy")return <PrivacyPage/>;
   if(local==="/terms")return <TermsPage/>;
