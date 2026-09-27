@@ -1,55 +1,25 @@
+import { env, pipeline } from "@huggingface/transformers";
+
 export const MODEL_KEY="toolloot:ai:model";
-export const MODEL_REGISTRY=[
- {id:"onnx-community/Qwen3-0.6B-ONNX",name:"Qwen3 0.6B • Smart",size:"~570 MB q4f16",license:"Apache-2.0",speed:"PC + capable mobile",default:true},
- {id:"onnx-community/SmolLM2-135M-Instruct-ONNX-MHA",name:"SmolLM2 135M • Fast",size:"~182 MB q4",license:"Apache-2.0",speed:"mobile + PC"}
-];
+export const MODEL_REGISTRY=[{id:"onnx-community/Qwen3-0.6B-ONNX",name:"Qwen3 0.6B • GitHub",size:"~570 MB WebGPU / ~919 MB CPU",license:"Apache-2.0",speed:"WebGPU / WASM",default:true}];
 export const DATASET_REGISTRY=[
- {id:"OpenRL/daily_dialog",name:"DailyDialog",size:"4.28 MB",license:"CC BY-NC-SA 4.0",file:"data/train-00000-of-00001-f151c79abb2c1fd5.parquet"},
- {id:"HuggingFaceTB/smoltalk",name:"SmolTalk • everyday conversations",size:"946 KB",license:"Apache-2.0",file:"data/everyday-conversations/train-00000-of-00001.parquet"},
-];
-let generator=null,loadedId="";
-let transformersPromise=null;
-const getTransformers=()=>transformersPromise||(transformersPromise=import("@huggingface/transformers"));
-const isMobile=()=>/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)||Math.min(screen.width,screen.height)<700;
+{id:"OpenRL/daily_dialog",name:"DailyDialog",size:"4.28 MB",license:"CC BY-NC-SA 4.0",file:"data/train-00000-of-00001-f151c79abb2c1fd5.parquet"},
+{id:"HuggingFaceTB/smoltalk",name:"SmolTalk • everyday conversations",size:"946 KB",license:"Apache-2.0",file:"data/everyday-conversations/train-00000-of-00001.parquet"}];
+
+const RELEASE_ROOT="https://github.com/wpguidexpro-hub/toolloot/releases/download/toolloot-ai-v1";
+let generator=null,generatorMode="",loading=null;
+env.allowLocalModels=false;env.allowRemoteModels=true;env.remoteHost=RELEASE_ROOT;env.remotePathTemplate="{file}";env.useBrowserCache=true;env.useFSCache=false;
+env.fetch=async(input,init)=>{const source=input instanceof Request?input.url:String(input);if(source.startsWith(RELEASE_ROOT+"/")){const name=decodeURIComponent(new URL(source).pathname.split("/").pop()||"");return fetch(RELEASE_ROOT+"/"+name,init)}return fetch(input,init)};
 export const recommendedModel=()=>MODEL_REGISTRY[0];
-export const runtimeInfo=()=>({mobile:isMobile(),device:navigator.gpu?"webgpu":"wasm",deviceLabel:navigator.gpu?"WebGPU":"WASM",cores:navigator.hardwareConcurrency||1,memory:navigator.deviceMemory||0});
-export function modelUrl(id,file=""){return `https://huggingface.co/${id}/resolve/main/${file}`}
-export async function getDtypes(id){try{const {ModelRegistry}=await getTransformers();return await ModelRegistry.get_available_dtypes(id)}catch{return ["q4"]}}
-export async function loadLocalLLM(id=recommendedModel().id,onProgress){
- if(generator&&loadedId===id)return generator;
- const {pipeline,env}=await getTransformers();
- env.allowLocalModels=false;env.useBrowserCache=true;
- const info=runtimeInfo();
- const dtype=id==="onnx-community/Qwen3-0.6B-ONNX"?"q4f16":"q4";
- try{generator=await pipeline("text-generation",id,{device:info.device,dtype,progress_callback:onProgress})}
- catch(first){
-  if(info.device!=="wasm")generator=await pipeline("text-generation",id,{device:"wasm",dtype,progress_callback:onProgress});
-  else{generator=null;throw first}
- }
- loadedId=id;return generator;
-}
-export async function generateLocal(prompt,{id=recommendedModel().id,max_new_tokens,onProgress,history=[],memory={facts:[],items:[]}}={}){
- const pipe=await loadLocalLLM(id,onProgress),tokens=max_new_tokens??(runtimeInfo().mobile?128:256);
- const context=history.filter(m=>m?.role&&m?.content).slice(-14).map(m=>({role:m.role,content:String(m.content).slice(0,5000)}));
- const facts=(memory.facts||[]).map(f=>f?.type+": "+f?.value).join("\n");
- const memories=(memory.items||[]).map(x=>x?.text).filter(Boolean).join("\n---\n").slice(0,12000);
- const memoryContext=[facts,memories].filter(Boolean).join("\n");
- const messages=[
-  {role:"system",content:"You are ToollooT AI, a capable general-purpose assistant. Be accurate, natural, helpful and concise. Reply in the user's language (Hindi, English or Hinglish). Remember the conversation context and the user's locally stored memory when relevant. Use memory as context, not as unquestionable truth. Avoid repeating the same wording across turns. Do not introduce yourself unless relevant. Never invent internet access or actions you did not perform. If uncertain, say so and explain what information is needed. You may learn from new conversation context, but do not claim that your neural weights were retrained."},
-  ...(memoryContext?[{role:"system",content:"Relevant long-term memory from this user's previous local chats:\n"+memoryContext}]:[]),
-  ...context,
-  {role:"user",content:prompt}
- ];
- const out=await pipe(messages,{max_new_tokens:tokens,temperature:.55,do_sample:true,top_p:.9,repetition_penalty:1.08}),text=out?.[0]?.generated_text;
- const answer=Array.isArray(text)?text.at(-1)?.content||"":String(text||"");
- return answer.replace(/^assistant\\s*[:：-]\\s*/i,"").trim();
-}
-export function preloadRecommendedModel(onProgress){
- if(typeof window==="undefined")return Promise.resolve(null);
- const warm=()=>{
-  try{if("serviceWorker" in navigator){const base=import.meta.env.BASE_URL||"/";navigator.serviceWorker.register(base+"sw.js",{scope:base}).catch(()=>{})}}catch{}
-  return loadLocalLLM(recommendedModel().id,onProgress).catch(()=>null);
- };
- if("requestIdleCallback" in window)return new Promise(resolve=>window.requestIdleCallback(()=>resolve(warm()),{timeout:2500}));
- return new Promise(resolve=>setTimeout(()=>resolve(warm()),1800));
-}
+export const runtimeInfo=()=>({mobile:/Android|iPhone|iPad|iPod/i.test(navigator.userAgent),device:generatorMode||"browser",deviceLabel:generatorMode==="webgpu"?"WebGPU":generatorMode==="wasm"?"CPU/WASM":"GitHub browser AI",cores:navigator.hardwareConcurrency||1,memory:navigator.deviceMemory||0});
+export function modelUrl(_id,file=""){return RELEASE_ROOT+"/"+file.split("/").pop()}
+export function datasetUrl(id,file=""){return "https://huggingface.co/datasets/"+id+"/resolve/main/"+file}
+export async function getDtypes(){return["q4f16","q4"]}
+
+async function canUseFloat16WebGPU(){try{if(!navigator.gpu)return false;const adapter=await navigator.gpu.requestAdapter({powerPreference:"high-performance"});return!!adapter&&!!adapter.features?.has?.("shader-f16")}catch{return false}}
+async function createGenerator(onProgress){const webgpu=await canUseFloat16WebGPU(),device=webgpu?"webgpu":"wasm",dtype=webgpu?"q4f16":"q4";onProgress?.({status:"loading",progress:5,device,dtype});const pipe=await pipeline("text-generation",recommendedModel().id,{device,dtype,progress_callback:p=>{const loaded=Number(p?.progress);onProgress?.({status:"loading",progress:Number.isFinite(loaded)?Math.min(95,Math.max(5,loaded)):10,device,dtype})}});generatorMode=device;onProgress?.({status:"ready",progress:100,device,dtype});return pipe}
+export async function loadLocalLLM(_id=recommendedModel().id,onProgress){if(generator){onProgress?.({status:"ready",progress:100,device:generatorMode});return generator}if(loading)return loading;loading=createGenerator(onProgress).finally(()=>{loading=null});generator=await loading;return generator}
+const clean=text=>String(text||"").replace(/<think>[\s\S]*?<\/think>/gi,"").replace(/^assistant\s*[:：-]\s*/i,"").trim();
+function buildMessages(prompt,history=[],memory={}){const facts=(memory.facts||[]).map(f=>f?.type+": "+f?.value).join("\n"),memories=(memory.items||[]).map(x=>x?.text).filter(Boolean).slice(-8).join("\n---\n"),memoryText=[facts,memories].filter(Boolean).join("\n"),context=(history||[]).filter(m=>m?.role&&m?.content).slice(-16).map(m=>({role:m.role==="assistant"?"assistant":"user",content:String(m.content).slice(0,6000)}));return[{role:"system",content:"You are ToollooT AI. Be intelligent, accurate, natural and concise. Reply in Hindi, English or Hinglish matching the user. Use the conversation and memory as context. Never claim an action, tool, internet access or learning event that did not happen. Do not claim that your model weights changed."},...(memoryText?[{role:"system",content:"Relevant long-term memory:\n"+memoryText}]:[]),...context,{role:"user",content:String(prompt||"")+"\n/no_think"}]}
+export async function generateLocal(prompt,{max_new_tokens,history=[],memory={}}={}){if(!String(prompt||"").trim())throw new Error("Prompt required");const pipe=await loadLocalLLM(),output=await pipe(buildMessages(prompt,history,memory),{max_new_tokens:Math.max(32,Math.min(Number(max_new_tokens)||256,768)),do_sample:true,temperature:.55,top_p:.9,repetition_penalty:1.08,chat_template_kwargs:{enable_thinking:false}}),generated=output?.[0]?.generated_text,raw=Array.isArray(generated)?generated.at(-1)?.content:generated;return clean(raw)}
+export function preloadRecommendedModel(onProgress){if(typeof window==="undefined")return Promise.resolve(null);return loadLocalLLM(recommendedModel().id,onProgress).catch(()=>null)}
