@@ -32,7 +32,12 @@ async function fetchChunkedModel(init){
 
 env.fetch=async(input,init)=>{
  const source=input instanceof Request?input.url:String(input);
- if(source.endsWith("/onnx/model_q4.onnx"))return new Response(await fetchChunkedModel(init),{status:200,headers:{"content-type":"application/octet-stream"}});
+ const decoded=decodeURIComponent(source);
+ if(decoded.includes("/onnx/model_q4.onnx"))return new Response(await fetchChunkedModel(init),{status:200,headers:{"content-type":"application/octet-stream"}});
+ if(decoded.includes("/%7Bfile%7D/")||decoded.includes("/{file}/")){
+  const file=decoded.split("/").filter(Boolean).at(-1);
+  if(file)return fetch(RAW_ROOT+"/"+file,init);
+ }
  return fetch(input,init);
 };
 
