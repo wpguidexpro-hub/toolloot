@@ -1,0 +1,16 @@
+import React, { useEffect, useState } from "react";
+import { BrainCircuit, Cpu, Database, Download, ExternalLink, X, Zap } from "lucide-react";
+import { DATASET_REGISTRY, MODEL_REGISTRY, getDtypes, loadLocalLLM, modelUrl } from "./aiModel.js";
+import "./aiLab.css";
+
+const size=(n)=>{const u=["B","KB","MB","GB"];let i=0;while(n>=1024&&i<3){n/=1024;i++}return `${n.toFixed(i?1:0)} ${u[i]}`};
+export function AILab({onClose,onModelReady}){
+ const [model,setModel]=useState(MODEL_REGISTRY[0].id),[status,setStatus]=useState("idle"),[progress,setProgress]=useState(0),[dtypes,setDtypes]=useState([]),[message,setMessage]=useState("");
+ useEffect(()=>{getDtypes(model).then(setDtypes)},[model]);
+ const load=async()=>{setStatus("loading");setProgress(0);setMessage("Downloading model files and preparing the neural runtime…");try{await loadLocalLLM(model,p=>{const v=typeof p?.progress==="number"?p.progress:0;setProgress(Math.max(0,Math.min(100,v)))});setStatus("ready");setProgress(100);setMessage("LLM ready. It is cached by Transformers.js for later use.");onModelReady?.(model)}catch(e){setStatus("error");setMessage(e?.message||"Model could not be loaded")}};
+ return <div className="tlLabOverlay" role="dialog" aria-modal="true"><div className="tlLab"><header><div><span className="tlLabKicker"><BrainCircuit size={15}/>LOCAL AI LAB</span><h2>LLM + Neural Runtime</h2><p>Download an open model, run it in the browser, and keep the model cache on-device.</p></div><button className="tlIconBtn" onClick={onClose}><X size={19}/></button></header>
+  <section className="tlLabGrid"><div className="tlLabCard"><div className="tlLabCardHead"><Cpu size={18}/><b>LLM models</b></div><select value={model} onChange={e=>{setModel(e.target.value);setStatus("idle");setMessage("")}}>{MODEL_REGISTRY.map(m=><option key={m.id} value={m.id}>{m.name} • {m.size}</option>)}</select><div className="tlModelMeta"><span>Device: {navigator.gpu?"WebGPU":"WASM / CPU"}</span><span>Formats: {dtypes.length?dtypes.join(", "):"checking…"}</span></div><button className="tlLabPrimary" onClick={load} disabled={status==="loading"}><Zap size={16}/>{status==="loading"?"Preparing model…":status==="ready"?"Model ready":"Download & load LLM"}</button>{status==="loading"&&<div className="tlProgress"><div style={{width:`${progress}%`}}/></div>}<small className="tlLabNote">First load can be large. No API key is required.</small>{message&&<div className={`tlLabStatus ${status}`}>{message}</div>}</div>
+   <div className="tlLabCard"><div className="tlLabCardHead"><Database size={18}/><b>Training datasets</b></div><p className="tlLabIntro">Use small datasets for experiments first. Downloads go directly from Hugging Face.</p>{DATASET_REGISTRY.map(d=><div className="tlDataset" key={d.id}><div><b>{d.name}</b><small>{d.size} • {d.license}</small></div><a href={modelUrl(d.id,d.file)} download><Download size={15}/>Download</a><a href={`https://huggingface.co/datasets/${d.id}`} target="_blank" rel="noreferrer" aria-label={`Open ${d.name}`}><ExternalLink size={14}/></a></div>)}</div></section>
+  <footer><span>Neural inference: Transformers.js + ONNX</span><span>Local-first • cached in browser</span></footer>
+ </div></div>
+}

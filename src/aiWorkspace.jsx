@@ -1,8 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { get, set, del } from "idb-keyval";
 import Swal from "sweetalert2";
-import { Plus, Search, Menu, X, Send, Paperclip, Image as ImageIcon, FileText, Download, Sparkles, Brain, Users, Settings, MessageSquare, Shield, UserPlus, BarChart3, Loader2 } from "lucide-react";
+import { Plus, Search, Menu, X, Send, Paperclip, Image as ImageIcon, FileText, Download, Sparkles, Brain, BrainCircuit, Users, Settings, MessageSquare, Shield, UserPlus, BarChart3, Loader2 } from "lucide-react";
 import { imageCompressLocal, parseToolCommand } from "./aiTools.js";
+import { generateLocal, MODEL_KEY, MODEL_REGISTRY } from "./aiModel.js";
+import { AILab } from "./aiLab.jsx";
 import "./aiWorkspace.css";
 
 const CHAT_KEY="toolloot:ai:chats", USER_KEY="toolloot:ai:user", TEAM_KEY="toolloot:ai:teams", MEMORY_KEY="toolloot:ai:memory", ANALYTICS_KEY="toolloot:analytics:events";
@@ -12,14 +14,14 @@ async function load(k,f){try{return (await get(k))??f}catch{return f}}
 async function save(k,v){try{await set(k,v)}catch{}}
 async function track(event,data={}){const a=await load(ANALYTICS_KEY,[]);a.push({id:uid(),event,ts:Date.now(),path:location.pathname,session:sessionStorage.getItem("tl-session")||uid(),...data});await save(ANALYTICS_KEY,a.slice(-5000))}
 const bytes=n=>{if(!n)return"0 B";const u=["B","KB","MB","GB"],i=Math.min(Math.floor(Math.log(n)/Math.log(1024)),3);return(n/1024**i).toFixed(i?2:0)+" "+u[i]};
-function Logo(){return <span className="tlAiLogo"><b>T</b><i>AI</i><b>T</b></span>}
+function Logo(){return <span className="tlAiLogo"><b>T</b><i>AI</i></span>}
 
 export function ToollooTAI(){
- const [user,setUser]=useState(null),[chats,setChats]=useState([]),[activeId,setActiveId]=useState(null),[memory,setMemory]=useState({facts:[]}),[teams,setTeams]=useState([]),[processing,setProcessing]=useState(false);
+ const [user,setUser]=useState(null),[chats,setChats]=useState([]),[activeId,setActiveId]=useState(null),[memory,setMemory]=useState({facts:[]}),[teams,setTeams]=useState([]),[processing,setProcessing]=useState(false),[showLab,setShowLab]=useState(false),[modelId,setModelId]=useState(MODEL_REGISTRY[0].id);
  const [search,setSearch]=useState(""),[text,setText]=useState(""),[file,setFile]=useState(null),[busy,setBusy]=useState(false),[mobile,setMobile]=useState(false);
  const input=useRef(null),fileInput=useRef(null),messageListRef=useRef(null);
  useEffect(()=>{(async()=>{let u=await load(USER_KEY,null);if(!u){u={id:uid(),name:"Guest User",email:"local@toolloot.app",mode:"guest"};await save(USER_KEY,u)}
-   let c=await load(CHAT_KEY,[]);if(!c.length)c=[emptyChat()];setUser(u);setChats(c);setActiveId(c[0].id);setMemory(await load(MEMORY_KEY,{facts:[]}));setTeams(await load(TEAM_KEY,[]));sessionStorage.setItem("tl-session",sessionStorage.getItem("tl-session")||uid());track("app_open")})()},[]);
+   let c=await load(CHAT_KEY,[]);if(!c.length)c=[emptyChat()];setUser(u);setChats(c);setActiveId(c[0].id);setMemory(await load(MEMORY_KEY,{facts:[]}));setTeams(await load(TEAM_KEY,[]));setModelId(await load(MODEL_KEY,MODEL_REGISTRY[0].id));sessionStorage.setItem("tl-session",sessionStorage.getItem("tl-session")||uid());track("app_open")})()},[]);
  useEffect(()=>{if(chats.length)save(CHAT_KEY,chats)},[chats]);
  const active=chats.find(c=>c.id===activeId)||chats[0];
  useEffect(()=>{const el=messageListRef.current;if(!el)return;requestAnimationFrame(()=>{el.scrollTo({top:el.scrollHeight,behavior:"smooth"})})},[active?.messages?.length,busy]);
@@ -30,8 +32,11 @@ export function ToollooTAI(){
  const send=async()=>{if(busy||(!text.trim()&&!file))return;const promptText=text.trim(),f=file;setText("");setFile(null);setBusy(true);setProcessing(true);
    const um={id:uid(),role:"user",content:promptText||"Process this file",attachment:f?{name:f.name,type:f.type,size:f.size,blob:f}:null,createdAt:now()};
    update(c=>({...c,messages:[...c.messages,um],title:c.messages.length?c.title:(promptText||f?.name||"New task").slice(0,42),updatedAt:now()}));await track("message_sent",{hasAttachment:!!f,command:promptText});
-   try{const cmd=parseToolCommand(promptText,f);let result=null;if(cmd.tool==="image.compress"&&f)result=await imageCompressLocal(f,cmd.targetBytes);
-     const msg={id:uid(),role:"assistant",content:result?"Done. "+bytes(f.size)+" -> "+bytes(result.blob.size):"I understood: "+(promptText||"file task")+". The local tool engine is ready for this command.",tool:cmd.tool,result,createdAt:now()};
+   try{const cmd=parseToolCommand(promptText,f);let result=null;let content="";if(cmd.tool==="image.compress"&&f)result=await imageCompressLocal(f,cmd.targetBytes);
+     if(result)content="Done. "+bytes(f.size)+" -> "+bytes(result.blob.size);
+     else if(cmd.tool==="general"){try{content=await generateLocal(promptText,{id:modelId,max_new_tokens:180})}catch(e){content="Local LLM is not loaded yet. Open AI Lab to download the model, then ask again.";}}
+     else content="I can handle this task once the matching local tool is connected. Open AI Lab to manage the neural LLM runtime.";
+     const msg={id:uid(),role:"assistant",content,tool:cmd.tool,result,createdAt:now()};
      update(c=>({...c,messages:[...c.messages,msg],updatedAt:now()}));await track("tool_completed",{tool:cmd.tool,success:!!result});
    }catch(e){update(c=>({...c,messages:[...c.messages,{id:uid(),role:"assistant",content:"I couldn't finish that task locally. Please try again.",createdAt:now()}],updatedAt:now()}));await track("tool_failed")}
    setBusy(false);setProcessing(false)
@@ -46,7 +51,7 @@ export function ToollooTAI(){
    <div className="tlSideLabel">Chats</div>
    <div className="tlChatList">{visible.map(c=><button key={c.id} className={"tlChatItem "+(c.id===activeId?"active":"")} onClick={()=>{setActiveId(c.id);setMobile(false)}}><MessageSquare size={14}/><span>{c.title}</span></button>)}</div>
    <div className="tlSideBottom">
-    <button onClick={createTeam}><Users size={16}/>Teams <span>{teams.length}</span></button><button onClick={()=>track("analytics_open")}><BarChart3 size={16}/>Analytics</button><button onClick={clearMemory}><Brain size={16}/>Memory <span>{memory.facts.length}</span></button><button><Settings size={16}/>Settings</button>
+    <button onClick={createTeam}><Users size={16}/>Teams <span>{teams.length}</span></button><button onClick={()=>track("analytics_open")}><BarChart3 size={16}/>Analytics</button><button onClick={clearMemory}><Brain size={16}/>Memory <span>{memory.facts.length}</span></button><button onClick={()=>setShowLab(true)}><BrainCircuit size={16}/>AI Lab <span>LLM</span></button><button><Settings size={16}/>Settings</button>
     <div className="tlUserMini"><div className="tlAvatar">{user?.name?.[0]||"U"}</div><div><b>{user?.name||"Guest User"}</b><small>Free workspace</small></div></div>
    </div>
   </aside>
@@ -60,6 +65,7 @@ export function ToollooTAI(){
     <div className="tlComposerMeta"><span>Browser-local processing when supported.</span><span>ToollooT AI • Free</span></div>
    </div>
   </section>
+  {showLab&&<AILab onClose={()=>setShowLab(false)} onModelReady={id=>{setModelId(id);save(MODEL_KEY,id)}}/>}
  </div>
 }
 
