@@ -1,0 +1,11 @@
+/* Mobile app shell: fixed header + fixed bottom navigation + independently scrolling content */
+@media(max-width:760px){
+  html,body,#root{height:100%;min-height:0}
+  body{padding:0!important;overflow:hidden}
+  .app{height:100dvh!important;min-height:0!important;overflow:hidden!important;position:relative}
+  .header{position:fixed!important;top:0;left:0;right:0;z-index:100;height:58px!important}
+  .app>main{height:100dvh!important;min-height:0!important;box-sizing:border-box;overflow-y:auto!important;overflow-x:hidden!important;padding-top:58px!important;padding-bottom:calc(var(--mobile-nav-h) + env(safe-area-inset-bottom) + 8px)!important;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain}
+  .app>main>.toolPageInner{min-height:0!important}
+  footer{display:none!important}
+  .mobileBottomNav{position:fixed!important;left:0;right:0;bottom:0;z-index:110;height:calc(var(--mobile-nav-h) + env(safe-area-inset-bottom))!important;padding:6px 6px calc(6px + env(safe-area-inset-bottom))!important;box-sizing:border-box}
+}
