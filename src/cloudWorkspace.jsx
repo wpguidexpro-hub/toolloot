@@ -9,7 +9,7 @@ const copy=async text=>{await navigator.clipboard?.writeText(text);notify("succe
 
 export function CloudWorkspace(){
  const [account,setAccount]=useState(getAccount()),[teams,setTeams]=useState([]),[team,setTeam]=useState(null),[members,setMembers]=useState([]),[chats,setChats]=useState([]),[chat,setChat]=useState(null),[messages,setMessages]=useState([]),[memory,setMemory]=useState([]),[busy,setBusy]=useState(false),[draft,setDraft]=useState(""),[invite,setInvite]=useState(null);
- const [teamName,setTeamName]=useState(""),[memoryKey,setMemoryKey]=useState(""),[memoryValue,setMemoryValue]=useState("");
+ const [teamName,setTeamName]=useState(""),[memoryKey,setMemoryKey]=useState(""),[memoryValue,setMemoryValue]=useState(""),[view,setView]=useState("overview");
  const loadTeams=async()=>{const d=await api("/api/teams");setTeams(d.teams||[]);if(!team&&d.teams?.[0])setTeam(d.teams[0])};
  const loadTeam=async t=>{if(!t)return;const d=await api("/api/teams/"+t.id);setTeam({...t,...d.team});setMembers(d.members||[]);const c=await api("/api/teams/"+t.id+"/chats");setChats(c.chats||[]);const m=await api("/api/memory?teamId="+encodeURIComponent(t.id));setMemory(m.memories||[])};
  useEffect(()=>{if(!account?.token||!cloudEnabled())return;loadTeams().catch(e=>notify("error",e.message))},[]);
