@@ -12,7 +12,8 @@ env.allowLocalModels=false;
 env.allowRemoteModels=true;
 env.useBrowserCache=true;
 env.useFSCache=false;
-env.cacheKey="toolloot-ai-smollm2-official-v4";
+// Bump this whenever the model/runtime changes so an old or partial ONNX cache can never be reused.
+env.cacheKey="toolloot-ai-smollm2-official-v5";
 
 export const recommendedModel=()=>MODEL_REGISTRY[0];
 export const runtimeInfo=()=>({mobile:/Android|iPhone|iPad|iPod/i.test(navigator.userAgent),device:generatorMode||"browser",deviceLabel:generatorMode==="webgpu"?"WebGPU":generatorMode==="wasm"?"CPU/WASM":"Browser AI",cores:navigator.hardwareConcurrency||1,memory:navigator.deviceMemory||0});
@@ -55,14 +56,14 @@ export async function loadLocalLLM(_id=recommendedModel().id,onProgress){
  return generator;
 }
 
-const clean=text=>String(text||"").replace(/<think>[\s\S]*?<\/think>/gi,"").replace(/^assistant\s*[:：-]\s*/i,"").trim();
+const clean=text=>String(text||"").replace(/<think>[\\s\\S]*?<\\/think>/gi,"").replace(/^assistant\\s*[:：-]\\s*/i,"").trim();
 
 function buildMessages(prompt,history=[],memory={}){
- const facts=(memory.facts||[]).map(f=>f?.type+": "+f?.value).join("\n");
- const memories=(memory.items||[]).map(x=>x?.text).filter(Boolean).slice(-8).join("\n---\n");
- const memoryText=[facts,memories].filter(Boolean).join("\n");
+ const facts=(memory.facts||[]).map(f=>f?.type+": "+f?.value).join("\\n");
+ const memories=(memory.items||[]).map(x=>x?.text).filter(Boolean).slice(-8).join("\\n---\\n");
+ const memoryText=[facts,memories].filter(Boolean).join("\\n");
  const context=(history||[]).filter(m=>m?.role&&m?.content).slice(-12).map(m=>({role:m.role==="assistant"?"assistant":"user",content:String(m.content).slice(0,4000)}));
- return[{role:"system",content:"You are ToollooT AI. Be intelligent, accurate, natural and concise. Reply in Hindi, English or Hinglish matching the user. Use conversation and memory as context. Never claim an action, tool, internet access or learning event that did not happen."},...(memoryText?[{role:"system",content:"Relevant memory:\n"+memoryText}]:[]),...context,{role:"user",content:String(prompt||"")+"\n/no_think"}];
+ return[{role:"system",content:"You are ToollooT AI. Be intelligent, accurate, natural and concise. Reply in Hindi, English or Hinglish matching the user. Use conversation and memory as context. Never claim an action, tool, internet access or learning event that did not happen."},...(memoryText?[{role:"system",content:"Relevant memory:\\n"+memoryText}]:[]),...context,{role:"user",content:String(prompt||"")+"\\n/no_think"}];
 }
 
 export async function generateLocal(prompt,{max_new_tokens,history=[],memory={}}={}){
