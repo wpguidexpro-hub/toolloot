@@ -14,6 +14,7 @@ import "./styles.mobile-shell.css";
 import "./generation.css";
 import "./ai-minimal.css";
 import "./future-ui.css";
+import "./brand.css";
 import "./components/CompressorGuide.css";
 import { imageToolMeta, ImageBatchTool, ExactSizeCompressor, ImageToolGuide } from "./imageTools.jsx";
 import { ChooseImage } from "./components/ChooseImage.jsx";
@@ -67,7 +68,7 @@ function Header({ dark, setDark, canInstall, installApp }) {
   const nav = [["Tools","/"],["Categories","/categories"],["How to Use","/how-to-use"],["About","/about"]];
   return <header className="header">
     <a className="brand" href={link("/")} onClick={()=>setMenu(false)}>
-      <span className="brandIcon"><ToollooTIcon /></span><span>ToollooT</span>
+      <span className="brandMark" aria-hidden="true"><i>T</i><b>•</b><i>T</i></span><span className="brandWord">ToollooT</span>
     </a>
     <nav className={menu ? "nav open" : "nav"}>
       {nav.map(([name,path])=><a key={name} href={link(path)} onClick={()=>setMenu(false)}>{name}</a>)}
@@ -81,7 +82,7 @@ function Header({ dark, setDark, canInstall, installApp }) {
 }
 function Footer() {
   return <footer><div className="container footerInner">
-    <div><strong>ToollooT</strong><span>Simple tools for everyday work.</span></div>
+    <div><strong>ToollooT</strong><span>Make it. Fix it. Ship it.</span></div>
     <nav><a href={link("/about")}>About</a><a href={link("/privacy")}>Privacy</a><a href={link("/terms")}>Terms</a><a href={link("/contact")}>Contact</a></nav>
     <small>(c) 2026 ToollooT</small>
   </div></footer>;
@@ -142,8 +143,8 @@ function Home() {
   return <Layout><Seo title="ToollooT - Free Online Tools" description="ToollooT provides simple, fast and free online tools for images, documents, developers and everyday work."/>
     <main>
       <section className="hero"><div className="container heroInner">
-        <div className="eyebrow">TOOLLOOT • FUTURE WORKSPACE</div><h1>Your tools. Your flow. A smarter web workspace.</h1>
-        <p>Fast, free and local-first utilities that remember your recent workflow in this browser and help you get to the result with less effort.</p>
+        <div className="brandKicker"><span className="brandPulse"></span> TOOLLOOT INTELLIGENCE WORKSPACE</div><h1>Tools that feel <em>ahead.</em></h1>
+        <p>One place for the things you make, fix, convert and calculate. Fast, local-first and designed to feel almost effortless.</p>
         <label className="searchBox"><Search size={20}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search tools..." aria-label="Search tools"/></label>
       </div></section>
       {recentTools.length>0&&<section className="container section recentSection"><div className="sectionHead"><div><h2>Recently used</h2><p>Your recent tools are stored only in this browser.</p></div></div><div className="toolGrid">{recentTools.map(t=><ToolCard tool={t} key={t.id}/>)}</div></section>}
