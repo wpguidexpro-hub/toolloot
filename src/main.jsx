@@ -19,6 +19,8 @@ import "./components/CompressorGuide.css";
 import { ToollooTAI } from "./aiWorkspace.jsx";
 import { AnalyticsPage } from "./analyticsPage.jsx";
 import { AccountPage } from "./account.jsx";
+import { CloudWorkspace } from "./cloudWorkspace.jsx";
+import { OwnerAnalyticsPage } from "./ownerAnalyticsPage.jsx";
 import { imageToolMeta, ImageBatchTool, ExactSizeCompressor, ImageToolGuide } from "./imageTools.jsx";
 import { ChooseImage } from "./components/ChooseImage.jsx";
 import { ToolFileTimeline } from "./components/ToolTimeline.jsx";
@@ -68,7 +70,7 @@ function ToollooTIcon({ className="" }) {
 }
 function Header({ dark, setDark, canInstall, installApp }) {
   const [menu,setMenu] = useState(false);
-  const nav = [["Tools","/"],["Categories","/categories"],["How to Use","/how-to-use"],["About","/about"]];
+  const nav = [["Tools","/"],["Workspace","/workspace"],["Categories","/categories"],["How to Use","/how-to-use"],["Account","/account"]];
   return <header className="header">
     <a className="brand" href={link("/")} onClick={()=>setMenu(false)}>
       <span className="brandMark" aria-hidden="true"><i>T</i><b>•</b><i>T</i></span><span className="brandWord">ToollooT</span>
@@ -300,6 +302,8 @@ function Root(){
   if(local==="/categories/documents")return <CategoryPage categoryName="Documents" slug="documents"/>;
   if(local==="/categories/calculators")return <CategoryPage categoryName="Calculators" slug="calculators"/>;
   if(local==="/account")return <Layout><Seo title="ToollooT Account" description="Free ToollooT account and workspace identity."/><main className="staticPage"><AccountPage/></main></Layout>;
+  if(local==="/workspace")return <Layout><Seo title="ToollooT Cloud Workspace" description="Multi-user ToollooT workspace with teams, shared chats, permissions and server-side memory."/><main className="staticPage"><CloudWorkspace/></main></Layout>;
+  if(local==="/owner-analytics")return <Layout><Seo title="ToollooT Owner Analytics" description="Owner-only ToollooT platform analytics and advertising revenue dashboard."/><main className="staticPage"><OwnerAnalyticsPage/></main></Layout>;
   if(local==="/analytics")return <Layout><Seo title="ToollooT Analytics" description="ToollooT site analytics dashboard."/><main className="staticPage"><AnalyticsPage/></main></Layout>;
   if(local==="/about")return <AboutPage/>;
   if(local==="/privacy")return <PrivacyPage/>;
