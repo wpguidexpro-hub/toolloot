@@ -187,7 +187,7 @@ footer{border-top:1px solid #e5e7eb}
 
 /* Fixed app chrome + responsive mobile navigation */
 :root{--header-h:64px;--footer-h:72px;--mobile-nav-h:68px}
-body{padding-top:var(--header-h);padding-bottom:var(--footer-h)}
+body{}
 .header{position:fixed;top:0;left:0;right:0;height:var(--header-h);width:100%;padding-left:24px;padding-right:24px;background:rgba(255,255,255,.96);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 1px 0 rgba(17,24,39,.06)}
 footer{position:fixed;left:0;right:0;bottom:0;height:var(--footer-h);z-index:19;background:rgba(255,255,255,.97);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
 .footerInner{height:100%;padding-left:24px;padding-right:24px}
