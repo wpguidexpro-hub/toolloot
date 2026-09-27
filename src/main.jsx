@@ -30,7 +30,3 @@ function Message({m,onReply}){const[more,setMore]=useState(false);return <div cl
 function Emoji({onPick}){return <div className="emojiPanel">{["😀","😂","😍","😊","😎","👍","❤️","🔥","🎉","👏","🙏","😢","😮","😡","🤣","🤝","✨","🚀","💯","🥳"].map(e=><button type="button" key={e} onClick={()=>onPick(e)}>{e}</button>)}</div>}
 function SettingsPanel({dark,setDark,user,logout}){return <div className="settingsPage"><h1>Settings</h1><p>Signed in as <b>{user.phone}</b></p><div className="settingCard"><div><b>Appearance</b><span>Choose light or dark mode</span></div><button onClick={()=>setDark(!dark)}>{dark?<Sun/>:<Moon/>}{dark?"Dark":"Light"}</button></div><div className="settingCard"><div><b>Account</b><span>{user.name||"ToollooT user"}</span></div><UserRound/></div><button className="logoutBtn" onClick={logout}>Log out</button></div>}
 createRoot(document.getElementById("root")).render(<App/>);
-
-[executed on device: DESKTOP-FDST6BT (46106b74-8a7e-4242-b6fc-28cd419ec149)]
-
-[executed on device: DESKTOP-FDST6BT (46106b74-8a7e-4242-b6fc-28cd419ec149)]
