@@ -1,12 +1,21 @@
 const ASI_CORE_URL = String(process.env.ASI_CORE_URL || "http://127.0.0.1:5181");
 
 async function call(path, options = {}) {
-  const response = await fetch(ASI_CORE_URL + path, options);
-  const body = await response.text();
-  let data = {};
-  try { data = body ? JSON.parse(body) : {}; } catch { data = { raw: body }; }
-  if (!response.ok) throw new Error(data.error || data.detail || "ASI-Core unavailable");
-  return data;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 110000);
+  try {
+    const response = await fetch(ASI_CORE_URL + path, { ...options, signal: controller.signal });
+    const body = await response.text();
+    let data = {};
+    try { data = body ? JSON.parse(body) : {}; } catch { data = { raw: body }; }
+    if (!response.ok) throw new Error(data.error || data.detail || "ASI-Core unavailable");
+    return data;
+  } catch (e) {
+    if (e?.name === "AbortError") throw new Error("ASI-Core response timeout");
+    throw e;
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 export async function getAIHealth() {
@@ -20,9 +29,12 @@ export async function getAIHealth() {
 
 export async function generateAI({ prompt="", history=[], memory={} } = {}) {
   const context = [];
-  if (Array.isArray(history) && history.length) context.push("Recent conversation:\n" + history.slice(-8).map(x => (x.role || "user") + ": " + (x.content || "")).join("\n"));
-  if (memory && Object.keys(memory).length) context.push("ToollooT memory:\n" + JSON.stringify(memory).slice(0,5000));
-  const message = context.length ? context.join("\n\n") + "\n\nUser request:\n" + prompt : prompt;
-  const result = await call("/api/chat", { method:"POST", headers:{"content-type":"application/json"}, body:JSON.stringify({message}) });
+  if (Array.isArray(history) && history.length) {
+    const recent = history.slice(-6).map(x => (x.role || "user") + ": " + String(x.content || "").slice(-2000)).join("\n");
+    context.push("Recent conversation:\n" + recent);
+  }
+  if (memory && Object.keys(memory).length) context.push("ToollooT memory:\n" + JSON.stringify(memory).slice(0,3000));
+  const message = (context.length ? context.join("\n\n") + "\n\nUser request:\n" : "") + String(prompt || "").slice(0,6000);
+  const result = await call("/api/chat", { method:"POST", headers:{"content-type":"application/json"}, body:JSON.stringify({message,max_tokens:256,temperature:0.7}) });
   return String(result.response || "").trim();
 }
