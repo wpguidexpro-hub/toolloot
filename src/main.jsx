@@ -13,10 +13,13 @@ import "./styles.css";
 import "./styles.mobile-shell.css";
 import "./generation.css";
 import "./ai-minimal.css";
+import "./components/CompressorGuide.css";
 import { imageToolMeta, ImageBatchTool, ExactSizeCompressor, ImageToolGuide } from "./imageTools.jsx";
 import { ChooseImage } from "./components/ChooseImage.jsx";
 import { ToolFileTimeline } from "./components/ToolTimeline.jsx";
 import { ToolPreview } from "./components/ToolPreview.jsx";
+import { CompressorGuide } from "./components/CompressorGuide.jsx";
+import { loadImageSession, saveImageSession, clearImageSession, imageSessionKey } from "./hooks/usePersistentImageSession.js";
 
 const BASE = import.meta.env.BASE_URL;
 const link = (path = "") => BASE + path.replace(/^\//, "");
@@ -226,12 +229,16 @@ function ImageCompressor() {
   const [active,setActive]=useState(0);
   const [estimatedSize,setEstimatedSize]=useState(null),[estimating,setEstimating]=useState(false);
   const item=items[active]||null;
+  const [sessionReady,setSessionReady]=useState(false);
+  useEffect(()=>{let alive=true;(async()=>{const restored=await loadImageSession();if(alive&&restored.length){setItems(restored);setActive(0)}if(alive)setSessionReady(true)})();return()=>{alive=false}},[]);
+  useEffect(()=>{if(!sessionReady)return;const t=setTimeout(()=>saveImageSession(items).catch(()=>{}),250);return()=>clearTimeout(t)},[sessionReady,imageSessionKey(items)]);
+  useEffect(()=>()=>{items.forEach(x=>{if(x.preview)URL.revokeObjectURL(x.preview);if(x.result?.url&&x.result.url!==x.preview)URL.revokeObjectURL(x.result.url)})},[]);
   const keyFor=file=>"toolloot:image-quality:"+file.name+":"+file.size+":"+file.lastModified;
   const remembered=file=>{try{return {...defaults,...JSON.parse(localStorage.getItem(keyFor(file))||"{}")}}catch{return {...defaults}}};
   const makeItem=file=>({id:crypto.randomUUID(),file,preview:URL.createObjectURL(file),settings:remembered(file),result:null});
   const addFiles=input=>{const picked=Array.from(input||[]).filter(f=>f.type.startsWith("image/"));if(!picked.length)return;setItems(prev=>{const existing=new Set(prev.map(x=>x.file.name+":"+x.file.size+":"+x.file.lastModified));const fresh=picked.filter(f=>!existing.has(f.name+":"+f.size+":"+f.lastModified));if(!prev.length)setActive(0);return [...prev,...fresh.map(makeItem)]});setProgress(0);notify("success",picked.length+" image"+(picked.length>1?"s":"")+" added");};
   const removeItem=id=>setItems(prev=>{const index=prev.findIndex(i=>i.id===id);const x=prev[index];if(x)URL.revokeObjectURL(x.preview);if(x?.result?.url&&x.result.url!==x.preview)URL.revokeObjectURL(x.result.url);const next=prev.filter(i=>i.id!==id);setActive(a=>Math.max(0,Math.min(index<a?a:a-1,next.length-1)));return next});
-  const clearAll=()=>{items.forEach(x=>{URL.revokeObjectURL(x.preview);if(x.result?.url)URL.revokeObjectURL(x.result.url)});setItems([]);setProgress(0);};
+  const clearAll=()=>{items.forEach(x=>{URL.revokeObjectURL(x.preview);if(x.result?.url)URL.revokeObjectURL(x.result.url)});setItems([]);setProgress(0);clearImageSession();};
   const updateQuality=value=>setItems(prev=>prev.map(x=>{const settings={...x.settings,quality:value};try{localStorage.setItem(keyFor(x.file),JSON.stringify({quality:value}))}catch{}return {...x,settings,result:null}}));
   useEffect(()=>{let cancelled=false;const run=async()=>{if(!item||busy){if(!item)setEstimatedSize(null);return}setEstimating(true);try{const r=await compressOne(item);if(!cancelled)setEstimatedSize(r.blob.size)}catch{if(!cancelled)setEstimatedSize(null)}finally{if(!cancelled)setEstimating(false)}};const t=setTimeout(run,120);return()=>{cancelled=true;clearTimeout(t)}},[item?.id,item?.settings?.quality]);
   const applyAll=key=>{const source=items[0]?.settings;if(!source)return;setItems(prev=>prev.map(x=>({...x,settings:{...x.settings,[key]:source[key]},result:null})));notify("success","Applied "+key+" to all images");};
@@ -269,6 +276,7 @@ function ImageCompressor() {
           </div>
           {item.result&&!busy&&<div className="resultSummary"><span>{item.result.width} Ã— {item.result.height}</span><strong>{formatBytes(item.file.size)} → {formatBytes(item.result.blob.size)}</strong><span>{item.file.size>item.result.blob.size?Math.round((1-item.result.blob.size/item.file.size)*100)+"% smaller":"No size reduction"}</span><a className="downloadButton" href={item.result.url} download={item.result.name}><Download size={15}/> Download</a></div>}
         </div>}
+        <div className="compressorGuideDock"><CompressorGuide count={items.length} hasResult={!!items.some(x=>x.result)} onClear={()=>{clearAll();clearImageSession()}}/></div>
         <div className="workspaceMiniFooter"><span><strong>{items.length}</strong> image{items.length>1?"s":""} selected</span><span className="workspaceReadyHint"><Sparkles size={12}/> Individual processing • local only</span></div>
       </div>}
       <div className="privacyNote"><Shield size={17}/><span>Everything is processed locally in your browser. Your images are not uploaded.</span></div>

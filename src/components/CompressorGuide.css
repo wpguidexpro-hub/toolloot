@@ -1,0 +1,11 @@
+.compressorGuideDock{width:100%;margin-top:8px}
+.compressorGuide{border:1px solid var(--app-border,#e5e7eb);background:var(--app-surface,#fff);border-radius:14px;padding:10px;box-shadow:0 8px 24px rgba(15,23,42,.06);color:var(--app-text,#111827)}
+.compressorGuideHead{display:flex;align-items:center;gap:9px}.aiGuideIcon{width:30px;height:30px;display:grid;place-items:center;border-radius:9px;background:var(--app-muted,#f3f4f6)}
+.compressorGuideHead strong{display:block;font-size:12px}.compressorGuideHead span{display:block;font-size:10px;color:#6b7280;margin-top:2px}
+.guideStepsMini{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:9px}.guideStepsMini>div{display:flex;align-items:center;gap:6px;padding:7px;border:1px solid var(--app-border,#e5e7eb);border-radius:9px;background:var(--app-muted,#f8fafc);font-size:10px}
+.guideStepsMini b{flex:0 0 20px;width:20px;height:20px;display:grid;place-items:center;border-radius:50%;background:var(--app-border,#e5e7eb);font-size:9px}.guideStepsMini .done b{background:var(--app-text,#111827);color:var(--app-surface,#fff)}
+.guideTrust,.guideExpiry{display:inline-flex;align-items:center;gap:5px;margin-top:8px;font-size:9px;color:#6b7280}.guideExpiry{margin-left:12px}
+.guideClear{float:right;margin-top:5px;display:inline-flex;align-items:center;gap:5px;border:0;background:transparent;color:var(--app-text,#111827);font-size:9px;font-weight:700;cursor:pointer}
+.dark .compressorGuide{background:#101217;border-color:#30343c;box-shadow:0 8px 28px rgba(0,0,0,.25)}.dark .guideStepsMini>div{background:#181b21;border-color:#30343c}.dark .guideStepsMini b{background:#30343c}.dark .compressorGuideHead span,.dark .guideTrust,.dark .guideExpiry{color:#9ca3af}
+@media(min-width:1000px){.compressWorkspace{padding-right:0}.compressorGuideDock{max-width:100%}.compressorGuide{padding:9px 12px}.guideStepsMini{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:760px){.compressorGuideDock{margin-top:6px}.compressorGuide{padding:8px;border-radius:11px}.guideStepsMini{grid-template-columns:1fr;gap:4px}.guideStepsMini>div{padding:5px}.guideTrust,.guideExpiry{font-size:8px}.guideExpiry{margin-left:8px}.guideClear{font-size:8px}}
