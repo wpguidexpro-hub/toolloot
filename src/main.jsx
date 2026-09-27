@@ -10,6 +10,7 @@ import Swal from "sweetalert2";
 import { get, set } from "idb-keyval";
 import "sweetalert2/dist/sweetalert2.min.css";
 import "./styles.css";
+import "./styles.mobile-shell.css";
 import "./generation.css";
 import "./ai-minimal.css";
 import { imageToolMeta, ImageBatchTool, ExactSizeCompressor, ImageToolGuide } from "./imageTools.jsx";
