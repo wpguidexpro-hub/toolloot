@@ -211,6 +211,31 @@ function ContactPage() {
     <p>For now, use the public ToollooT GitHub repository to report issues or suggest improvements.</p>
   </Page>;
 }
+function ImageAddedChat({items,active,onSelect,busy}) {
+  if(!items?.length) return null;
+  return <section className="imageAddedChat" aria-label="Image assistant chat">
+    <div className="imageChatHead">
+      <div className="imageChatAvatar"><Sparkles size={15}/></div>
+      <div><strong>ToollooT AI</strong><span>Image assistant · local processing</span></div>
+      <span className="imageChatStatus"><i/> Ready</span>
+    </div>
+    <div className="imageChatBody">
+      <div className="imageChatBubble assistantBubble">
+        <strong>{busy?"I'm working on your image…":"I got your image."}</strong>
+        <span>{busy?"Scanning the selected image and preparing the compression…":"Preview added below. Select an image to edit its settings."}</span>
+      </div>
+      {items.map((x,i)=><button type="button" key={x.id} className={"imageChatBubble imageChatImage "+(i===active?"selected":"")} onClick={()=>onSelect(i)}>
+        <img src={x.preview} alt={x.file.name}/>
+        <span className="imageChatImageInfo"><strong>{x.file.name}</strong><small>Image {i+1} · {formatBytes(x.file.size)}</small><em>{x.result?"Compressed result ready":"Added image"}</em></span>
+        <span className="imageChatArrow">→</span>
+      </button>)}
+      <div className="imageChatBubble assistantBubble compactBubble">
+        <span>{items.length>1?items.length+" images are ready. Each image keeps its own settings.":"Ready when you are. Change quality, then compress this image."}</span>
+        <div className="chatDots"><i/><i/><i/></div>
+      </div>
+    </div>
+  </section>;
+}
 function ImageCompressor() {
   const defaults={quality:0.8};
   const [items,setItems]=useState([]),[busy,setBusy]=useState(false),[progress,setProgress]=useState(0),[generation,setGeneration]=useState(0);
@@ -227,7 +252,7 @@ function ImageCompressor() {
   const addFiles=input=>{const picked=Array.from(input||[]).filter(f=>f.type.startsWith("image/"));if(!picked.length)return;setItems(prev=>{const existing=new Set(prev.map(x=>x.file.name+":"+x.file.size+":"+x.file.lastModified));const fresh=picked.filter(f=>!existing.has(f.name+":"+f.size+":"+f.lastModified));if(!prev.length)setActive(0);return [...prev,...fresh.map(makeItem)]});setProgress(0);notify("success",picked.length+" image"+(picked.length>1?"s":"")+" added");};
   const removeItem=id=>setItems(prev=>{const index=prev.findIndex(i=>i.id===id);const x=prev[index];if(x)URL.revokeObjectURL(x.preview);if(x?.result?.url&&x.result.url!==x.preview)URL.revokeObjectURL(x.result.url);const next=prev.filter(i=>i.id!==id);setActive(a=>Math.max(0,Math.min(index<a?a:a-1,next.length-1)));return next});
   const clearAll=()=>{items.forEach(x=>{URL.revokeObjectURL(x.preview);if(x.result?.url)URL.revokeObjectURL(x.result.url)});setItems([]);setProgress(0);clearImageSession();};
-  const updateQuality=value=>setItems(prev=>prev.map(x=>{const settings={...x.settings,quality:value};try{localStorage.setItem(keyFor(x.file),JSON.stringify({quality:value}))}catch{}return {...x,settings,result:null}}));
+  const updateQuality=value=>setItems(prev=>prev.map(x=>{if(x.id!==item?.id)return x;const settings={...x.settings,quality:value};try{localStorage.setItem(keyFor(x.file),JSON.stringify({quality:value}))}catch{}return {...x,settings,result:null}}));
   useEffect(()=>{let cancelled=false;const run=async()=>{if(!item||busy){if(!item)setEstimatedSize(null);return}setEstimating(true);try{const r=await compressOne(item);if(!cancelled)setEstimatedSize(r.blob.size)}catch{if(!cancelled)setEstimatedSize(null)}finally{if(!cancelled)setEstimating(false)}};const t=setTimeout(run,120);return()=>{cancelled=true;clearTimeout(t)}},[item?.id,item?.settings?.quality]);
   const applyAll=key=>{const source=items[0]?.settings;if(!source)return;setItems(prev=>prev.map(x=>({...x,settings:{...x.settings,[key]:source[key]},result:null})));notify("success","Applied "+key+" to all images");};
   const applySettingsToAll=source=>{if(!source)return;setItems(prev=>prev.map(x=>{try{localStorage.setItem(keyFor(x.file),JSON.stringify(source))}catch{}return {...x,settings:{...source},result:null}}));notify("success","First image settings applied to all");};
@@ -258,11 +283,12 @@ function ImageCompressor() {
         <div className="compressorFixedTimeline"><ToolFileTimeline items={items} activeIndex={active} onSelect={setActive} onRemove={removeItem}/></div>
         <div className="timelineAddBar"><ChooseImage className="compactAddPicker" accept="image/*" multiple={true} onFiles={addFiles} label="Add more images"/><button type="button" className="timelineClearButton" onClick={clearAll} disabled={busy}><Trash2 size={13}/> Clear all</button></div>
         {item&&<div className="editorPanel"><ToolPreview item={item} busy={busy} generation={generation+" of "+items.length} progress={progress} onRemove={removeItem}/>
-          <div className="contextSettings aiCompressorControls"><div className="aiSettingsIntro"><div className="aiBadge"><Sparkles size={14}/> Smart compression</div><strong>One setting for all images</strong><span>Choose quality once. ToollooT applies it to every selected image automatically.</span></div>
-            <label className="qualityControl"><div><span>Quality</span><b>{Math.round(item.settings.quality*100)}%</b></div><input type="range" min=".1" max="1" step=".05" value={item.settings.quality} onChange={e=>updateQuality(Number(e.target.value))}/><div className="realtimeSize"><span>Estimated size</span><strong>{estimating?"Calculating…":estimatedSize!=null?formatBytes(estimatedSize):"—"}</strong>{estimatedSize!=null&&<em>{item.file.size>estimatedSize?Math.round((1-estimatedSize/item.file.size)*100)+"% smaller":"No size reduction"}</em>}</div><small>Lower = smaller file Â· Higher = more detail</small></label>
+          <ImageAddedChat items={items} active={active} onSelect={setActive} busy={busy}/>
+          <div className="contextSettings aiCompressorControls"><div className="aiSettingsIntro"><div className="aiBadge"><Sparkles size={14}/> Smart compression</div><strong>Settings for this image</strong><span>Each image keeps its own settings. Use the batch actions only when you want to copy settings.</span></div>
+            <label className="qualityControl"><div><span>Quality</span><b>{Math.round(item.settings.quality*100)}%</b></div><input type="range" min=".1" max="1" step=".05" value={item.settings.quality} onChange={e=>updateQuality(Number(e.target.value))}/><div className="realtimeSize"><span>Estimated size</span><strong>{estimating?"Calculating…":estimatedSize!=null?formatBytes(estimatedSize):"—"}</strong>{estimatedSize!=null&&<em>{item.file.size>estimatedSize?Math.round((1-estimatedSize/item.file.size)*100)+"% smaller":"No size reduction"}</em>}</div><small>Lower = smaller file · Higher = more detail</small></label>
             <button className="primaryButton compressSelected aiCompressButton" disabled={busy} onClick={()=>compressSingle(item.id)}><Gauge size={17}/> {busy?"Generating…":item.result?"Compress again":"Compress image"}</button>
           </div>
-          {item.result&&!busy&&<div className="resultSummary"><span>{item.result.width} Ã— {item.result.height}</span><strong>{formatBytes(item.file.size)} → {formatBytes(item.result.blob.size)}</strong><span>{item.file.size>item.result.blob.size?Math.round((1-item.result.blob.size/item.file.size)*100)+"% smaller":"No size reduction"}</span><a className="downloadButton" href={item.result.url} download={item.result.name}><Download size={15}/> Download</a></div>}
+          {item.result&&!busy&&<div className="resultSummary"><span>{item.result.width} × {item.result.height}</span><strong>{formatBytes(item.file.size)} → {formatBytes(item.result.blob.size)}</strong><span>{item.file.size>item.result.blob.size?Math.round((1-item.result.blob.size/item.file.size)*100)+"% smaller":"No size reduction"}</span><a className="downloadButton" href={item.result.url} download={item.result.name}><Download size={15}/> Download</a></div>}
         </div>}
         <div className="compressorGuideDock"><CompressorGuide count={items.length} hasResult={!!items.some(x=>x.result)} onClear={()=>{clearAll();clearImageSession()}}/></div>
         <div className="workspaceMiniFooter"><span><strong>{items.length}</strong> image{items.length>1?"s":""} selected</span><span className="workspaceReadyHint"><Sparkles size={12}/> Individual processing • local only</span></div>
