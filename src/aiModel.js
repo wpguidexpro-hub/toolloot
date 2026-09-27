@@ -28,11 +28,15 @@ export async function loadLocalLLM(id=recommendedModel().id,onProgress){
  }
  loadedId=id;return generator;
 }
-export async function generateLocal(prompt,{id=recommendedModel().id,max_new_tokens,onProgress,history=[]}={}){
+export async function generateLocal(prompt,{id=recommendedModel().id,max_new_tokens,onProgress,history=[],memory={facts:[],items:[]}}={}){
  const pipe=await loadLocalLLM(id,onProgress),tokens=max_new_tokens??(runtimeInfo().mobile?128:256);
- const context=history.filter(m=>m?.role&&m?.content).slice(-10).map(m=>({role:m.role,content:String(m.content).slice(0,4000)}));
+ const context=history.filter(m=>m?.role&&m?.content).slice(-14).map(m=>({role:m.role,content:String(m.content).slice(0,5000)}));
+ const facts=(memory.facts||[]).map(f=>f?.type+": "+f?.value).join("\n");
+ const memories=(memory.items||[]).map(x=>x?.text).filter(Boolean).join("\n---\n").slice(0,12000);
+ const memoryContext=[facts,memories].filter(Boolean).join("\n");
  const messages=[
-  {role:"system",content:"You are ToollooT AI, a capable general-purpose assistant. Be accurate, natural, helpful and concise. Reply in the user's language (Hindi, English or Hinglish). Use the conversation context. Never invent a shopping/business context unless the user asks about it. For simple greetings, respond naturally. Do not claim internet access or actions you did not perform. If uncertain, say so and explain what information is needed."},
+  {role:"system",content:"You are ToollooT AI, a capable general-purpose assistant. Be accurate, natural, helpful and concise. Reply in the user's language (Hindi, English or Hinglish). Remember the conversation context and the user's locally stored memory when relevant. Use memory as context, not as unquestionable truth. Avoid repeating the same wording across turns. Do not introduce yourself unless relevant. Never invent internet access or actions you did not perform. If uncertain, say so and explain what information is needed. You may learn from new conversation context, but do not claim that your neural weights were retrained."},
+  ...(memoryContext?[{role:"system",content:"Relevant long-term memory from this user's previous local chats:\n"+memoryContext}]:[]),
   ...context,
   {role:"user",content:prompt}
  ];

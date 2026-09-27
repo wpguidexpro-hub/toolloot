@@ -9,6 +9,15 @@ import "./aiWorkspace.css";
 
 const CHAT_KEY="toolloot:ai:chats", USER_KEY="toolloot:ai:user", TEAM_KEY="toolloot:ai:teams", MEMORY_KEY="toolloot:ai:memory", ANALYTICS_KEY="toolloot:analytics:events";
 const uid=()=>crypto.randomUUID(), now=()=>new Date().toISOString();
+const normalizeMemory=m=>({facts:Array.isArray(m?.facts)?m.facts:[],items:Array.isArray(m?.items)?m.items:[]});
+const memoryTerms=s=>String(s||"").toLowerCase().replace(/[^a-z0-9\u0900-\u097f ]/g," ").split(/\s+/).filter(x=>x.length>2&&!["the","and","for","this","that","hai","ka","ke","ki","ko","se","me","main","mujhe","you","your"].includes(x));
+function rankMemory(items,prompt){const terms=new Set(memoryTerms(prompt));const ranked=items.map(x=>{const t=memoryTerms(x.text),score=t.reduce((n,w)=>n+(terms.has(w)?1:0),0);return {...x,score}}).filter(x=>x.score>0).sort((a,b)=>b.score-a.score).slice(0,8);return ranked.length?ranked:items.slice(-6)}
+function learnMemory(prev,userText,assistantText,chatTitle){const m=normalizeMemory(prev),stamp=Date.now(),items=[...m.items,{id:uid(),text:"User: "+userText+"\\nAI: "+assistantText,chatTitle:chatTitle||"Chat",ts:stamp}].slice(-1000);
+ const facts=[...m.facts];
+ const factPatterns=[[/\b(?:my name is|mera naam)\s+([^.,!?\n]{2,40})/i,"name"],[/\b(?:i live in|i am from|main rehta hoon|main rahta hoon)\s+([^.,!?\n]{2,50})/i,"location"],[/\b(?:i use|i am using|main use karta hoon|main use karti hoon)\s+([^.,!?\n]{2,80})/i,"preference"]];
+ for(const [re,type] of factPatterns){const hit=String(userText).match(re);if(hit){const value=hit[1].trim();const next=facts.filter(f=>f.type!==type);next.push({id:uid(),type,value,ts:stamp});facts.splice(0,facts.length,...next.slice(-50))}}
+ return {facts,items}
+}
 const emptyChat=()=>({id:uid(),title:"New chat",createdAt:now(),updatedAt:now(),messages:[]});
 async function load(k,f){try{return (await get(k))??f}catch{return f}}
 async function save(k,v){try{await set(k,v)}catch{}}
@@ -17,11 +26,11 @@ const bytes=n=>{if(!n)return"0 B";const u=["B","KB","MB","GB"],i=Math.min(Math.f
 function Logo(){return <span className="tlAiLogo"><b>T</b><i>AI</i></span>}
 
 export function ToollooTAI(){
- const [user,setUser]=useState(null),[chats,setChats]=useState([]),[activeId,setActiveId]=useState(null),[memory,setMemory]=useState({facts:[]}),[teams,setTeams]=useState([]),[processing,setProcessing]=useState(false),[showLab,setShowLab]=useState(false),[modelId,setModelId]=useState(recommendedModel().id);
+ const [user,setUser]=useState(null),[chats,setChats]=useState([]),[activeId,setActiveId]=useState(null),[memory,setMemory]=useState({facts:[],items:[]}),[teams,setTeams]=useState([]),[processing,setProcessing]=useState(false),[showLab,setShowLab]=useState(false),[modelId,setModelId]=useState(recommendedModel().id);
  const [search,setSearch]=useState(""),[text,setText]=useState(""),[file,setFile]=useState(null),[busy,setBusy]=useState(false),[mobile,setMobile]=useState(false);
  const input=useRef(null),fileInput=useRef(null),messageListRef=useRef(null);
  useEffect(()=>{(async()=>{let u=await load(USER_KEY,null);if(!u){u={id:uid(),name:"Guest User",email:"local@toolloot.app",mode:"guest"};await save(USER_KEY,u)}
-   let c=await load(CHAT_KEY,[]);if(!c.length)c=[emptyChat()];setUser(u);setChats(c);setActiveId(c[0].id);setMemory(await load(MEMORY_KEY,{facts:[]}));setTeams(await load(TEAM_KEY,[]));
+   let c=await load(CHAT_KEY,[]);if(!c.length)c=[emptyChat()];setUser(u);setChats(c);setActiveId(c[0].id);setMemory(normalizeMemory(await load(MEMORY_KEY,{facts:[],items:[]})));setTeams(await load(TEAM_KEY,[]));
    const savedModel=await load(MODEL_KEY,null);const legacyModel=savedModel==="onnx-community/SmolLM2-135M-Instruct-ONNX-MHA"||savedModel==="onnx-community/Qwen2.5-0.5B-Instruct";const safeModel=legacyModel?recommendedModel().id:(savedModel||recommendedModel().id);setModelId(safeModel);if(safeModel!==savedModel)save(MODEL_KEY,safeModel);
    sessionStorage.setItem("tl-session",sessionStorage.getItem("tl-session")||uid());track("app_open");
    // Prepare the default local model automatically in the background; no manual download step.
@@ -39,14 +48,14 @@ export function ToollooTAI(){
    update(c=>({...c,messages:[...c.messages,um],title:c.messages.length?c.title:(promptText||f?.name||"New task").slice(0,42),updatedAt:now()}));await track("message_sent",{hasAttachment:!!f,command:promptText});
    try{const cmd=parseToolCommand(promptText,f);let result=null;let content="";if(cmd.tool==="image.compress"&&f)result=await imageCompressLocal(f,cmd.targetBytes);
      if(result)content="Done. "+bytes(f.size)+" -> "+bytes(result.blob.size);
-     else if(cmd.tool==="general"){try{content=await generateLocal(promptText,{id:modelId,max_new_tokens:runtimeInfo().mobile?128:256,history:active?.messages||[]})}catch(e){content="ToollooT AI is preparing its local model. Please try again in a moment."}}
+     else if(cmd.tool==="general"){try{content=await generateLocal(promptText,{id:modelId,max_new_tokens:runtimeInfo().mobile?128:256,history:active?.messages||[],memory:{facts:memory.facts,items:rankMemory(memory.items,promptText)}})}catch(e){content="ToollooT AI is preparing its local model. Please try again in a moment."}}
      else content="I can handle this task once the matching local tool is connected.";
-     const msg={id:uid(),role:"assistant",content,tool:cmd.tool,result,createdAt:now()};update(c=>({...c,messages:[...c.messages,msg],updatedAt:now()}));await track("tool_completed",{tool:cmd.tool,success:!!result});
+     const msg={id:uid(),role:"assistant",content,tool:cmd.tool,result,createdAt:now()};update(c=>({...c,messages:[...c.messages,msg],updatedAt:now()}));const learned=learnMemory(memory,promptText,content,active?.title);setMemory(learned);await save(MEMORY_KEY,learned);await track("tool_completed",{tool:cmd.tool,success:!!result});
    }catch(e){update(c=>({...c,messages:[...c.messages,{id:uid(),role:"assistant",content:"I couldn't finish that task locally. Please try again.",createdAt:now()}],updatedAt:now()}));await track("tool_failed")}
    setBusy(false);setProcessing(false)
  };
  const createTeam=async()=>{const name=window.prompt("Team name");if(!name?.trim())return;const t={id:uid(),name:name.trim(),owner:user.id,members:[{userId:user.id,role:"owner"}],createdAt:now()};const n=[...teams,t];setTeams(n);await save(TEAM_KEY,n);track("team_created");Swal.fire({icon:"success",title:"Team created",text:name,confirmButtonColor:"#111827"})};
- const clearMemory=async()=>{await del(MEMORY_KEY);setMemory({facts:[]});Swal.fire({icon:"success",title:"Memory cleared",toast:true,position:"bottom-end",showConfirmButton:false,timer:1400});track("memory_cleared")};
+ const clearMemory=async()=>{await del(MEMORY_KEY);setMemory({facts:[],items:[]});Swal.fire({icon:"success",title:"Memory cleared",toast:true,position:"bottom-end",showConfirmButton:false,timer:1400});track("memory_cleared")};
  return <div className="tlAiShell">
   <aside className={"tlAiSidebar "+(mobile?"open":"")}><div className="tlAiSideTop"><a href="#" className="tlAiBrand"><Logo/><span>ToollooT <small>AI</small></span></a><button className="tlIconBtn mobileOnly" onClick={()=>setMobile(false)}><X size={18}/></button></div>
    <button className="tlNewChat" onClick={newChat}><Plus size={17}/>New chat</button><label className="tlChatSearch"><Search size={15}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search chats"/></label><div className="tlSideLabel">Chats</div><div className="tlChatList">{visible.map(c=><button key={c.id} className={"tlChatItem "+(c.id===activeId?"active":"")} onClick={()=>{setActiveId(c.id);setMobile(false)}}><MessageSquare size={14}/><span>{c.title}</span></button>)}</div>
