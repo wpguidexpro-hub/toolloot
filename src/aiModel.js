@@ -56,7 +56,7 @@ export async function loadLocalLLM(_id=recommendedModel().id,onProgress){
  return generator;
 }
 
-const clean=text=>String(text||"").replace(/<think>[\\s\\S]*?<\\/think>/gi,"").replace(/^assistant\\s*[:：-]\\s*/i,"").trim();
+const clean=text=>String(text||"").replace(/<think>[\s\S]*?<\/think>/gi,"").replace(/^assistant\s*[:：-]\s*/i,"").trim();
 
 function buildMessages(prompt,history=[],memory={}){
  const facts=(memory.facts||[]).map(f=>f?.type+": "+f?.value).join("\\n");
