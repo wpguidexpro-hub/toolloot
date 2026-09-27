@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+﻿import React, { useEffect, useMemo, useState } from "react";
 import {
   Search, Boxes, Sparkles, Code2, Image as ImageIcon, FileText, Calculator,
   Menu, X, Sun, Moon, Upload, Download, SlidersHorizontal, Shield,
@@ -12,11 +12,9 @@ import "sweetalert2/dist/sweetalert2.min.css";
 import "./styles.css";
 import "./styles.mobile-shell.css";
 import "./generation.css";
-import "./ai-minimal.css";
 import "./future-ui.css";
 import "./brand.css";
 import "./components/CompressorGuide.css";
-import { ToollooTAI } from "./aiWorkspace.jsx";
 import { AnalyticsPage } from "./analyticsPage.jsx";
 import { AccountPage } from "./account.jsx";
 import { CloudWorkspace } from "./cloudWorkspace.jsx";
@@ -32,7 +30,6 @@ const BASE = import.meta.env.BASE_URL;
 const link = (path = "") => BASE + path.replace(/^\//, "");
 const categories = [
   {name:"All Tools", icon:Boxes, path:"/"},
-  {name:"AI & Smart", icon:Sparkles, path:"/categories/ai"},
   {name:"Developer", icon:Code2, path:"/categories/developer"},
   {name:"Images", icon:ImageIcon, path:"/categories/images"},
   {name:"Documents", icon:FileText, path:"/categories/documents"},
@@ -73,7 +70,7 @@ function Header({ dark, setDark, canInstall, installApp }) {
   const nav = [["Tools","/"],["Workspace","/workspace"],["Categories","/categories"],["How to Use","/how-to-use"],["Account","/account"]];
   return <header className="header">
     <a className="brand" href={link("/")} onClick={()=>setMenu(false)}>
-      <span className="brandMark" aria-hidden="true"><i>T</i><b>•</b><i>T</i></span><span className="brandWord">ToollooT</span>
+      <span className="brandMark" aria-hidden="true"><i>T</i><b>â€¢</b><i>T</i></span><span className="brandWord">ToollooT</span>
     </a>
     <nav className={menu ? "nav open" : "nav"}>
       {nav.map(([name,path])=><a key={name} href={link(path)} onClick={()=>setMenu(false)}>{name}</a>)}
@@ -143,9 +140,7 @@ function ToolCard({ tool }) {
     <p>{tool.description}</p><span className="toolLink">Open tool</span>
   </a>;
 }
-function Home() {
-  return <Layout><Seo title="ToollooT AI - Free AI Utility Workspace" description="ToollooT AI is a free multi-user utility workspace where natural-language commands run local tools for images, PDFs and files."/><main className="aiRoute"><ToollooTAI/></main></Layout>;
-}
+function Home() {  return <Layout><Seo title="ToollooT - Free Online Tools" description="Free browser-based tools for images, documents and everyday tasks."/><main className="homePage container"><section className="hero"><div className="pageIcon"><ToollooTIcon /></div><h1>Simple tools. Fast results.</h1><p>Free browser-based utilities for everyday work. Your files stay on your device whenever processing is local.</p></section><div className="toolGrid">{tools.map(t=><ToolCard tool={t} key={t.id}/>)}</div></main></Layout>;}
 function Page({ title,description,icon:Icon,children }) {
   return <Layout><Seo title={title} description={description}/><main className="staticPage container">
     <div className="pageIcon"><ToollooTIcon /></div><h1>{title}</h1><p className="pageLead">{description}</p><div className="pageContent">{children}</div>
@@ -169,7 +164,7 @@ function HowToUsePage() {
     <section id="getting-started" className="guideSection"><h2>Getting Started</h2><ol><li>Open a tool from the Tools page or a category.</li><li>Follow the instructions shown inside that tool.</li><li>Choose your files or enter the required information.</li><li>Adjust settings when available.</li><li>Run the tool and review the result.</li><li>Download or export your finished result.</li></ol></section>
     <section id="privacy" className="guideSection"><h2>Privacy & Browser Processing</h2><p>When a ToollooT tool says processing happens in your browser, the work is performed locally on your device. Your files are not uploaded by that browser-based tool.</p></section>
     <section id="troubleshooting" className="guideSection"><h2>Troubleshooting</h2><ul><li>Refresh the page if a tool becomes unresponsive.</li><li>Use a modern browser and allow file access when prompted.</li><li>For large files, wait for processing to finish before closing the tab.</li><li>If a download does not start, try the download button again.</li></ul></section>
-    <section className="guideSection"><h2>Tool Guides</h2><div className="pageCards">{guides.map(g=>{const Icon=g.icon;return <a className="infoCard" key={g.id} href={link("/how-to-use/"+g.id)}><Icon size={20}/><strong>{g.title}</strong><span>{g.desc}</span><em>Use Image Compressor →</em></a>})}</div></section>
+    <section className="guideSection"><h2>Tool Guides</h2><div className="pageCards">{guides.map(g=>{const Icon=g.icon;return <a className="infoCard" key={g.id} href={link("/how-to-use/"+g.id)}><Icon size={20}/><strong>{g.title}</strong><span>{g.desc}</span><em>Use Image Compressor â†’</em></a>})}</div></section>
   </Page>;
 }
 function ImageCompressorGuide() {
@@ -216,18 +211,18 @@ function ImageAddedChat({items,active,onSelect,busy}) {
   return <section className="imageAddedChat" aria-label="Image assistant chat">
     <div className="imageChatHead">
       <div className="imageChatAvatar"><Sparkles size={15}/></div>
-      <div><strong>ToollooT AI</strong><span>Image assistant · local processing</span></div>
+      <div><strong>ToollooT AI</strong><span>Image assistant Â· local processing</span></div>
       <span className="imageChatStatus"><i/> Ready</span>
     </div>
     <div className="imageChatBody">
       <div className="imageChatBubble assistantBubble">
-        <strong>{busy?"I'm working on your image…":"I got your image."}</strong>
-        <span>{busy?"Scanning the selected image and preparing the compression…":"Preview added below. Select an image to edit its settings."}</span>
+        <strong>{busy?"I'm working on your imageâ€¦":"I got your image."}</strong>
+        <span>{busy?"Scanning the selected image and preparing the compressionâ€¦":"Preview added below. Select an image to edit its settings."}</span>
       </div>
       {items.map((x,i)=><button type="button" key={x.id} className={"imageChatBubble imageChatImage "+(i===active?"selected":"")} onClick={()=>onSelect(i)}>
         <img src={x.preview} alt={x.file.name}/>
-        <span className="imageChatImageInfo"><strong>{x.file.name}</strong><small>Image {i+1} · {formatBytes(x.file.size)}</small><em>{x.result?"Compressed result ready":"Added image"}</em></span>
-        <span className="imageChatArrow">→</span>
+        <span className="imageChatImageInfo"><strong>{x.file.name}</strong><small>Image {i+1} Â· {formatBytes(x.file.size)}</small><em>{x.result?"Compressed result ready":"Added image"}</em></span>
+        <span className="imageChatArrow">â†’</span>
       </button>)}
       <div className="imageChatBubble assistantBubble compactBubble">
         <span>{items.length>1?items.length+" images are ready. Each image keeps its own settings.":"Ready when you are. Change quality, then compress this image."}</span>
@@ -277,7 +272,7 @@ function ImageCompressor() {
   const compressSingle=async id=>{const selected=items.find(x=>x.id===id);if(!selected||busy)return;setBusy(true);setGeneration(1);await waitGeneration();try{const r=await compressOne(selected);setItems(prev=>prev.map(x=>x.id===id?{...x,result:r}:x));notify("success","Smart compression complete");}catch(e){notify("error","Compression failed");}finally{setBusy(false);}};
   return <Layout><Seo title="Image Compressor - Free Online | ToollooT" description="Compress multiple images with individual settings directly in your browser."/>
     <main className="toolPage"><div className="container toolPageInner"><a className="backLink" href={link("/")}>Back to ToollooT</a>
-      <div className="toolTitle compactToolTitle"><div className="toolIcon large"><Sparkles size={22}/></div><div><h1>Image Compressor</h1><p>Choose → quality → compress → download.</p></div></div>
+      <div className="toolTitle compactToolTitle"><div className="toolIcon large"><Sparkles size={22}/></div><div><h1>Image Compressor</h1><p>Choose â†’ quality â†’ compress â†’ download.</p></div></div>
       {items.length===0&&<ChooseImage accept="image/*" multiple={true} onFiles={addFiles} label="Choose images"/>}
       {items.length>0&&<div className="compressWorkspace">
         <div className="compressorFixedTimeline"><ToolFileTimeline items={items} activeIndex={active} onSelect={setActive} onRemove={removeItem}/></div>
@@ -285,38 +280,38 @@ function ImageCompressor() {
         {item&&<div className="editorPanel"><ToolPreview item={item} busy={busy} generation={generation+" of "+items.length} progress={progress} onRemove={removeItem}/>
           <ImageAddedChat items={items} active={active} onSelect={setActive} busy={busy}/>
           <div className="contextSettings aiCompressorControls"><div className="aiSettingsIntro"><div className="aiBadge"><Sparkles size={14}/> Smart compression</div><strong>Settings for this image</strong><span>Each image keeps its own settings. Use the batch actions only when you want to copy settings.</span></div>
-            <label className="qualityControl"><div><span>Quality</span><b>{Math.round(item.settings.quality*100)}%</b></div><input type="range" min=".1" max="1" step=".05" value={item.settings.quality} onChange={e=>updateQuality(Number(e.target.value))}/><div className="realtimeSize"><span>Estimated size</span><strong>{estimating?"Calculating…":estimatedSize!=null?formatBytes(estimatedSize):"—"}</strong>{estimatedSize!=null&&<em>{item.file.size>estimatedSize?Math.round((1-estimatedSize/item.file.size)*100)+"% smaller":"No size reduction"}</em>}</div><small>Lower = smaller file · Higher = more detail</small></label>
-            <button className="primaryButton compressSelected aiCompressButton" disabled={busy} onClick={()=>compressSingle(item.id)}><Gauge size={17}/> {busy?"Generating…":item.result?"Compress again":"Compress image"}</button>
+            <label className="qualityControl"><div><span>Quality</span><b>{Math.round(item.settings.quality*100)}%</b></div><input type="range" min=".1" max="1" step=".05" value={item.settings.quality} onChange={e=>updateQuality(Number(e.target.value))}/><div className="realtimeSize"><span>Estimated size</span><strong>{estimating?"Calculatingâ€¦":estimatedSize!=null?formatBytes(estimatedSize):"â€”"}</strong>{estimatedSize!=null&&<em>{item.file.size>estimatedSize?Math.round((1-estimatedSize/item.file.size)*100)+"% smaller":"No size reduction"}</em>}</div><small>Lower = smaller file Â· Higher = more detail</small></label>
+            <button className="primaryButton compressSelected aiCompressButton" disabled={busy} onClick={()=>compressSingle(item.id)}><Gauge size={17}/> {busy?"Generatingâ€¦":item.result?"Compress again":"Compress image"}</button>
           </div>
-          {item.result&&!busy&&<div className="resultSummary"><span>{item.result.width} × {item.result.height}</span><strong>{formatBytes(item.file.size)} → {formatBytes(item.result.blob.size)}</strong><span>{item.file.size>item.result.blob.size?Math.round((1-item.result.blob.size/item.file.size)*100)+"% smaller":"No size reduction"}</span><a className="downloadButton" href={item.result.url} download={item.result.name}><Download size={15}/> Download</a></div>}
+          {item.result&&!busy&&<div className="resultSummary"><span>{item.result.width} Ã— {item.result.height}</span><strong>{formatBytes(item.file.size)} â†’ {formatBytes(item.result.blob.size)}</strong><span>{item.file.size>item.result.blob.size?Math.round((1-item.result.blob.size/item.file.size)*100)+"% smaller":"No size reduction"}</span><a className="downloadButton" href={item.result.url} download={item.result.name}><Download size={15}/> Download</a></div>}
         </div>}
         <div className="compressorGuideDock"><CompressorGuide count={items.length} hasResult={!!items.some(x=>x.result)} onClear={()=>{clearAll();clearImageSession()}}/></div>
-        <div className="workspaceMiniFooter"><span><strong>{items.length}</strong> image{items.length>1?"s":""} selected</span><span className="workspaceReadyHint"><Sparkles size={12}/> Individual processing • local only</span></div>
+        <div className="workspaceMiniFooter"><span><strong>{items.length}</strong> image{items.length>1?"s":""} selected</span><span className="workspaceReadyHint"><Sparkles size={12}/> Individual processing â€¢ local only</span></div>
       </div>}
       <div className="privacyNote"><Shield size={17}/><span>Everything is processed locally in your browser. Your images are not uploaded.</span></div>
-      <div className="toolHelpLink"><a href={link("/how-to-use/image-compressor")}>How to use Image Compressor <span>→</span></a></div>
+      <div className="toolHelpLink"><a href={link("/how-to-use/image-compressor")}>How to use Image Compressor <span>â†’</span></a></div>
     </div></main>
   </Layout>;
 }
 function ImageItem({item,index,busy,update,applyAll,compressSingle,removeItem}) {
   const s=item.settings,r=item.result;
   return <article className="imageItem"><div className="imageItemTop"><div className="imageIdentity"><span className="imageNumber">{index+1}</span><div><strong title={item.file.name}>{item.file.name}</strong><span>{formatBytes(item.file.size)}</span></div></div><button className="iconOnly" onClick={()=>removeItem(item.id)} aria-label={"Remove "+item.file.name}><Trash2 size={16}/></button></div>
-    <div className="imageWorkGrid"><div className="imagePreviewPane"><span className="previewLabel">Original preview</span><img src={item.preview} alt={item.file.name}/><div className="previewStats">{item.file.type||"image"} • {item.file.size?formatBytes(item.file.size):"0 B"}</div></div>
+    <div className="imageWorkGrid"><div className="imagePreviewPane"><span className="previewLabel">Original preview</span><img src={item.preview} alt={item.file.name}/><div className="previewStats">{item.file.type||"image"} â€¢ {item.file.size?formatBytes(item.file.size):"0 B"}</div></div>
       <div className="imageSettingsPane"><div className="settingsHeader"><strong>Individual settings</strong><button className="smallControl" onClick={()=>applyAll("format")}>Use first format</button></div>
         <label>Format<select value={s.format} onChange={e=>update(item.id,"format",e.target.value)}><option value="webp">WebP</option><option value="jpg">JPG</option><option value="png">PNG</option><option value="avif">AVIF</option><option value="original">Original</option></select></label>
         <label>Quality <b>{Math.round(s.quality*100)}%</b><input type="range" min=".1" max="1" step=".05" value={s.quality} onChange={e=>update(item.id,"quality",Number(e.target.value))}/><small>For JPG/WebP/AVIF. PNG uses lossless encoding.</small></label>
         <label>Width <b>{s.maxWidth?s.maxWidth+" px":"Original"}</b><input type="range" min="0" max="8000" step="100" value={s.maxWidth} onChange={e=>update(item.id,"maxWidth",Number(e.target.value))}/></label>
         <label>Target size <b>{s.targetKB?s.targetKB+" KB":"Off"}</b><input type="range" min="0" max="5000" step="100" value={s.targetKB} onChange={e=>update(item.id,"targetKB",Number(e.target.value))}/></label>
-        <div className="advancedRow"><button className={"smallControl "+(s.rotate?"selected":"")} onClick={()=>update(item.id,"rotate",(s.rotate+90)%360)}><RotateCw size={15}/> {s.rotate}°</button><button className={"smallControl "+(s.flip?"selected":"")} onClick={()=>update(item.id,"flip",!s.flip)}><FlipHorizontal2 size={15}/> Flip</button><button className="smallControl" onClick={()=>{update(item.id,"quality",.8);update(item.id,"maxWidth",0);update(item.id,"format","webp");update(item.id,"targetKB",0);update(item.id,"rotate",0);update(item.id,"flip",false)}}>Reset</button></div>
+        <div className="advancedRow"><button className={"smallControl "+(s.rotate?"selected":"")} onClick={()=>update(item.id,"rotate",(s.rotate+90)%360)}><RotateCw size={15}/> {s.rotate}Â°</button><button className={"smallControl "+(s.flip?"selected":"")} onClick={()=>update(item.id,"flip",!s.flip)}><FlipHorizontal2 size={15}/> Flip</button><button className="smallControl" onClick={()=>{update(item.id,"quality",.8);update(item.id,"maxWidth",0);update(item.id,"format","webp");update(item.id,"targetKB",0);update(item.id,"rotate",0);update(item.id,"flip",false)}}>Reset</button></div>
         <div className="imageActions"><button className="primaryButton" disabled={busy} onClick={()=>compressSingle(item.id)}><Gauge size={16}/> {r?"Re-compress":"Compress"}</button>{r&&<a className="downloadButton" href={r.url} download={r.name}><Download size={16}/> Download</a>}</div>
       </div></div>
-    {r&&<div className="itemResult"><div className="miniResultPreview"><span className="previewLabel">Compressed preview</span><img src={r.url} alt={"Compressed "+item.file.name}/></div><div className="resultInfo"><strong>{r.name}</strong><span>{r.width} Ã— {r.height} • {formatBytes(r.original)} → {formatBytes(r.blob.size)} • {r.original>r.blob.size?Math.round((1-r.blob.size/r.original)*100)+"% smaller":"No size reduction"}</span><button className="textButton" onClick={()=>{}}>Settings stay with this image</button></div></div>}
+    {r&&<div className="itemResult"><div className="miniResultPreview"><span className="previewLabel">Compressed preview</span><img src={r.url} alt={"Compressed "+item.file.name}/></div><div className="resultInfo"><strong>{r.name}</strong><span>{r.width} Ãƒâ€” {r.height} â€¢ {formatBytes(r.original)} â†’ {formatBytes(r.blob.size)} â€¢ {r.original>r.blob.size?Math.round((1-r.blob.size/r.original)*100)+"% smaller":"No size reduction"}</span><button className="textButton" onClick={()=>{}}>Settings stay with this image</button></div></div>}
   </article>;
 }
 function App(){
   const [loading,setLoading]=useState(true);
   useEffect(()=>{ const t=setTimeout(()=>setLoading(false),450); return ()=>clearTimeout(t); },[]);
-  return <>{loading&&<div className="pageLoader" role="status" aria-label="Loading"><div className="pageLoaderSpinner"/><span>Loading ToollooT…</span></div>}<Root/></>;
+  return <>{loading&&<div className="pageLoader" role="status" aria-label="Loading"><div className="pageLoaderSpinner"/><span>Loading ToollooTâ€¦</span></div>}<Root/></>;
 }
 function Root(){
   const path=window.location.pathname.replace(/\/+$/,"")||"/";
@@ -328,7 +323,6 @@ function Root(){
   if(local==="/how-to-use/image-compressor")return <ImageCompressorGuide/>;
   if(local.startsWith("/how-to-use/")){const id=local.split("/").pop();if(id==="compress-to-size"||imageToolMeta[id])return <ImageToolGuide toolId={id} link={link} Layout={Layout} Page={Page}/>;}
   if(local==="/categories")return <CategoriesPage/>;
-  if(local==="/categories/ai")return <CategoryPage categoryName="AI & Smart" slug="ai"/>;
   if(local==="/categories/developer")return <CategoryPage categoryName="Developer" slug="developer"/>;
   if(local==="/categories/images")return <CategoryPage categoryName="Images" slug="images"/>;
   if(local==="/categories/documents")return <CategoryPage categoryName="Documents" slug="documents"/>;
@@ -344,3 +338,6 @@ function Root(){
   return <Home/>;
 }
 createRoot(document.getElementById("root")).render(<App/>);
+
+
+
