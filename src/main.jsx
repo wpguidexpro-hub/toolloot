@@ -39,6 +39,15 @@ async function wikidataSearch(q){
  return(d?.search||[]).map(x=>({title:x.label||x.id,extract:cleanText(x.description||""),url:x.concepturi||("https://www.wikidata.org/wiki/"+x.id),source:"Wikidata"}));
 }
 async function webResearch(question){
+ const local="http://127.0.0.1:5190/api/ask?q="+encodeURIComponent(question);
+ try{
+  const r=await fetch(local,{signal:AbortSignal.timeout(20000)});
+  if(r.ok){
+   const d=await r.json();
+   if(d?.ok&&d.answer)return{text:d.answer,title:d.title||"Open web",url:d.url||"",source:d.source||"Open Web Crawler",score:d.score||0};
+   if(d?.ok===false&&d?.message)return null;
+  }
+ }catch{}
  const original=question.trim(),keys=norm(original).join(" "),variants=[original,keys].filter((x,i,a)=>x&&a.indexOf(x)===i),all=[];
  for(const v of variants){
   try{all.push(...await wikiSearch(v,"en"))}catch{}
