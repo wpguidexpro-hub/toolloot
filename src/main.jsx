@@ -14,7 +14,7 @@ function DemoGame(){
   const toggleMute=()=>{mute=!mute;if(mute)stopMusic();else startMusic()};
   const sfx=(type)=>{if(mute)return;initAudio();if(!audioCtx)return;const now=audioCtx.currentTime,o=audioCtx.createOscillator(),g=audioCtx.createGain();const cfg={shoot:[720,"square",.045,.07],hit:[150,"sawtooth",.08,.10],power:[620,"triangle",.16,.12],bounce:[90,"square",.055,.06],hurt:[75,"sawtooth",.22,.14],gameover:[110,"sawtooth",.5,.16],start:[330,"square",.12,.08]}[type]||[220,"square",.08,.06];o.type=cfg[1];o.frequency.setValueAtTime(cfg[0],now);o.frequency.exponentialRampToValueAtTime(Math.max(35,cfg[0]*.55),now+cfg[2]);g.gain.setValueAtTime(cfg[3],now);g.gain.exponentialRampToValueAtTime(.001,now+cfg[2]);o.connect(g);g.connect(audioCtx.destination);o.start(now);o.stop(now+cfg[2]+.02)};
   const resize=()=>{const dpr=Math.min(2,window.devicePixelRatio||1),w=innerWidth,h=innerHeight;c.style.width=w+"px";c.style.height=h+"px";c.width=Math.floor(w*dpr);c.height=Math.floor(h*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);c._w=w;c._h=h}; resize();addEventListener("resize",resize);
-  state.current={player:{x:innerWidth/2,y:innerHeight-86,w:64,h:42,speed:260,walk:0,dir:1},bullets:[],balls:[],powerups:[],particles:[],next:0,score:0,highScore:Number(localStorage.getItem("toollootHighScore")||0),spawn:10,over:false,paused:false,elapsed:0,level:1,drop:0,bulletPower:1,playerSpeedPower:1,ballSpeedPower:1,lives:3,shield:0,combo:0,comboTimer:0,magnet:0,shake:0,flash:0,birds:[],boss:null,coins:0};
+  state.current={player:{x:innerWidth/2,y:innerHeight-86,w:64,h:42,speed:260,walk:0,dir:1},bullets:[],balls:[],powerups:[],particles:[],next:0,score:0,highScore:Number(localStorage.getItem("toollootHighScore")||0),spawn:10,over:false,paused:false,elapsed:0,level:1,drop:0,bulletPower:1,playerSpeedPower:1,ballSpeedPower:1,lives:3,shield:0,combo:0,comboTimer:0,magnet:0,shake:0,flash:0,birds:[],boss:null,bossLevel:0,coins:0};
   const s=state.current,colors=["#ff4d6d","#ffd166","#06d6a0","#4cc9f0","#a855f7","#ff7b00","#f72585","#90be6d"];
   const shoot=()=>{if(s.over)return;sfx("shoot");s.muzzle=(s.muzzle||0)+0.08;const count=s.bulletPower||1;for(let n=0;n<count;n++){const spread=(n-(count-1)/2)*14;s.bullets.push({x:s.player.x+spread,y:s.player.y-18,r:4,vy:-820,vx:spread*3})}};
   const down=e=>{initAudio();if(!mute)startMusic();if(["ArrowLeft","ArrowRight"," ","p","P"].includes(e.key))e.preventDefault();if(e.key.toLowerCase()==="p")togglePause();k[e.key.toLowerCase()]=true;if(e.code==="Space"&&!e.repeat)shoot()};
@@ -33,7 +33,7 @@ function DemoGame(){
    s.balls.splice(i,1);return 0;
   };
   const togglePause=()=>{if(s.over)return;s.paused=!s.paused;if(s.paused)stopMusic();else if(!mute)startMusic()};
-  const restart=()=>{initAudio();if(!mute)startMusic();sfx("start");s.player.x=innerWidth/2;s.player.walk=0;s.muzzle=0;s.bullets=[];s.balls=[];s.powerups=[];s.particles=[];s.next=0;s.score=0;s.coins=0;s.boss=null;s.achievement="";s.achievementTimer=0;s.flash=.12;s.highScore=Number(localStorage.getItem("toollootHighScore")||0);s.bulletPower=1;s.playerSpeedPower=1;s.ballSpeedPower=1;s.lives=3;s.shield=0;s.combo=0;s.comboTimer=0;s.magnet=0;s.shake=0;s.flash=0;s.spawn=10;s.over=false;s.elapsed=0;s.level=1;s.drop=0;s.birds=[];s.achievement="";s.achievementTimer=0;lastAchievement=0;setScore(0);setBalls(0)};
+  const restart=()=>{initAudio();if(!mute)startMusic();sfx("start");s.player.x=innerWidth/2;s.player.walk=0;s.muzzle=0;s.bullets=[];s.balls=[];s.powerups=[];s.particles=[];s.next=0;s.score=0;s.coins=0;s.boss=null;s.bossLevel=0;s.achievement="";s.achievementTimer=0;s.flash=.12;s.highScore=Number(localStorage.getItem("toollootHighScore")||0);s.bulletPower=1;s.playerSpeedPower=1;s.ballSpeedPower=1;s.lives=3;s.shield=0;s.combo=0;s.comboTimer=0;s.magnet=0;s.shake=0;s.flash=0;s.spawn=10;s.over=false;s.elapsed=0;s.level=1;s.drop=0;s.birds=[];s.achievement="";s.achievementTimer=0;lastAchievement=0;setScore(0);setBalls(0)};
   const full=async()=>{if(document.fullscreenElement){document.exitFullscreen();return}await document.documentElement.requestFullscreen?.();try{await screen.orientation?.lock?.("landscape")}catch{} };
   let raf,last=performance.now();
   const loop=t=>{
@@ -42,7 +42,7 @@ function DemoGame(){
     s.elapsed+=dt;s.achievementTimer=Math.max(0,(s.achievementTimer||0)-dt);
     s.level=1+Math.floor(s.elapsed/60);if(s.level>1&&s.level!==lastAchievement){lastAchievement=s.level;s.achievement="LEVEL "+s.level+" — SPEED UP";s.achievementTimer=2.4;sfx("power")}
     const speedScale=1+(s.level-1)*0.14;
-    if(s.level%5===0&&!s.boss&&s.elapsed>1)spawnBoss();s.shake=Math.max(0,s.shake-dt);s.flash=Math.max(0,s.flash-dt);
+    if(s.level%5===0&&s.bossLevel!==s.level&&!s.boss&&s.elapsed>1){s.bossLevel=s.level;spawnBoss();}s.shake=Math.max(0,s.shake-dt);s.flash=Math.max(0,s.flash-dt);
     const moveSpeed=s.player.speed*(s.playerSpeedPower||1);s.muzzle=Math.max(0,(s.muzzle||0)-dt);const walking=k.arrowleft||k.arrowright;if(walking){s.player.walk+=dt*10}else{s.player.walk*=Math.max(0,1-dt*8)}if(k.arrowleft){s.player.x-=moveSpeed*dt;s.player.dir=-1}if(k.arrowright){s.player.x+=moveSpeed*dt;s.player.dir=1};
     s.player.x=Math.max(s.player.w/2+10,Math.min(innerWidth-s.player.w/2-10,s.player.x));
     s.spawn-=dt;if(s.spawn<=0){spawnBall();s.spawn=10}
