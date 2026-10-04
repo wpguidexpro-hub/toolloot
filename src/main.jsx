@@ -33,7 +33,7 @@ function DemoGame(){
     s.player.x=Math.max(s.player.w/2+10,Math.min(c.width-s.player.w/2-10,s.player.x));
     s.spawn-=dt;if(s.spawn<=0&&s.balls.length===0){spawnBall();s.spawn=1.6}
     s.bullets.forEach(b=>b.y+=b.vy*dt);s.bullets=s.bullets.filter(b=>b.y>-30);
-    s.balls.forEach(b=>{b.vy+=360*dt;b.x+=b.vx*dt;b.y+=b.vy*dt;if(b.x-b.r<0){b.x=b.r;b.vx=Math.abs(b.vx)}if(b.x+b.r>c.width){b.x=c.width-b.r;b.vx=-Math.abs(b.vx)}if(b.y-b.r<0){b.y=b.r;b.vy=Math.abs(b.vy)}if(b.y+b.r>c.height-16){b.y=c.height-16-b.r;b.vy=-Math.abs(b.vy)*Math.max(.62,Math.min(.94,1-b.r*.004));b.bounces++}});
+    s.balls.forEach(b=>{b.vy+=210*dt;b.x+=b.vx*dt;b.y+=b.vy*dt;if(b.x-b.r<0){b.x=b.r;b.vx=Math.abs(b.vx)}if(b.x+b.r>c.width){b.x=c.width-b.r;b.vx=-Math.abs(b.vx)}if(b.y-b.r<70){b.y=70+b.r;b.vy=Math.abs(b.vy)}if(b.y+b.r>c.height-16){b.y=c.height-16-b.r;b.vy=-Math.max(420,Math.min(720,Math.abs(b.vy)*1.08));b.bounces++}});
     for(let i=s.balls.length-1;i>=0;i--){const b=s.balls[i];for(let j=s.bullets.length-1;j>=0;j--){const q=s.bullets[j];if(Math.hypot(q.x-b.x,q.y-b.y)<b.r+q.r){s.bullets.splice(j,1);const oldR=b.r, made=splitBall(b,i);s.score+=Math.round(oldR*2)+(made?20:60);setScore(s.score);for(let n=0;n<16;n++)s.particles.push({x:b.x,y:b.y,vx:(Math.random()-.5)*(180+oldR*3),vy:(Math.random()-.5)*(180+oldR*3),life:.5,color:b.color});break}}}
     const p=s.player;for(const b of s.balls)if(b.x>p.x-p.w/2&&b.x<p.x+p.w/2&&b.y+b.r>p.y-p.h/2&&b.y-b.r<p.y+p.h/2){s.over=true;break}
    }
