@@ -9,11 +9,11 @@
 
 /* HD arcade presentation */
 .gameFullscreen{background:#030611!important;overflow:hidden;touch-action:none;}
-.gameFullscreen canvas{display:block;width:100%;height:100%;image-rendering:auto;transform:perspective(1400px) rotateX(.35deg);transform-origin:center bottom;}
+.gameFullscreen canvas{display:block;width:100%;height:100%;image-rendering:auto;touch-action:none;cursor:crosshair;}
 .gameUI{z-index:30;}
 .gameIcon,.gameRestart{backdrop-filter:blur(10px);background:rgba(8,14,30,.78)!important;border:1px solid rgba(100,190,255,.35)!important;box-shadow:0 8px 30px rgba(0,0,0,.35),inset 0 0 18px rgba(50,130,255,.08);}
-.mobileControls{z-index:40;}
+.mobileControls{display:none!important;z-index:40;}
 .gameTouch,.shootBtn{backdrop-filter:blur(10px);box-shadow:0 8px 28px rgba(0,0,0,.35),inset 0 0 20px rgba(255,255,255,.05);}
 .shootBtn{border-color:rgba(255,220,90,.65)!important;}
 
-.upgradeTouch{position:absolute;left:50%;bottom:74px;transform:translateX(-50%);display:flex;gap:10px;z-index:45;pointer-events:none}.upgradeTouch button{pointer-events:auto;background:rgba(5,18,28,.88);border:1px solid rgba(255,209,102,.65);color:#ffd166;border-radius:4px;padding:10px 13px;font:9px "Press Start 2P";box-shadow:0 8px 25px rgba(0,0,0,.3)}.upgradeTouch button:active{transform:translateY(1px);background:#16313b}@media(max-width:760px){.upgradeTouch{bottom:164px;gap:6px}.upgradeTouch button{font-size:7px;padding:9px 8px}}
+.upgradeTouch{display:none!important;position:absolute;left:50%;bottom:74px;transform:translateX(-50%);display:flex;gap:10px;z-index:45;pointer-events:none}.upgradeTouch button{pointer-events:auto;background:rgba(5,18,28,.88);border:1px solid rgba(255,209,102,.65);color:#ffd166;border-radius:4px;padding:10px 13px;font:9px "Press Start 2P";box-shadow:0 8px 25px rgba(0,0,0,.3)}.upgradeTouch button:active{transform:translateY(1px);background:#16313b}@media(max-width:760px){.gameHelp{display:block;font-size:7px;bottom:12px;}.gameUI{top:8px;right:8px;}.gameIcon{width:38px;min-height:38px}.gameRestart{min-height:38px;font-size:7px}}
