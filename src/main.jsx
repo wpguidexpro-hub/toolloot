@@ -25,7 +25,7 @@ function DemoGame(){
    s.balls.splice(i,1);return 0;
   };
   const restart=()=>{s.player.x=c.width/2;s.bullets=[];s.balls=[];s.powerups=[];s.particles=[];s.next=0;s.score=0;s.bulletPower=1;s.playerSpeedPower=1;s.ballSpeedPower=1;s.spawn=10;s.over=false;s.elapsed=0;s.level=1;s.drop=0;setScore(0);setBalls(0)};
-  const full=()=>{if(document.fullscreenElement)document.exitFullscreen();else document.documentElement.requestFullscreen?.()};
+  const full=async()=>{if(document.fullscreenElement){document.exitFullscreen();return}await document.documentElement.requestFullscreen?.();try{await screen.orientation?.lock?.("landscape")}catch{} };
   let raf,last=performance.now();
   const loop=t=>{
    const dt=Math.min(.033,(t-last)/1000);last=t;
