@@ -6,6 +6,11 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import mariadb from "mariadb";
 import { v4 as uuid } from "uuid";
+import dotenv from "dotenv";
+import { fileURLToPath } from "url";
+import path from "path";
+
+dotenv.config({ path: path.join(path.dirname(fileURLToPath(import.meta.url)), ".env") });
 
 const app = express();
 const httpServer = http.createServer(app);
@@ -21,7 +26,9 @@ const pool = mariadb.createPool({
   password: process.env.DB_PASSWORD || "",
   database: process.env.DB_NAME || "toolloot",
   connectionLimit: 5,
-  bigIntAsNumber: true
+  bigIntAsNumber: true,
+  connectTimeout: 5000,
+  acquireTimeout: 5000
 });
 
 const io = new Server(httpServer, {
@@ -64,6 +71,7 @@ app.get("/api/health", async (req, res) => {
     await query("SELECT 1 AS ok");
     res.json({ ok: true, database: "mariadb", game: "ToollooT Mining Master" });
   } catch (error) {
+    console.error("health", error);
     res.status(503).json({ ok: false, database: "unavailable", error: error.message });
   }
 });
@@ -73,28 +81,19 @@ app.post("/api/register", async (req, res) => {
     const { name, email, password } = req.body || {};
     const cleanName = String(name || "").trim().slice(0, 24);
     const cleanEmail = String(email || "").trim().toLowerCase();
-
-    if (!cleanName || !cleanEmail || !password || String(password).length < 6) {
+    if (!cleanName || !cleanEmail || !password || String(password).length < 6)
       return res.status(400).json({ error: "Name, email and 6+ character password required" });
-    }
 
     const existing = await query("SELECT id FROM users WHERE email = ? LIMIT 1", [cleanEmail]);
     if (existing.length) return res.status(409).json({ error: "Email already registered" });
 
-    const user = {
-      id: uuid(),
-      name: cleanName,
-      email: cleanEmail,
-      password: await bcrypt.hash(String(password), 10)
-    };
-
+    const user = { id: uuid(), name: cleanName, email: cleanEmail, password: await bcrypt.hash(String(password), 10) };
     await query(
       `INSERT INTO users
        (id,name,email,password,cash,ore,zone,bulldozer_level,tool_level,workers,score,wins,kills)
        VALUES (?,?,?,?,0,0,1,1,1,0,0,0,0)`,
       [user.id, user.name, user.email, user.password]
     );
-
     res.json({ token: signToken(user), user: publicUser(user) });
   } catch (error) {
     console.error("register", error);
@@ -107,11 +106,8 @@ app.post("/api/login", async (req, res) => {
     const email = String(req.body?.email || "").trim().toLowerCase();
     const password = String(req.body?.password || "");
     const user = (await query("SELECT * FROM users WHERE email = ? LIMIT 1", [email]))[0];
-
-    if (!user || !(await bcrypt.compare(password, user.password))) {
+    if (!user || !(await bcrypt.compare(password, user.password)))
       return res.status(401).json({ error: "Invalid email or password" });
-    }
-
     res.json({ token: signToken(user), user: publicUser(user) });
   } catch (error) {
     console.error("login", error);
@@ -125,9 +121,7 @@ app.get("/api/me", auth, async (req, res) => {
     if (!user) return res.status(404).json({ error: "User not found" });
     const { password, ...safe } = user;
     res.json(safe);
-  } catch (error) {
-    res.status(500).json({ error: "Could not load profile" });
-  }
+  } catch { res.status(500).json({ error: "Could not load profile" }); }
 });
 
 app.get("/api/leaderboard", async (req, res) => {
@@ -135,9 +129,7 @@ app.get("/api/leaderboard", async (req, res) => {
     const rows = await query(`SELECT id,name,cash,ore,zone,bulldozer_level AS bulldozerLevel,
       tool_level AS toolLevel,workers,score,wins,kills FROM users ORDER BY score DESC LIMIT 100`);
     res.json(rows);
-  } catch (error) {
-    res.status(500).json({ error: "Could not load leaderboard" });
-  }
+  } catch { res.status(500).json({ error: "Could not load leaderboard" }); }
 });
 
 app.post("/api/save", auth, async (req, res) => {
@@ -145,7 +137,6 @@ app.post("/api/save", auth, async (req, res) => {
     const p = req.body || {};
     const fields = ["cash", "ore", "zone", "bulldozerLevel", "toolLevel", "workers", "score"];
     const values = fields.map(k => Number.isFinite(Number(p[k])) ? Math.max(0, Math.floor(Number(p[k]))) : null);
-
     await query(
       `UPDATE users SET cash=COALESCE(?,cash), ore=COALESCE(?,ore), zone=COALESCE(?,zone),
        bulldozer_level=COALESCE(?,bulldozer_level), tool_level=COALESCE(?,tool_level),
@@ -153,9 +144,7 @@ app.post("/api/save", auth, async (req, res) => {
       [...values, req.user.id]
     );
     res.json({ ok: true });
-  } catch (error) {
-    res.status(500).json({ error: "Save failed" });
-  }
+  } catch { res.status(500).json({ error: "Save failed" }); }
 });
 
 app.post("/api/match-result", auth, async (req, res) => {
@@ -165,20 +154,16 @@ app.post("/api/match-result", auth, async (req, res) => {
     await query("UPDATE users SET score=score+?, wins=wins+? WHERE id=?", [score, win, req.user.id]);
     const user = await getUser(req.user.id);
     res.json({ ok: true, score: user.score });
-  } catch (error) {
-    res.status(500).json({ error: "Match result failed" });
-  }
+  } catch { res.status(500).json({ error: "Match result failed" }); }
 });
 
 const rooms = new Map();
 const safePlayer = s => ({ id: s.id, userId: s.userId, name: s.name, x: s.x, y: s.y, ore: s.ore, score: s.score });
-
 async function addPlayer(socket, room) {
   const user = await getUser(socket.userId);
   if (!user) throw new Error("User not found");
   room.players.set(socket.id, { id: socket.id, userId: user.id, name: user.name, x: 500, y: 300, ore: 0, score: 0 });
 }
-
 const roomPlayers = room => [...room.players.values()].map(safePlayer);
 const roomFor = socket => [...rooms.values()].find(r => r.players.has(socket.id));
 
@@ -188,9 +173,7 @@ io.use((socket, next) => {
     const p = jwt.verify(token, JWT_SECRET);
     socket.userId = p.id;
     next();
-  } catch {
-    next(new Error("Unauthorized"));
-  }
+  } catch { next(new Error("Unauthorized")); }
 });
 
 io.on("connection", socket => {
@@ -203,9 +186,7 @@ io.on("connection", socket => {
       socket.join(code);
       cb?.({ code });
       io.to(code).emit("room:players", roomPlayers(room));
-    } catch {
-      cb?.({ error: "Could not create room" });
-    }
+    } catch { cb?.({ error: "Could not create room" }); }
   });
 
   socket.on("room:join", async (rawCode, cb) => {
@@ -218,9 +199,7 @@ io.on("connection", socket => {
       socket.join(code);
       cb?.({ code });
       io.to(code).emit("room:players", roomPlayers(room));
-    } catch {
-      cb?.({ error: "Could not join room" });
-    }
+    } catch { cb?.({ error: "Could not join room" }); }
   });
 
   socket.on("room:quick", async cb => {
@@ -235,9 +214,7 @@ io.on("connection", socket => {
       socket.join(code);
       cb?.({ code });
       io.to(code).emit("room:players", roomPlayers(room));
-    } catch {
-      cb?.({ error: "Quick join failed" });
-    }
+    } catch { cb?.({ error: "Quick join failed" }); }
   });
 
   socket.on("player:move", p => {
@@ -246,16 +223,14 @@ io.on("connection", socket => {
     const player = room.players.get(socket.id);
     player.x = Math.max(20, Math.min(980, Number(p?.x) || 500));
     player.y = Math.max(20, Math.min(580, Number(p?.y) || 300));
-    io.to([...socket.rooms].find(x => x !== socket.id) || "").emit("room:players", roomPlayers(room));
+    const code = [...socket.rooms].find(x => x !== socket.id);
+    if (code) io.to(code).emit("room:players", roomPlayers(room));
   });
 
   socket.on("game:start", rawCode => {
     const code = String(rawCode || "").toUpperCase();
     const room = rooms.get(code);
-    if (room) {
-      room.started = true;
-      io.to(code).emit("game:start");
-    }
+    if (room) { room.started = true; io.to(code).emit("game:start"); }
   });
 
   socket.on("disconnect", () => {
