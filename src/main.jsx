@@ -1,31 +1,4 @@
-import { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { Browser } from "jsnes";
-import { Gamepad2, Upload, Play, Library, Settings2, Volume2, VolumeX, RotateCcw, Maximize2, Keyboard, ChevronRight, CircleDot, Trophy, Save, FolderOpen, Fullscreen, Swords } from "lucide-react";
-import ArenaGame from "./ArenaGame.jsx";
+import SpaceGame from "./SpaceGame.jsx";
 import "./chat.css";
-
-const RECENT_KEY="toolloot_nes_recent", STATE_KEY="toolloot_nes_state:";
-const readRecent=()=>{try{return JSON.parse(localStorage.getItem(RECENT_KEY)||"[]")}catch{return[]}};
-const saveRecent=x=>localStorage.setItem(RECENT_KEY,JSON.stringify(x.slice(0,12)));
-
-function Emulator({rom,name,onBack}){
- const host=useRef(null),browser=useRef(null),[error,setError]=useState(""),[muted,setMuted]=useState(false),[slot,setSlot]=useState(1),[saved,setSaved]=useState("");
- useEffect(()=>{if(!host.current||!rom)return;setError("");const emu=new Browser({container:host.current,onError:e=>setError(e?.message||String(e))});browser.current=emu;try{emu.loadROM(rom)}catch(e){setError(e?.message||"ROM could not be loaded.")}return()=>{emu.destroy();browser.current=null}},[rom]);
- const key=()=>STATE_KEY+btoa(name).replace(/[^a-z0-9]/gi,"");
- const save=()=>{try{localStorage.setItem(key()+":"+slot,JSON.stringify(browser.current.nes.toJSON()));setSaved("SAVED")}catch{setSaved("SAVE FAILED")}};
- const load=()=>{try{const s=localStorage.getItem(key()+":"+slot);if(!s)return setSaved("EMPTY SLOT");browser.current.nes.fromJSON(JSON.parse(s));setSaved("LOADED")}catch{setSaved("LOAD FAILED")}};
- const reset=()=>{try{browser.current?.nes?.reset()}catch{}};
- const full=()=>document.querySelector(".screenPage")?.requestFullscreen?.();
- return <div className="screenPage"><div className="screenTop"><button className="pixelBtn ghost" onClick={onBack}>← LIBRARY</button><div className="cartName"><CircleDot size={14}/> {name}</div><div className="saveTools"><select value={slot} onChange={e=>setSlot(+e.target.value)}><option value="1">SLOT 1</option><option value="2">SLOT 2</option><option value="3">SLOT 3</option></select><button className="iconBtn" onClick={save}><Save/></button><button className="iconBtn" onClick={load}><FolderOpen/></button><button className="iconBtn" onClick={reset}><RotateCcw/></button><button className="iconBtn" onClick={full}><Fullscreen/></button><button className="iconBtn" onClick={()=>setMuted(x=>!x)}>{muted?<VolumeX/>:<Volume2/>}</button></div></div><div className="crtFrame"><div ref={host} className="nesHost"/>{error&&<div className="emuError">{error}</div>}</div><div className="saveToast">{saved&&<>SLOT {slot}: {saved}</>}</div><div className="controls"><span><Keyboard/> Arrows <b>D-PAD</b></span><span><kbd>X</kbd> A</span><span><kbd>Z</kbd> B</span><span><kbd>Enter</kbd> START</span></div><div className="tinyNote">Use ROMs you own or are legally permitted to use.</div></div>;
-}
-
-function App(){
- const[view,setView]=useState("library"),[rom,setRom]=useState(null),[romName,setRomName]=useState(""),[recent,setRecent]=useState(readRecent());
- const input=useRef(null);
- const loadFile=file=>{if(!file)return;if(!file.name.toLowerCase().endsWith(".nes"))return alert("Please choose a .NES ROM file.");const r=new FileReader();r.onload=()=>{const data=new Uint8Array(r.result);setRom(data);setRomName(file.name);setView("emulator");const n=[{name:file.name,size:file.size,at:Date.now()},...recent.filter(x=>x.name!==file.name)];setRecent(n);saveRecent(n)};r.readAsArrayBuffer(file)};
- if(view==="arena")return <ArenaGame onBack={()=>setView("library")}/>;
- if(view==="emulator")return <Emulator rom={rom} name={romName} onBack={()=>setView("library")}/>;
- return <div className="nesApp"><header className="nesHeader"><div className="brand"><div className="brandMark"><Gamepad2/></div><div><b>TOOLLOOT</b><span>3D ARCADE</span></div></div><div className="headerRight"><span className="statusDot"/> LOCAL MODE</div></header><main className="launcher"><section className="hero"><div><p className="eyebrow">ORIGINAL WEB GAME</p><h1>ENTER<br/><em>THE ARENA.</em></h1><p className="heroText">A real WebGL 3D boss arena with low-poly CC0 models, moving camera, foreground scenery and mobile controls.</p><div className="heroActions"><button className="pixelBtn primary" onClick={()=>setView("arena")}><Swords/> PLAY 3D ARENA</button><button className="pixelBtn" onClick={()=>input.current?.click()}><Upload/> LOAD .NES</button></div><input ref={input} hidden type="file" accept=".nes,application/octet-stream" onChange={e=>loadFile(e.target.files?.[0])}/></div><div className="consoleArt"><div className="console"><div className="slot"/><div className="led"/><div className="label">TOOLLOOT<br/><small>3D WEBGL</small></div><div className="vent">{Array.from({length:18},(_,i)=><i key={i}/>)}</div></div><div className="cartridge"><div>3D</div><span>ARENA</span></div></div></section><section className="librarySection"><div className="sectionTitle"><div><p className="eyebrow">GAME MODES</p><h2><Library/> PLAY</h2></div><button className="smallBtn" onClick={()=>setView("arena")}><Play/> ARENA</button></div><div className="gameGrid"><button className="gameCard featured" onClick={()=>setView("arena")}><div className="boxArt arenaArt"><span>⚔</span><b>3D</b></div><div className="cardInfo"><strong>Astra Arena</strong><small>FPP • TPP • BOSS BATTLE</small></div><ChevronRight/></button>{recent.map((g,i)=><button className="gameCard" key={g.name+i} onClick={()=>input.current?.click()}><div className="romArt">NES</div><div className="cardInfo"><strong>{g.name}</strong><small>{Math.round(g.size/1024)} KB • RECENT</small></div><ChevronRight/></button>)}<button className="emptyCard" onClick={()=>input.current?.click()}><Upload/><strong>LOAD YOUR ROM</strong><small>Only .NES cartridges</small></button></div></section><section className="infoStrip"><div><Settings2/><b>REAL 3D</b><span>Three.js WebGL renderer.</span></div><div><Gamepad2/><b>PC + MOBILE</b><span>Keyboard and touch controls.</span></div><div><Maximize2/><b>FPP + TPP</b><span>Press V to switch camera.</span></div></section></main><footer>TOOLLOOT • ASTRA ARENA • CC0 GAME ASSETS</footer></div>
-}
-createRoot(document.getElementById("root")).render(<App/>);
+createRoot(document.getElementById("root")).render(<SpaceGame onBack={()=>location.reload()}/>);
