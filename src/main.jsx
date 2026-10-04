@@ -1,38 +1,142 @@
-import{createRoot}from"react-dom/client";
-import{useEffect,useRef,useState}from"react";
-import{Gamepad2,Trophy,LogIn,UserPlus,LogOut,Users,Copy,Play,Pickaxe,Truck,Coins,ChevronUp,RefreshCw}from"lucide-react";
-import{io}from"socket.io-client";
-import VoxelWorld from"./VoxelWorld.jsx";
-import"./chat.css";
+import { useEffect, useRef, useState } from "react";
+import { createRoot } from "react-dom/client";
+import { Browser, Controller } from "jsnes";
+import { Gamepad2, Upload, Play, Library, Settings2, Volume2, VolumeX, RotateCcw, Maximize2, Keyboard, ChevronRight, CircleDot, Trophy } from "lucide-react";
+import "./chat.css";
 
-const API=import.meta.env.VITE_GAME_API||"http://localhost:3000",KEY="toolloot_mining_auth";
-const load=()=>{try{return JSON.parse(localStorage.getItem(KEY)||"null")}catch{return null}},saveAuth=x=>localStorage.setItem(KEY,JSON.stringify(x));
-const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
-const defaultGame={cash:0,ore:0,zone:1,bulldozerLevel:1,toolLevel:1,workers:0,score:0,lastSeen:Date.now()};
-const fmt=n=>new Intl.NumberFormat("en-IN",{notation:"compact",maximumFractionDigits:1}).format(n);
+const RECENT_KEY = "toolloot_nes_recent";
+const readRecent = () => { try { return JSON.parse(localStorage.getItem(RECENT_KEY) || "[]"); } catch { return []; } };
+const saveRecent = x => localStorage.setItem(RECENT_KEY, JSON.stringify(x.slice(0, 12)));
 
-function Auth({onAuth}){const[mode,setMode]=useState("login"),[name,setName]=useState(""),[email,setEmail]=useState(""),[password,setPassword]=useState(""),[err,setErr]=useState(""),[busy,setBusy]=useState(false);
- const submit=async e=>{e.preventDefault();setBusy(true);setErr("");try{const r=await fetch(API+"/api/"+(mode==="login"?"login":"register"),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name,email,password})});const d=await r.json();if(!r.ok)throw Error(d.error||"Request failed");saveAuth(d);onAuth(d)}catch(e){setErr(e.message)}finally{setBusy(false)}};
- return <div className="auth"><form className="authCard" onSubmit={submit}><div className="brand"><Gamepad2/> TOOLLOOT <b>MINING</b></div><h1>{mode==="login"?"Welcome back":"Start mining"}</h1><p>Build your own mining empire.</p>{mode==="register"&&<input required placeholder="Player name" value={name} onChange={e=>setName(e.target.value)} maxLength="24"/>}<input required type="email" placeholder="Email" value={email} onChange={e=>setEmail(e.target.value)}/><input required minLength="6" type="password" placeholder="Password (6+ characters)" value={password} onChange={e=>setPassword(e.target.value)}/>{err&&<div className="error">{err}</div>}<button className="primary wide" disabled={busy}>{mode==="login"?<LogIn/>:<UserPlus/>}{busy?"PLEASE WAIT":mode==="login"?"LOGIN":"CREATE ACCOUNT"}</button><button type="button" className="link" onClick={()=>setMode(mode==="login"?"register":"login")}>{mode==="login"?"Create a new account":"Already registered? Login"}</button></form></div>}
+function Emulator({ rom, name, onBack }) {
+  const host = useRef(null);
+  const browser = useRef(null);
+  const [muted, setMuted] = useState(false);
+  const [error, setError] = useState("");
 
-function Game({auth,onLogout}){const[tab,setTab]=useState("mine"),[lb,setLb]=useState([]),[game,setGame]=useState(defaultGame),[socket,setSocket]=useState(null),[online,setOnline]=useState(false),[room,setRoom]=useState(""),[players,setPlayers]=useState([]),[status,setStatus]=useState("Mine started"),[toast,setToast]=useState(""),canvas=useRef(null),state=useRef({...defaultGame}),pos=useRef({x:500,y:300}),keys=useRef({}),rocks=useRef([]);
- const update=(patch)=>{state.current={...state.current,...patch};setGame({...state.current})};
- useEffect(()=>{fetch(API+"/api/me",{headers:{Authorization:"Bearer "+auth.token}}).then(r=>r.json()).then(u=>{if(u.cash!==undefined){const g={...defaultGame,...u};const offline=Math.min(8*60*60*1000,Math.max(0,Date.now()-(u.lastSeen||Date.now())));if(offline>60000){g.cash+=Math.floor(offline/60000)*Math.max(1,g.workers)*2;setToast("Offline reward +₹"+fmt(Math.floor(offline/60000)*Math.max(1,g.workers)*2))}state.current=g;setGame(g)}}).catch(()=>{});
- fetch(API+"/api/leaderboard").then(r=>r.json()).then(setLb).catch(()=>{});
- const s=io(API,{auth:{token:auth.token}});setSocket(s);s.on("connect",()=>setOnline(true));s.on("disconnect",()=>setOnline(false));s.on("room:players",setPlayers);s.on("room:state",d=>{setPlayers(d.players||[]);rocks.current=d.rocks||[]});s.on("room:joined",d=>setRoom(d.code));s.on("mine:result",d=>{if(d.error)return setStatus(d.error);update({ore:d.ore,score:d.score});setStatus(d.destroyed?`+${d.gain} ore • ${String(d.type).toUpperCase()}`:`CRUSHING ${String(d.type).toUpperCase()}`)});s.on("attack:result",d=>setStatus(d.error|| (d.killed?`💥 KILL +100 • ${d.kills} KILLS`:`HIT • ${d.targetHp} HP LEFT`)));s.on("game:start",()=>setStatus("MULTIPLAYER MINE LIVE"));return()=>s.disconnect()},[auth.token]);
- useEffect(()=>{},[]);
- useEffect(()=>{const down=e=>{const k=e.key.toLowerCase();keys.current[k]=true;if(k===" "||k==="e")socket?.emit("player:attack")};const up=e=>{keys.current[e.key.toLowerCase()]=false};addEventListener("keydown",down);addEventListener("keyup",up);return()=>{removeEventListener("keydown",down);removeEventListener("keyup",up)}},[socket]);
- const mine=()=>{socket?.emit("player:mine");return;const p=pos.current;let hit=null,best=999;for(const r of rocks.current){if(r.hp<=0)continue;const dist=Math.hypot(r.x-p.x,r.y-p.y);if(dist<55&&dist<best){hit=r;best=dist}}if(!hit){setStatus("Drive closer to an ore block");return}hit.hp-=12+state.current.toolLevel*5;let gain=hit.type==="gold"?35:hit.type==="iron"?12:4;if(hit.hp<=0){const g={ore:state.current.ore+gain,cash:state.current.cash,score:state.current.score+gain*2};update(g);setStatus("+"+gain+" ore • "+hit.type.toUpperCase());hit.hp=0}else setStatus("CRUSHING "+hit.type.toUpperCase());};
- const sell=()=>{const g=state.current;if(!g.ore)return setStatus("No ore to sell");const money=g.ore*(8+g.zone*2);update({cash:g.cash+money,ore:0,score:g.score+money});setStatus("Sold ore for ₹"+fmt(money))};
- const upgrade=(kind)=>{const g=state.current,cost=kind==="bulldozer"?Math.floor(100*g.bulldozerLevel**1.55):kind==="tool"?Math.floor(120*g.toolLevel**1.55):Math.floor(180*(g.workers+1)**1.4);if(g.cash<cost)return setStatus("Need ₹"+fmt(cost));update({cash:g.cash-cost,[kind==="bulldozer"?"bulldozerLevel":kind==="tool"?"toolLevel":"workers"]:g[kind==="bulldozer"?"bulldozerLevel":kind==="tool"?"toolLevel":"workers"]+1});setStatus(kind.toUpperCase()+" UPGRADED")};
- const save=()=>fetch(API+"/api/save",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+auth.token},body:JSON.stringify({...state.current,lastSeen:Date.now()})}).catch(()=>{});
- useEffect(()=>{const id=setInterval(save,10000);return()=>clearInterval(id)},[auth.token]);
- const join=x=>socket?.emit("room:join",String(x||"").toUpperCase(),d=>{if(d?.error)setStatus(d.error);else setRoom(d.code)}),create=()=>socket?.emit("room:create",d=>setRoom(d.code)),quick=()=>socket?.emit("room:quick",d=>setRoom(d.code));
- return <div className="app"><header><div className="brand"><Gamepad2/> TOOLLOOT <b>MINING</b></div><div className="headUser"><span>{auth.user.name}</span><button onClick={()=>{save();onLogout()}}><LogOut/></button></div></header>
- <div className="topbar"><div><Coins/> <b>₹{fmt(game.cash)}</b></div><div><Pickaxe/> <b>{fmt(game.ore)}</b> ORE</div><div><Trophy/> <b>{fmt(game.score)}</b></div><span className={online?"online":"offline"}>{online?"● ONLINE":"● OFFLINE"}</span></div>
- <nav><button className={tab==="mine"?"active":""} onClick={()=>setTab("mine")}><Truck/> MINE</button><button className={tab==="upgrade"?"active":""} onClick={()=>setTab("upgrade")}><ChevronUp/> UPGRADES</button><button className={tab==="multi"?"active":""} onClick={()=>setTab("multi")}><Users/> MULTIPLAYER</button><button className={tab==="leaderboard"?"active":""} onClick={()=>setTab("leaderboard")}><Trophy/> RANKING</button></nav>
- <main>{tab==="leaderboard"?<section className="panel"><h2><Trophy/> Global Mining Ranking</h2>{lb.map((p,i)=><div className="rank" key={p.id}><b>#{i+1}</b><strong>{p.name}</strong><span>{fmt(p.score)} XP</span></div>)}</section>:tab==="upgrade"?<section className="upgradeGrid"><Upgrade icon="🚜" title="Bulldozer" level={game.bulldozerLevel} cost={Math.floor(100*game.bulldozerLevel**1.55)} onClick={()=>upgrade("bulldozer")} text="Move faster and push harder."/><Upgrade icon="⛏️" title="Mining Tool" level={game.toolLevel} cost={Math.floor(120*game.toolLevel**1.55)} onClick={()=>upgrade("tool")} text="Break ore faster."/><Upgrade icon="👷" title="Workers" level={game.workers} cost={Math.floor(180*(game.workers+1)**1.4)} onClick={()=>upgrade("workers")} text="Earn offline cash."/><Upgrade icon="🗺️" title={"Zone "+game.zone} level={game.zone} cost={Math.floor(800*game.zone**1.8)} onClick={()=>game.cash>=Math.floor(800*game.zone**1.8)&&update({cash:game.cash-Math.floor(800*game.zone**1.8),zone:game.zone+1})} text="Unlock richer ore." /></section>:tab==="multi"?<section className="panel multi"><h2><Users/> Multiplayer Mine</h2><p>Compete in the same mine and climb the global ranking.</p><div className="roomline"><input placeholder="ROOM CODE" id="roomcode"/><button onClick={()=>join(document.getElementById("roomcode").value)}>JOIN</button><button onClick={create}>CREATE</button><button onClick={quick}><RefreshCw/> QUICK</button></div>{room&&<div className="room"><b>ROOM {room}</b><button onClick={()=>navigator.clipboard?.writeText(room)}><Copy/> COPY</button><span>{players.length}/10 players</span></div>}<div className="status">{status}</div></section>:<><section className="minePanel"><div className="mineTitle"><div><h1>ZONE {game.zone}</h1><p>Crush rocks • collect ore • sell • upgrade</p></div><div className="goal">NEXT ZONE<br/><b>₹{fmt(800*game.zone**1.8)}</b></div></div><div className="arena"><VoxelWorld socket={socket} players={players} onStatus={setStatus} onCollect={(type)=>{const gain=type===5?35:type===4?12:type===3?7:4;update({ore:state.current.ore+gain,score:state.current.score+gain*2})}}/><div className="zoneLabel">MINE {game.zone}</div></div><div className="actionbar"><button className="mineBtn" onClick={mine}><Pickaxe/> CRUSH ORE</button><button className="mineBtn" onClick={()=>socket?.emit("player:attack")}>⚔️ ATTACK</button><button className="sellBtn" onClick={sell}><Truck/> SELL ORE</button></div><div className="help">WASD / ARROW KEYS TO DRIVE • SPACE / E = ATTACK • MOVE CLOSE TO ROCKS • CRUSH • SELL • UPGRADE</div>{toast&&<div className="toast">{toast}</div>}</section></>}</main><footer>ToollooT Mining Master • Original mining arcade inspired by the genre • Progress auto-saves</footer></div>}
-function Upgrade({icon,title,level,cost,onClick,text}){return <div className="upgrade"><div className="upIcon">{icon}</div><div><h2>{title}</h2><p>{text}</p><small>LEVEL {level}</small></div><button onClick={onClick}>₹{fmt(cost)}<br/><span>UPGRADE</span></button></div>}
-function App(){const[auth,setAuth]=useState(load());return auth?<Game auth={auth} onLogout={()=>{localStorage.removeItem(KEY);setAuth(null)}}/>:<Auth onAuth={setAuth}/>}
+  useEffect(() => {
+    if (!host.current || !rom) return;
+    setError("");
+    const emu = new Browser({
+      container: host.current,
+      onError: e => setError(e?.message || String(e)),
+    });
+    browser.current = emu;
+    try { emu.loadROM(rom); } catch (e) { setError(e?.message || "ROM could not be loaded."); }
+    return () => { emu.destroy(); browser.current = null; };
+  }, [rom]);
+
+  const reset = () => {
+    try { browser.current?.nes?.reset(); } catch {}
+  };
+
+  return <div className="screenPage">
+    <div className="screenTop">
+      <button className="pixelBtn ghost" onClick={onBack}>← LIBRARY</button>
+      <div className="cartName"><CircleDot size={14}/> {name}</div>
+      <div className="screenTools">
+        <button className="iconBtn" title="Reset" onClick={reset}><RotateCcw/></button>
+        <button className="iconBtn" title="Mute" onClick={() => setMuted(x => !x)}><>{muted ? <VolumeX/> : <Volume2/>}</></button>
+      </div>
+    </div>
+    <div className="crtFrame">
+      <div ref={host} className="nesHost"/>
+      {error && <div className="emuError">{error}</div>}
+    </div>
+    <div className="controls">
+      <span><Keyboard/> Arrows <b>D-PAD</b></span>
+      <span><kbd>X</kbd> A</span><span><kbd>Z</kbd> B</span>
+      <span><kbd>Enter</kbd> START</span><span><kbd>Shift</kbd> SELECT</span>
+    </div>
+    <div className="tinyNote">Runs your selected .NES cartridge locally in the browser. Use ROMs you own or are legally permitted to use.</div>
+  </div>;
+}
+
+function DemoGame({ onBack }) {
+  const canvas = useRef(null);
+  const keys = useRef({});
+  const score = useRef(0);
+  const [scoreUi, setScoreUi] = useState(0);
+
+  useEffect(() => {
+    const c = canvas.current, ctx = c.getContext("2d"), k = keys.current;
+    const onDown = e => { k[e.key.toLowerCase()] = true; };
+    const onUp = e => { k[e.key.toLowerCase()] = false; };
+    addEventListener("keydown", onDown); addEventListener("keyup", onUp);
+    let x = 80, y = 160, coinX = 220, coinY = 120, raf, last = performance.now();
+    const loop = t => {
+      const dt = Math.min(.04, (t-last)/1000); last=t;
+      if (k.arrowleft || k.a) x -= 150*dt;
+      if (k.arrowright || k.d) x += 150*dt;
+      if (k.arrowup || k.w) y -= 150*dt;
+      if (k.arrowdown || k.s) y += 150*dt;
+      x=Math.max(14,Math.min(242,x)); y=Math.max(14,Math.min(226,y));
+      if(Math.hypot(x-coinX,y-coinY)<16){score.current++;setScoreUi(score.current);coinX=20+Math.random()*216;coinY=20+Math.random()*196;}
+      ctx.imageSmoothingEnabled=false;
+      ctx.fillStyle="#101820";ctx.fillRect(0,0,256,240);
+      ctx.fillStyle="#172d22";for(let i=0;i<16;i++)ctx.fillRect(0,i*15,256,1);
+      ctx.fillStyle="#2ec4b6";ctx.fillRect(coinX-5,coinY-5,10,10);
+      ctx.fillStyle="#f7d154";ctx.fillRect(x-7,y-7,14,14);
+      ctx.fillStyle="#f7d154";ctx.fillRect(x-4,y-11,8,4);
+      ctx.fillStyle="#e9f5db";ctx.font="10px monospace";ctx.fillText("TOOLLOOT 8-BIT",8,12);ctx.fillText("SCORE "+score.current,190,12);
+      raf=requestAnimationFrame(loop);
+    };
+    raf=requestAnimationFrame(loop);
+    return()=>{cancelAnimationFrame(raf);removeEventListener("keydown",onDown);removeEventListener("keyup",onUp);};
+  }, []);
+
+  return <div className="screenPage">
+    <div className="screenTop"><button className="pixelBtn ghost" onClick={onBack}>← LIBRARY</button><div className="cartName"><CircleDot size={14}/> TOOLLOOT 8-BIT</div><div className="scoreBadge"><Trophy size={13}/> {scoreUi}</div></div>
+    <div className="crtFrame demoFrame"><canvas ref={canvas} width="256" height="240"/></div>
+    <div className="controls"><span><Keyboard/> WASD / ARROWS MOVE</span><span>COLLECT THE CORES</span></div>
+    <div className="tinyNote">Original ToollooT demo cartridge — no third-party ROM required.</div>
+  </div>;
+}
+
+function App() {
+  const [view,setView] = useState("library");
+  const [rom,setRom] = useState(null);
+  const [romName,setRomName] = useState("");
+  const [recent,setRecent] = useState(readRecent());
+  const input = useRef(null);
+
+  const loadFile = file => {
+    if (!file) return;
+    if (!file.name.toLowerCase().endsWith(".nes")) return alert("Please choose a .NES ROM file.");
+    const reader = new FileReader();
+    reader.onload = () => {
+      const data = new Uint8Array(reader.result);
+      setRom(data); setRomName(file.name); setView("emulator");
+      const next=[{name:file.name,size:file.size,at:Date.now()},...recent.filter(x=>x.name!==file.name)];
+      setRecent(next); saveRecent(next);
+    };
+    reader.readAsArrayBuffer(file);
+  };
+
+  if(view==="emulator") return <Emulator rom={rom} name={romName} onBack={()=>setView("library")}/>;
+  if(view==="demo") return <DemoGame onBack={()=>setView("library")}/>;
+
+  return <div className="nesApp">
+    <header className="nesHeader">
+      <div className="brand"><div className="brandMark"><Gamepad2/></div><div><b>TOOLLOOT</b><span>8-BIT ARCADE</span></div></div>
+      <div className="headerRight"><span className="statusDot"/> LOCAL MODE</div>
+    </header>
+    <main className="launcher">
+      <section className="hero">
+        <div><p className="eyebrow">ORIGINAL RETRO CONSOLE</p><h1>INSERT<br/><em>CARTRIDGE.</em></h1><p className="heroText">A clean NES-style launcher for your own cartridges, with a built-in original demo.</p><div className="heroActions"><button className="pixelBtn primary" onClick={()=>input.current?.click()}><Upload/> LOAD .NES</button><button className="pixelBtn" onClick={()=>setView("demo")}><Play/> PLAY DEMO</button></div><input ref={input} hidden type="file" accept=".nes,application/octet-stream" onChange={e=>loadFile(e.target.files?.[0])}/></div>
+        <div className="consoleArt"><div className="console"><div className="slot"/><div className="led"/><div className="label">TOOLLOOT<br/><small>8-BIT SYSTEM</small></div><div className="vent">{Array.from({length:18},(_,i)=><i key={i}/>)}</div></div><div className="cartridge"><div>NES</div><span>TOOLLOOT</span></div></div>
+      </section>
+      <section className="librarySection">
+        <div className="sectionTitle"><div><p className="eyebrow">GAME LIBRARY</p><h2><Library/> CARTRIDGES</h2></div><button className="smallBtn" onClick={()=>input.current?.click()}>+ ADD ROM</button></div>
+        <div className="gameGrid">
+          <button className="gameCard featured" onClick={()=>setView("demo")}><div className="boxArt"><span>TL</span><b>8-BIT</b></div><div className="cardInfo"><strong>ToollooT 8-Bit</strong><small>ORIGINAL DEMO</small></div><ChevronRight/></button>
+          {recent.map((g,i)=><button className="gameCard" key={g.name+i} onClick={()=>{setRomName(g.name);alert("For security, select the ROM file again to load it.");input.current?.click();}}><div className="romArt">NES</div><div className="cardInfo"><strong>{g.name}</strong><small>{Math.round(g.size/1024)} KB • RECENT</small></div><ChevronRight/></button>)}
+          <button className="emptyCard" onClick={()=>input.current?.click()}><Upload/><strong>LOAD YOUR ROM</strong><small>Only .NES cartridges</small></button>
+        </div>
+      </section>
+      <section className="infoStrip"><div><Settings2/><b>LOCAL-FIRST</b><span>No account or cloud required.</span></div><div><Gamepad2/><b>CONTROLLER READY</b><span>Keyboard and gamepad friendly.</span></div><div><Maximize2/><b>PIXEL PERFECT</b><span>Original 256×240 output.</span></div></section>
+    </main>
+    <footer>TOOLLOOT 8-BIT • ORIGINAL UI • Powered by JSNES emulator core</footer>
+  </div>;
+}
 createRoot(document.getElementById("root")).render(<App/>);
-
