@@ -82,7 +82,7 @@ function DemoGame(){
    const vignette=ctx.createRadialGradient(innerWidth*.5,innerHeight*.35,100,innerWidth*.5,innerHeight*.5,Math.max(innerWidth,innerHeight)*.8);vignette.addColorStop(0,"rgba(255,255,255,0)");vignette.addColorStop(1,"rgba(20,55,45,.25)");ctx.fillStyle=vignette;ctx.fillRect(0,0,innerWidth,innerHeight);
    for(let i=0;i<55;i++){const sx=(i*173)%innerWidth,sy=(i*97)%Math.max(120,innerHeight);ctx.fillStyle=i%4===0?"#ffffff":"#5f78a8";ctx.fillRect(sx,sy,2,2)}
    // World camera transform. Canvas save/restore keeps HUD and overlays in screen space.
-   const cam=s.camera;ctx.save();ctx.translate(innerWidth/2+cam.shakeX,innerHeight/2+cam.shakeY);ctx.rotate(cam.roll);ctx.scale(cam.zoom,cam.zoom);ctx.translate(-innerWidth/2-cam.x,-innerHeight/2-cam.y);
+   ctx.save();ctx.translate(innerWidth/2+cam.shakeX,innerHeight/2+cam.shakeY);ctx.rotate(cam.roll);ctx.scale(cam.zoom,cam.zoom);ctx.translate(-innerWidth/2-cam.x,-innerHeight/2-cam.y);
    if(s.boss){
     const bx=s.boss.x,by=horizon-12;
     ctx.save();ctx.globalAlpha=.22;ctx.fillStyle="#ff365f";ctx.beginPath();ctx.ellipse(bx,by+28,Math.max(120,s.boss.r*1.8),26,0,0,Math.PI*2);ctx.fill();ctx.restore();
