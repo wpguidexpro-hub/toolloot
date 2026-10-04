@@ -20,7 +20,8 @@ function DemoGame(){
   const down=e=>{initAudio();if(!mute)startMusic();if(["ArrowLeft","ArrowRight"," ","p","P"].includes(e.key))e.preventDefault();if(e.key.toLowerCase()==="p")togglePause();k[e.key.toLowerCase()]=true;if(e.code==="Space"&&!e.repeat)shoot()};
   const up=e=>{k[e.key.toLowerCase()]=false};addEventListener("keydown",down);addEventListener("keyup",up);
   const touchStart=d=>{initAudio();if(!mute)startMusic();k[d]=true},touchEnd=d=>k[d]=false;
-  const pointerMove=e=>{if(s.over||s.paused)return;const r=c.getBoundingClientRect();const x=(e.clientX-r.left)*(innerWidth/r.width);s.player.x=Math.max(s.player.w/2+10,Math.min(innerWidth-s.player.w/2-10,x));};\n  const pointerDown=e=>{if(e.pointerType!=="touch"&&e.button!==0)return;initAudio();if(!mute)startMusic();shoot();};
+  const pointerMove=e=>{if(s.over||s.paused)return;const r=c.getBoundingClientRect();const x=(e.clientX-r.left)*(innerWidth/r.width);s.player.x=Math.max(s.player.w/2+10,Math.min(innerWidth-s.player.w/2-10,x));};
+  const pointerDown=e=>{if(e.pointerType!=="touch"&&e.button!==0)return;initAudio();if(!mute)startMusic();shoot();};
   c.addEventListener("pointermove",pointerMove);c.addEventListener("pointerdown",pointerDown);
   const spawnBall=()=>{const r=78+Math.random()*24,x=r+Math.random()*(innerWidth-r*2);s.balls.push({x,y:-r-8,r,color:colors[Math.floor(Math.random()*colors.length)],stage:5,vy:30+Math.random()*25,vx:(Math.random()-.5)*70,bounces:0,drop:2,special:s.next%3===2,elite:s.next%5===4});s.next++};
   const spawnBoss=()=>{if(s.boss)return;s.boss={x:innerWidth/2,y:130,r:76,hp:24,maxHp:24,vx:145,vy:180,color:"#ff365f",phase:0};s.flash=.12;burst(s.boss.x,s.boss.y,"#ff365f",35,320);};
