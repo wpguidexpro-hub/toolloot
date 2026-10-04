@@ -158,6 +158,10 @@ app.post("/api/match-result", auth, async (req, res) => {
 });
 
 const rooms = new Map();
+const makeRocks = () => Array.from({length:90}, (_,i) => ({
+  id:i, x:40+(i%10)*100+Math.random()*25, y:55+Math.floor(i/10)*62+Math.random()*20,
+  type:Math.random()<.1?"gold":Math.random()<.25?"iron":"stone", hp:30
+}));
 const safePlayer = s => ({ id: s.id, userId: s.userId, name: s.name, x: s.x, y: s.y, ore: s.ore, score: s.score });
 async function addPlayer(socket, room) {
   const user = await getUser(socket.userId);
@@ -165,6 +169,7 @@ async function addPlayer(socket, room) {
   room.players.set(socket.id, { id: socket.id, userId: user.id, name: user.name, x: 500, y: 300, ore: 0, score: 0 });
 }
 const roomPlayers = room => [...room.players.values()].map(safePlayer);
+const roomState = room => ({ players: roomPlayers(room), rocks: room.rocks.map(r => ({id:r.id,x:r.x,y:r.y,type:r.type,hp:r.hp})) });
 const roomFor = socket => [...rooms.values()].find(r => r.players.has(socket.id));
 
 io.use((socket, next) => {
@@ -180,12 +185,13 @@ io.on("connection", socket => {
   socket.on("room:create", async cb => {
     try {
       const code = Math.random().toString(36).slice(2, 7).toUpperCase();
-      const room = { players: new Map(), started: false };
+      const room = { players: new Map(), rocks: makeRocks(), started: false };
       rooms.set(code, room);
       await addPlayer(socket, room);
       socket.join(code);
       cb?.({ code });
       io.to(code).emit("room:players", roomPlayers(room));
+      io.to(code).emit("room:state", roomState(room));
     } catch { cb?.({ error: "Could not create room" }); }
   });
 
@@ -198,7 +204,7 @@ io.on("connection", socket => {
       await addPlayer(socket, room);
       socket.join(code);
       cb?.({ code });
-      io.to(code).emit("room:players", roomPlayers(room));
+      io.to(code).emit("room:players", roomPlayers(room)); io.to(code).emit("room:state", roomState(room));
     } catch { cb?.({ error: "Could not join room" }); }
   });
 
@@ -207,13 +213,13 @@ io.on("connection", socket => {
       let code = [...rooms.keys()].find(k => rooms.get(k).players.size < 10 && !rooms.get(k).started);
       if (!code) {
         code = Math.random().toString(36).slice(2, 7).toUpperCase();
-        rooms.set(code, { players: new Map(), started: false });
+        rooms.set(code, { players: new Map(), rocks: makeRocks(), started: false });
       }
       const room = rooms.get(code);
       await addPlayer(socket, room);
       socket.join(code);
       cb?.({ code });
-      io.to(code).emit("room:players", roomPlayers(room));
+      io.to(code).emit("room:players", roomPlayers(room)); io.to(code).emit("room:state", roomState(room));
     } catch { cb?.({ error: "Quick join failed" }); }
   });
 
@@ -224,7 +230,31 @@ io.on("connection", socket => {
     player.x = Math.max(20, Math.min(980, Number(p?.x) || 500));
     player.y = Math.max(20, Math.min(580, Number(p?.y) || 300));
     const code = [...socket.rooms].find(x => x !== socket.id);
-    if (code) io.to(code).emit("room:players", roomPlayers(room));
+    if (code) io.to(code).emit("room:players", roomPlayers(room)); io.to(code).emit("room:state", roomState(room));
+  });
+
+  socket.on("player:mine", () => {
+    const room = roomFor(socket);
+    if (!room) return;
+    const player = room.players.get(socket.id);
+    let hit = null, best = 999;
+    for (const r of room.rocks) {
+      if (r.hp <= 0) continue;
+      const dist = Math.hypot(r.x-player.x, r.y-player.y);
+      if (dist < 55 && dist < best) { hit = r; best = dist; }
+    }
+    if (!hit) return socket.emit("mine:result", {error:"Drive closer to an ore block"});
+    hit.hp = Math.max(0, hit.hp - 17);
+    const gain = hit.type==="gold" ? 35 : hit.type==="iron" ? 12 : 4;
+    if (hit.hp === 0) {
+      player.ore += gain;
+      player.score += gain * 2;
+      socket.emit("mine:result", {gain, type:hit.type, ore:player.ore, score:player.score, destroyed:true});
+    } else {
+      socket.emit("mine:result", {gain:0, type:hit.type, hp:hit.hp, ore:player.ore, score:player.score, destroyed:false});
+    }
+    const code = [...socket.rooms].find(x => x !== socket.id);
+    if (code) io.to(code).emit("room:state", roomState(room));
   });
 
   socket.on("game:start", rawCode => {
@@ -236,7 +266,7 @@ io.on("connection", socket => {
   socket.on("disconnect", () => {
     for (const [code, room] of rooms) {
       if (room.players.delete(socket.id)) {
-        io.to(code).emit("room:players", roomPlayers(room));
+        io.to(code).emit("room:players", roomPlayers(room)); io.to(code).emit("room:state", roomState(room));
         if (!room.players.size) rooms.delete(code);
       }
     }
