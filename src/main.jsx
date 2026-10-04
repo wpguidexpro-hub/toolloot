@@ -7,13 +7,13 @@ function DemoGame(){
  const canvas=useRef(null),keys=useRef({}),state=useRef(null),[score,setScore]=useState(0),[balls,setBalls]=useState(0);
  useEffect(()=>{
   const c=canvas.current,ctx=c.getContext("2d",{alpha:false}),k=keys.current;
-  let audioCtx=null;
+  let audioCtx=null;let mute=false;
   const initAudio=()=>{try{if(!audioCtx)audioCtx=new (window.AudioContext||window.webkitAudioContext)();if(audioCtx.state==="suspended")audioCtx.resume()}catch{}};
-  const sfx=(type)=>{initAudio();if(!audioCtx)return;const now=audioCtx.currentTime,o=audioCtx.createOscillator(),g=audioCtx.createGain();const cfg={shoot:[720,"square",.045,.07],hit:[150,"sawtooth",.08,.10],power:[620,"triangle",.16,.12],bounce:[90,"square",.055,.06],hurt:[75,"sawtooth",.22,.14],gameover:[110,"sawtooth",.5,.16],start:[330,"square",.12,.08]}[type]||[220,"square",.08,.06];o.type=cfg[1];o.frequency.setValueAtTime(cfg[0],now);o.frequency.exponentialRampToValueAtTime(Math.max(35,cfg[0]*.55),now+cfg[2]);g.gain.setValueAtTime(cfg[3],now);g.gain.exponentialRampToValueAtTime(.001,now+cfg[2]);o.connect(g);g.connect(audioCtx.destination);o.start(now);o.stop(now+cfg[2]+.02)};
+  const sfx=(type)=>{if(mute)return;initAudio();if(!audioCtx)return;const now=audioCtx.currentTime,o=audioCtx.createOscillator(),g=audioCtx.createGain();const cfg={shoot:[720,"square",.045,.07],hit:[150,"sawtooth",.08,.10],power:[620,"triangle",.16,.12],bounce:[90,"square",.055,.06],hurt:[75,"sawtooth",.22,.14],gameover:[110,"sawtooth",.5,.16],start:[330,"square",.12,.08]}[type]||[220,"square",.08,.06];o.type=cfg[1];o.frequency.setValueAtTime(cfg[0],now);o.frequency.exponentialRampToValueAtTime(Math.max(35,cfg[0]*.55),now+cfg[2]);g.gain.setValueAtTime(cfg[3],now);g.gain.exponentialRampToValueAtTime(.001,now+cfg[2]);o.connect(g);g.connect(audioCtx.destination);o.start(now);o.stop(now+cfg[2]+.02)};
   const resize=()=>{const dpr=Math.min(2,window.devicePixelRatio||1),w=innerWidth,h=innerHeight;c.style.width=w+"px";c.style.height=h+"px";c.width=Math.floor(w*dpr);c.height=Math.floor(h*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);c._w=w;c._h=h}; resize();addEventListener("resize",resize);
   state.current={player:{x:innerWidth/2,y:innerHeight-86,w:64,h:42,speed:260,walk:0,dir:1},bullets:[],balls:[],powerups:[],particles:[],next:0,score:0,spawn:10,over:false,elapsed:0,level:1,drop:0,bulletPower:1,playerSpeedPower:1,ballSpeedPower:1,lives:3,shield:0,combo:0,comboTimer:0,magnet:0};
   const s=state.current,colors=["#ff4d6d","#ffd166","#06d6a0","#4cc9f0","#a855f7","#ff7b00","#f72585","#90be6d"];
-  const shoot=()=>{if(s.over)return;sfx("shoot");const count=s.bulletPower||1;for(let n=0;n<count;n++){const spread=(n-(count-1)/2)*14;s.bullets.push({x:s.player.x+spread,y:s.player.y-18,r:4,vy:-820,vx:spread*3})}};
+  const shoot=()=>{if(s.over)return;sfx("shoot");s.muzzle=(s.muzzle||0)+0.08;const count=s.bulletPower||1;for(let n=0;n<count;n++){const spread=(n-(count-1)/2)*14;s.bullets.push({x:s.player.x+spread,y:s.player.y-18,r:4,vy:-820,vx:spread*3})}};
   const down=e=>{if(["ArrowLeft","ArrowRight"," "].includes(e.key))e.preventDefault();k[e.key.toLowerCase()]=true;if(e.code==="Space"&&!e.repeat)shoot()};
   const up=e=>{k[e.key.toLowerCase()]=false};addEventListener("keydown",down);addEventListener("keyup",up);
   const touchStart=d=>k[d]=true,touchEnd=d=>k[d]=false;
@@ -27,7 +27,7 @@ function DemoGame(){
    }
    s.balls.splice(i,1);return 0;
   };
-  const restart=()=>{sfx("start");s.player.x=innerWidth/2;s.player.walk=0;s.bullets=[];s.balls=[];s.powerups=[];s.particles=[];s.next=0;s.score=0;s.bulletPower=1;s.playerSpeedPower=1;s.ballSpeedPower=1;s.lives=3;s.shield=0;s.combo=0;s.comboTimer=0;s.magnet=0;s.spawn=10;s.over=false;s.elapsed=0;s.level=1;s.drop=0;setScore(0);setBalls(0)};
+  const restart=()=>{sfx("start");s.player.x=innerWidth/2;s.player.walk=0;s.muzzle=0;s.bullets=[];s.balls=[];s.powerups=[];s.particles=[];s.next=0;s.score=0;s.bulletPower=1;s.playerSpeedPower=1;s.ballSpeedPower=1;s.lives=3;s.shield=0;s.combo=0;s.comboTimer=0;s.magnet=0;s.spawn=10;s.over=false;s.elapsed=0;s.level=1;s.drop=0;setScore(0);setBalls(0)};
   const full=async()=>{if(document.fullscreenElement){document.exitFullscreen();return}await document.documentElement.requestFullscreen?.();try{await screen.orientation?.lock?.("landscape")}catch{} };
   let raf,last=performance.now();
   const loop=t=>{
@@ -36,7 +36,7 @@ function DemoGame(){
     s.elapsed+=dt;
     s.level=1+Math.floor(s.elapsed/60);
     const speedScale=1+(s.level-1)*0.14;
-    const moveSpeed=s.player.speed*(s.playerSpeedPower||1);const walking=k.arrowleft||k.arrowright;if(walking){s.player.walk+=dt*10}else{s.player.walk*=Math.max(0,1-dt*8)}if(k.arrowleft){s.player.x-=moveSpeed*dt;s.player.dir=-1}if(k.arrowright){s.player.x+=moveSpeed*dt;s.player.dir=1};
+    const moveSpeed=s.player.speed*(s.playerSpeedPower||1);s.muzzle=Math.max(0,(s.muzzle||0)-dt);const walking=k.arrowleft||k.arrowright;if(walking){s.player.walk+=dt*10}else{s.player.walk*=Math.max(0,1-dt*8)}if(k.arrowleft){s.player.x-=moveSpeed*dt;s.player.dir=-1}if(k.arrowright){s.player.x+=moveSpeed*dt;s.player.dir=1};
     s.player.x=Math.max(s.player.w/2+10,Math.min(innerWidth-s.player.w/2-10,s.player.x));
     s.spawn-=dt;if(s.spawn<=0){spawnBall();s.spawn=10}
     s.bullets.forEach(b=>{b.x+=b.vx*dt;b.y+=b.vy*dt});s.bullets=s.bullets.filter(b=>b.y>-30);
@@ -60,7 +60,11 @@ function DemoGame(){
    s.bullets.forEach(b=>{ctx.shadowColor="#fff7a8";ctx.shadowBlur=12;ctx.fillStyle="#fff7a8";ctx.fillRect(b.x-2,b.y-14,4,22);ctx.shadowBlur=0});s.particles.forEach(p=>{ctx.globalAlpha=Math.max(0,p.life/.5);ctx.fillStyle=p.color;ctx.fillRect(p.x-2,p.y-2,5,5)});ctx.globalAlpha=1;
    const p=s.player;ctx.save();ctx.translate(Math.round(p.x),Math.round(p.y));ctx.scale(p.dir||1,1);const step=Math.sin(p.walk)*4,bodyBob=Math.abs(Math.sin(p.walk))*.8;
    if(s.shield){ctx.strokeStyle="rgba(103,232,249,.8)";ctx.lineWidth=4;ctx.beginPath();ctx.arc(0,-10,42+Math.sin(t*.008)*3,0,Math.PI*2);ctx.stroke()}
-   ctx.fillStyle="#f2c49b";ctx.fillRect(-10,-34,20,18);ctx.fillStyle="#33231e";ctx.fillRect(-11,-37,22,7);ctx.fillRect(-15,-33,6,10);ctx.fillStyle="#e74c3c";ctx.fillRect(-13,-16,26,22);ctx.fillStyle="#2b5f9e";ctx.fillRect(-14,6,12,17+step);ctx.fillRect(2,6,12,17-step);ctx.fillStyle="#f2c49b";ctx.fillRect(-20,-13,7,17);ctx.fillRect(13,-13,7,17);ctx.fillStyle="#1f2937";ctx.fillRect(-16,22+step,15,6);ctx.fillRect(1,22-step,15,6);ctx.fillStyle="#ffe08a";ctx.fillRect(-5,-29,3,3);ctx.fillRect(4,-29,3,3);ctx.fillStyle="#fff";ctx.fillRect(-4,-29,2,2);ctx.fillRect(5,-29,2,2);ctx.fillStyle="#b91c1c";ctx.fillRect(-5,-22,10,3);ctx.translate(0,-bodyBob);ctx.restore();
+   ctx.fillStyle="#f2c49b";ctx.fillRect(-10,-34,20,18);ctx.fillStyle="#33231e";ctx.fillRect(-11,-37,22,7);ctx.fillRect(-15,-33,6,10);ctx.fillStyle="#e74c3c";ctx.fillRect(-13,-16,26,22);ctx.fillStyle="#2b5f9e";ctx.fillRect(-14,6,12,17+step);ctx.fillRect(2,6,12,17-step);ctx.fillStyle="#f2c49b";ctx.fillRect(-20,-13,7,17);ctx.fillRect(13,-13,7,17);
+   // animated blaster
+   ctx.fillStyle="#30343b";ctx.fillRect(12,-9,28,8);ctx.fillStyle="#17191d";ctx.fillRect(28,-12,14,6);ctx.fillStyle="#f0b429";ctx.fillRect(18,-8,8,4);
+   if((s.muzzle||0)>0){ctx.fillStyle="#fff6a8";ctx.beginPath();ctx.moveTo(42,-10);ctx.lineTo(62,-3);ctx.lineTo(42,1);ctx.lineTo(48,-5);ctx.closePath();ctx.fill();ctx.fillStyle="#ff9f1c";ctx.fillRect(39,-8,8,5)}
+   ctx.fillStyle="#1f2937";ctx.fillRect(-16,22+step,15,6);ctx.fillRect(1,22-step,15,6);ctx.fillStyle="#ffe08a";ctx.fillRect(-5,-29,3,3);ctx.fillRect(4,-29,3,3);ctx.fillStyle="#fff";ctx.fillRect(-4,-29,2,2);ctx.fillRect(5,-29,2,2);ctx.fillStyle="#b91c1c";ctx.fillRect(-5,-22,10,3);ctx.translate(0,-bodyBob);ctx.restore();
    ctx.fillStyle="rgba(0,0,0,.45)";ctx.fillRect(14,14,235,78);ctx.fillRect(innerWidth-205,14,191,78);ctx.fillStyle="#fff";ctx.font="bold 18px monospace";ctx.fillText("TOOLLOOT 8-BIT",24,34);ctx.fillText("SCORE "+s.score,24,60);ctx.textAlign="right";ctx.fillText("BALLS "+s.balls.length,innerWidth-24,34);ctx.fillText("LEVEL "+s.level,innerWidth-24,60);ctx.fillText("LIVES "+s.lives+"  "+("♥".repeat(s.lives)),innerWidth-24,84);ctx.textAlign="left";ctx.fillStyle="#ffd166";ctx.font="bold 14px monospace";ctx.fillText("POWERS: B+ P+ SLOW FAST SHIELD BOMB HEART MAGNET",24,84);if(s.combo>1){ctx.fillStyle="#fff";ctx.font="bold 20px monospace";ctx.fillText("COMBO x"+s.combo,24,112)}ctx.textAlign="left";
    if(s.over){ctx.fillStyle="rgba(0,0,0,.72)";ctx.fillRect(0,0,c.width,c.height);ctx.textAlign="center";ctx.fillStyle="#fff";ctx.font="bold 42px monospace";ctx.fillText("GAME OVER",innerWidth/2,innerHeight/2-25);ctx.font="18px monospace";ctx.fillText("SPACE = SHOOT",innerWidth/2,innerHeight/2+15);ctx.fillText("PRESS RESTART",innerWidth/2,innerHeight/2+45);ctx.textAlign="left"}
    raf=requestAnimationFrame(loop)
