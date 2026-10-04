@@ -9,7 +9,7 @@ function DemoGame(){
   const c=canvas.current,ctx=c.getContext("2d"),k=keys.current;
   const resize=()=>{c.width=innerWidth;c.height=innerHeight}; resize();addEventListener("resize",resize);
   state.current={player:{x:innerWidth/2,y:innerHeight-70,w:64,h:30,speed:430},bullets:[],balls:[],particles:[],next:0,score:0,spawn:10,over:false,elapsed:0,level:1,drop:0};
-  const s=state.current,colors=["#ff4d6d","#ffd166","#06d6a0","#4cc9f0","#a855f7","#ff7b00","#f72585","#90be6d"];
+  const playerAsset=new Image(); playerAsset.src="https://raw.githubusercontent.com/ETdoFresh/kenney.nl/master/kenney_platformercharacters/PNG/Player/Poses/player_stand.png";\n  const s=state.current,colors=["#ff4d6d","#ffd166","#06d6a0","#4cc9f0","#a855f7","#ff7b00","#f72585","#90be6d"];
   const shoot=()=>{if(!s.over)s.bullets.push({x:s.player.x,y:s.player.y-18,r:4,vy:-820})};
   const down=e=>{if(["ArrowLeft","ArrowRight"," "].includes(e.key))e.preventDefault();k[e.key.toLowerCase()]=true;if(e.code==="Space")shoot()};
   const up=e=>{k[e.key.toLowerCase()]=false};addEventListener("keydown",down);addEventListener("keyup",up);
@@ -42,7 +42,7 @@ function DemoGame(){
    ctx.strokeStyle="rgba(90,120,190,.12)";for(let y=0;y<c.height;y+=32){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(c.width,y);ctx.stroke()}
    s.balls.forEach(b=>{ctx.beginPath();ctx.arc(b.x,b.y,b.r,0,Math.PI*2);ctx.fillStyle=b.color;ctx.fill();ctx.fillStyle="rgba(255,255,255,.35)";ctx.beginPath();ctx.arc(b.x-b.r*.32,b.y-b.r*.35,b.r*.22,0,Math.PI*2);ctx.fill()});
    s.bullets.forEach(b=>{ctx.fillStyle="#fff7a8";ctx.fillRect(b.x-2,b.y-12,4,18)});s.particles.forEach(p=>{ctx.globalAlpha=Math.max(0,p.life/.5);ctx.fillStyle=p.color;ctx.fillRect(p.x-2,p.y-2,5,5)});ctx.globalAlpha=1;
-   const p=s.player;ctx.save();ctx.translate(Math.round(p.x),Math.round(p.y));ctx.fillStyle="#0b1020";ctx.fillRect(-32,-15,64,30);ctx.fillStyle="#2ec4b6";ctx.fillRect(-28,-12,56,24);ctx.fillStyle="#8affea";ctx.fillRect(-18,-8,36,8);ctx.fillStyle="#10242a";ctx.fillRect(-7,-5,14,6);ctx.fillStyle="#ffd166";ctx.fillRect(-24,10,12,5);ctx.fillRect(12,10,12,5);ctx.fillStyle="#ff5d73";ctx.fillRect(-4,-15,8,6);ctx.restore();
+   const p=s.player;ctx.save();ctx.imageSmoothingEnabled=false;if(playerAsset.complete&&playerAsset.naturalWidth){const h=78,w=Math.round(h*playerAsset.naturalWidth/playerAsset.naturalHeight);ctx.drawImage(playerAsset,Math.round(p.x-w/2),Math.round(p.y-h+14),w,h)}else{ctx.fillStyle="#0b1020";ctx.fillRect(-32,-15,64,30);ctx.fillStyle="#2ec4b6";ctx.fillRect(-28,-12,56,24)}ctx.restore();
    ctx.fillStyle="#fff";ctx.font="bold 18px monospace";ctx.fillText("TOOLLOOT 8-BIT",24,34);ctx.fillText("SCORE "+s.score,24,60);ctx.textAlign="right";ctx.fillText("BALLS "+s.balls.length,c.width-24,34);ctx.fillText("LEVEL "+s.level,c.width-24,60);ctx.textAlign="left";
    if(s.over){ctx.fillStyle="rgba(0,0,0,.72)";ctx.fillRect(0,0,c.width,c.height);ctx.textAlign="center";ctx.fillStyle="#fff";ctx.font="bold 42px monospace";ctx.fillText("GAME OVER",c.width/2,c.height/2-25);ctx.font="18px monospace";ctx.fillText("SPACE = SHOOT",c.width/2,c.height/2+15);ctx.fillText("PRESS RESTART",c.width/2,c.height/2+45);ctx.textAlign="left"}
    raf=requestAnimationFrame(loop)
