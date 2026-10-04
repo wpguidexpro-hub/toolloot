@@ -1,19 +1,124 @@
-import {useEffect,useRef,useState} from "react";import*as THREE from"three";
+import {useEffect,useRef,useState} from "react";
+import * as THREE from "three";
+
 const rnd=(a,b)=>a+Math.random()*(b-a);
-function SpaceGame({onBack}){const ref=useRef(null),keys=useRef({}),[ui,setUi]=useState({score:0,distance:0,speed:32,high:+localStorage.getItem("star_runner_high")||0,over:false});
-useEffect(()=>{const el=ref.current,s=new THREE.Scene();s.background=new THREE.Color(0x01030a);const c=new THREE.PerspectiveCamera(70,innerWidth/innerHeight,.1,1200),r=new THREE.WebGLRenderer({antialias:true,powerPreference:"high-performance"});r.setPixelRatio(Math.min(devicePixelRatio,1.5));r.setSize(innerWidth,innerHeight);el.appendChild(r.domElement);
-s.add(new THREE.AmbientLight(0x6688aa,1.5));const sun=new THREE.DirectionalLight(0xffffff,2);sun.position.set(5,8,8);s.add(sun);
-const sg=new THREE.BufferGeometry(),sp=new Float32Array(4500);for(let i=0;i<1500;i++){sp[i*3]=rnd(-180,180);sp[i*3+1]=rnd(-100,100);sp[i*3+2]=rnd(-900,80)}sg.setAttribute("position",new THREE.BufferAttribute(sp,3));s.add(new THREE.Points(sg,new THREE.PointsMaterial({color:0xffffff,size:.7})));
-const ship=new THREE.Group(),body=new THREE.Mesh(new THREE.ConeGeometry(.65,2.5,6),new THREE.MeshStandardMaterial({color:0x42cfff,metalness:.7,roughness:.25}));body.rotation.x=-Math.PI/2;ship.add(body);const glass=new THREE.Mesh(new THREE.SphereGeometry(.3,10,8),new THREE.MeshStandardMaterial({color:0x9ef4ff,emissive:0x168cff,emissiveIntensity:.7}));glass.position.z=-.2;ship.add(glass);for(const x of[-.8,.8]){const w=new THREE.Mesh(new THREE.BoxGeometry(1.3,.12,.65),new THREE.MeshStandardMaterial({color:0x172c43,metalness:.8}));w.position.set(x*.7,0,.45);w.rotation.z=x<0?-.15:.15;ship.add(w)}ship.position.set(0,0,3);s.add(ship);
-const objects=[];function spawn(){const kind=Math.random()<.72?"rock":"gate";let o;if(kind==="rock"){o=new THREE.Mesh(new THREE.IcosahedronGeometry(1,1),new THREE.MeshStandardMaterial({color:0x66717d,roughness:1}));o.scale.setScalar(rnd(1.1,2.8));}else{o=new THREE.Mesh(new THREE.TorusGeometry(rnd(3.5,5),.35,8,20),new THREE.MeshStandardMaterial({color:0x35d7ff,emissive:0x087a9c,emissiveIntensity:.45}));o.rotation.x=rnd(-.5,.5)}o.position.set(rnd(-11,11),rnd(-6,7),-170);o.userData={kind,passed:false};s.add(o);objects.push(o)}
-const pickups=[];function coin(){const o=new THREE.Mesh(new THREE.TorusGeometry(.5,.16,8,16),new THREE.MeshStandardMaterial({color:0xffd34d,emissive:0xb56b00,emissiveIntensity:.5}));o.position.set(rnd(-11,11),rnd(-6,7),-170);s.add(o);pickups.push(o)}
-for(let i=0;i<14;i++)spawn();for(let i=0;i<10;i++)coin();
-let last=performance.now(),dist=0,score=0,speed=32,alive=true,spawnT=0,coinT=0,raf;
-const kd=e=>{keys.current[e.key.toLowerCase()]=true;if(e.key==="r"&& !alive){alive=true;dist=0;score=0;speed=32;setUi(u=>({...u,over:false,score:0,distance:0,speed:32}));for(let i=0;i<objects.length;i++)objects[i].position.z=-30-i*12}};const ku=e=>keys.current[e.key.toLowerCase()]=false;addEventListener("keydown",kd);addEventListener("keyup",ku);
-const resetObj=o=>{o.position.set(rnd(-11,11),rnd(-6,7),-170);o.userData.passed=false};const loop=t=>{const dt=Math.min(.035,(t-last)/1000);last=t;if(alive){const k=keys.current,dx=(k.d||k.arrowright?1:0)-(k.a||k.arrowleft?1:0),dy=(k.w||k.arrowup?1:0)-(k.s||k.arrowdown?1:0);ship.position.x=THREE.MathUtils.lerp(ship.position.x,THREE.MathUtils.clamp(ship.position.x+dx*18*dt,-12,12),.55);ship.position.y=THREE.MathUtils.lerp(ship.position.y,THREE.MathUtils.clamp(ship.position.y+dy*14*dt,-7,8),.55);ship.rotation.z=THREE.MathUtils.lerp(ship.rotation.z,-dx*.35,.12);speed=Math.min(75,speed+dt*.65);dist+=speed*dt;score=Math.floor(dist*2);
-spawnT+=dt;coinT+=dt;if(spawnT>Math.max(.7,1.7-speed/70)){spawn();spawnT=0}if(coinT>1){coin();coinT=0}
-objects.forEach(o=>{o.position.z+=speed*dt;o.rotation.x+=dt;o.rotation.y+=dt*.7;if(o.position.z>12)resetObj(o);if(o.position.distanceTo(ship.position)<2.1){alive=false;const h=Math.max(score,+localStorage.getItem("star_runner_high")||0);localStorage.setItem("star_runner_high",h);setUi(u=>({...u,score,distance:Math.floor(dist),speed:Math.floor(speed),high:h,over:true}))}});
-pickups.forEach(o=>{o.position.z+=speed*dt;o.rotation.z+=dt*4;if(o.position.z>12)resetObj(o);if(o.position.distanceTo(ship.position)<1.5){score+=250;resetObj(o)}});
-setUi(u=>({...u,score,distance:Math.floor(dist),speed:Math.floor(speed)}))}
-c.position.lerp(new THREE.Vector3(ship.position.x*.35,ship.position.y*.3,ship.position.z+13),.08);c.lookAt(ship.position.x,ship.position.y,ship.position.z-35);r.render(s,c);raf=requestAnimationFrame(loop)};raf=requestAnimationFrame(loop);const rs=()=>{c.aspect=innerWidth/innerHeight;c.updateProjectionMatrix();r.setSize(innerWidth,innerHeight)};addEventListener("resize",rs);return()=>{cancelAnimationFrame(raf);removeEventListener("keydown",kd);removeEventListener("keyup",ku);removeEventListener("resize",rs);r.dispose();el.innerHTML=""}},[]);
-return <div className="spaceGame"><div ref={ref} className="spaceCanvas"/><div className="runnerTop"><div><b>STAR RUNNER</b><span>INFINITE SPACE • DODGE • SURVIVE</span></div><button onClick={onBack}>EXIT</button></div><div className="runnerStats"><strong>{ui.score.toString().padStart(7,"0")}</strong><span>DISTANCE {ui.distance} m</span><span>SPEED {ui.speed}</span><span>BEST {ui.high}</span></div><div className="runnerHint">A D / ← → MOVE • W S / ↑ ↓ DODGE</div>{ui.over&&<div className="gameOver"><small>SHIP CRASHED</small><h1>GAME OVER</h1><p>SCORE {ui.score} • DISTANCE {ui.distance}m</p><button onClick={()=>location.reload()}>RUN AGAIN</button></div>}<div className="mobileRun"><button onPointerDown={()=>keys.current.a=true} onPointerUp={()=>keys.current.a=false}>◀</button><button onPointerDown={()=>keys.current.d=true} onPointerUp={()=>keys.current.d=false}>▶</button></div></div>}export default SpaceGame;
+
+export default function SpaceGame({onBack}){
+  const ref=useRef(null), keys=useRef({});
+  const [ui,setUi]=useState({score:0,best:+localStorage.getItem("slab_best")||0,over:false});
+  useEffect(()=>{
+    const el=ref.current, scene=new THREE.Scene();
+    scene.background=new THREE.Color(0x050816);
+    scene.fog=new THREE.Fog(0x050816,35,150);
+    const camera=new THREE.PerspectiveCamera(62,innerWidth/innerHeight,.1,300);
+    const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:"high-performance"});
+    renderer.setPixelRatio(Math.min(devicePixelRatio,1.5)); renderer.setSize(innerWidth,innerHeight); el.appendChild(renderer.domElement);
+    scene.add(new THREE.HemisphereLight(0x8bdcff,0x16102b,2));
+    const sun=new THREE.DirectionalLight(0xffffff,2.2); sun.position.set(4,10,8); scene.add(sun);
+
+    const starsGeo=new THREE.BufferGeometry(), a=new Float32Array(3000);
+    for(let i=0;i<1000;i++){a[i*3]=rnd(-80,80);a[i*3+1]=rnd(-45,55);a[i*3+2]=rnd(-150,40)}
+    starsGeo.setAttribute("position",new THREE.BufferAttribute(a,3));
+    scene.add(new THREE.Points(starsGeo,new THREE.PointsMaterial({color:0xffffff,size:.55})));
+
+    const player=new THREE.Group();
+    const body=new THREE.Mesh(new THREE.CapsuleGeometry(.48,1.05,5,10),new THREE.MeshStandardMaterial({color:0x42d9ff,metalness:.55,roughness:.25}));
+    player.add(body);
+    const visor=new THREE.Mesh(new THREE.SphereGeometry(.3,12,8),new THREE.MeshStandardMaterial({color:0x071b3b,emissive:0x168cff,emissiveIntensity:.8}));
+    visor.position.set(0,.25,-.35); player.add(visor);
+    for(const x of[-.34,.34]){const wing=new THREE.Mesh(new THREE.BoxGeometry(.55,.1,.7),new THREE.MeshStandardMaterial({color:0x8cf3ff,emissive:0x126b8c,emissiveIntensity:.35}));wing.position.set(x,-.15,.1);wing.rotation.z=x<0?-.35:.35;player.add(wing)}
+    scene.add(player);
+
+    const platforms=[];
+    const makePlatform=(x,y,z,scale=1)=>{
+      const g=new THREE.Group();
+      const slab=new THREE.Mesh(new THREE.BoxGeometry(7*scale,.55,5*scale),new THREE.MeshStandardMaterial({color:0x253f62,metalness:.35,roughness:.55}));
+      g.add(slab);
+      const top=new THREE.Mesh(new THREE.BoxGeometry(6.5*scale,.08,4.5*scale),new THREE.MeshStandardMaterial({color:0x37c9e8,emissive:0x087b9a,emissiveIntensity:.45}));
+      top.position.y=.31; g.add(top);
+      g.position.set(x,y,z); scene.add(g); platforms.push(g); return g;
+    };
+    let px=0,py=0,pz=0;
+    for(let i=0;i<18;i++){px=THREE.MathUtils.clamp(px+rnd(-5,5),-10,10);py=THREE.MathUtils.clamp(py+rnd(-2.5,2.8),-4,8);pz=-i*8;makePlatform(px,py,pz,i<2?1.15:1)}
+    let nextZ=-144;
+
+    const rings=[];
+    const addRing=(p)=>{
+      const r=new THREE.Mesh(new THREE.TorusGeometry(1.15,.13,8,24),new THREE.MeshStandardMaterial({color:0xffd34d,emissive:0xff9800,emissiveIntensity:.7}));
+      r.position.set(p.position.x,p.position.y+1.5,p.position.z); scene.add(r); rings.push(r);
+    };
+    platforms.forEach((p,i)=>{if(i%2===0)addRing(p)});
+
+    let vx=0,vy=0,vz=0,grounded=true,alive=true,score=0,camY=5;
+    player.position.set(0,1.3,2.5);
+    const kd=e=>{keys.current[e.key.toLowerCase()]=true;if(e.key===" "||e.key==="arrowup")e.preventDefault();};
+    const ku=e=>keys.current[e.key.toLowerCase()]=false;
+    addEventListener("keydown",kd);addEventListener("keyup",ku);
+
+    const jump=()=>{if(grounded){vy=10.8;grounded=false}};
+    const reset=()=>{location.reload()};
+
+    let last=performance.now(),raf;
+    const loop=t=>{
+      const dt=Math.min(.033,(t-last)/1000);last=t;
+      if(alive){
+        const k=keys.current;
+        const left=k.a||k.arrowleft,right=k.d||k.arrowright;
+        if(left)vx-=22*dt;if(right)vx+=22*dt;vx*=Math.pow(.08,dt);
+        if((k[" "]||k.w||k.arrowup)&&grounded)jump();
+        player.position.x+=vx*dt;
+        player.position.x=THREE.MathUtils.clamp(player.position.x,-15,15);
+        vy-=22*dt; player.position.y+=vy*dt;
+        const forward=28; player.position.z-=forward*dt;
+        // recycle platforms behind the player to create an endless route
+        platforms.forEach(p=>{
+          if(p.position.z>player.position.z+18){
+            p.position.z=nextZ; nextZ-=rnd(7,11);
+            p.position.x=THREE.MathUtils.clamp(player.position.x+rnd(-7,7),-11,11);
+            p.position.y=THREE.MathUtils.clamp(player.position.y+rnd(-3.5,3.5),-5,10);
+            score+=10;
+            if(Math.random()<.7)addRing(p);
+          }
+        });
+        grounded=false;
+        platforms.forEach(p=>{
+          const dx=Math.abs(player.position.x-p.position.x),dz=Math.abs(player.position.z-p.position.z);
+          const top=p.position.y+.58;
+          if(dx<3.25 && dz<2.25 && vy<=0 && player.position.y>=top-.4 && player.position.y<=top+1.1){
+            player.position.y=top;vy=0;grounded=true;
+          }
+        });
+        rings.forEach(r=>{
+          r.rotation.y+=dt*4;
+          if(r.position.z>player.position.z+20){scene.remove(r);return}
+          if(r.position.distanceTo(player.position)<1.5){score+=100;scene.remove(r);r.position.z=9999}
+        });
+        if(player.position.y<-12){alive=false;const best=Math.max(score,ui.best);localStorage.setItem("slab_best",best);setUi({score,best,over:true})}
+        player.rotation.z=THREE.MathUtils.lerp(player.rotation.z,-vx*.045,.12);
+        player.rotation.x=THREE.MathUtils.lerp(player.rotation.x,-vy*.025,.1);
+        camera.position.x=THREE.MathUtils.lerp(camera.position.x,player.position.x*.55,.08);
+        camera.position.y=THREE.MathUtils.lerp(camera.position.y,player.position.y+5,.08);
+        camera.position.z=THREE.MathUtils.lerp(camera.position.z,player.position.z+17,.1);
+        camera.lookAt(player.position.x,player.position.y,player.position.z-12);
+        setUi(u=>({...u,score}));
+      }
+      renderer.render(scene,camera);raf=requestAnimationFrame(loop)
+    };
+    raf=requestAnimationFrame(loop);
+    const rs=()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)};
+    addEventListener("resize",rs);
+    return()=>{cancelAnimationFrame(raf);removeEventListener("keydown",kd);removeEventListener("keyup",ku);removeEventListener("resize",rs);renderer.dispose();el.innerHTML=""}
+  },[]);
+  return <div className="spaceGame">
+    <div ref={ref} className="spaceCanvas"/>
+    <div className="runnerTop"><div><b>SLAB FLY</b><span>JUMP • FLY • LAND • SURVIVE</span></div><button onClick={onBack}>EXIT</button></div>
+    <div className="runnerStats"><strong>{ui.score.toString().padStart(6,"0")}</strong><span>BEST {ui.best}</span></div>
+    <div className="runnerHint">A / D or ← / → MOVE &nbsp; • &nbsp; SPACE / ↑ JUMP</div>
+    <div className="mobileRun">
+      <button onPointerDown={()=>keys.current.a=true} onPointerUp={()=>keys.current.a=false} onPointerCancel={()=>keys.current.a=false}>◀</button>
+      <button onPointerDown={()=>{keys.current[" "]=true}} onPointerUp={()=>{keys.current[" "]=false}}>JUMP</button>
+      <button onPointerDown={()=>keys.current.d=true} onPointerUp={()=>keys.current.d=false}>▶</button>
+    </div>
+    {ui.over&&<div className="gameOver"><small>YOU FELL</small><h1>GAME OVER</h1><p>SCORE {ui.score} • BEST {ui.best}</p><button onClick={reset}>JUMP AGAIN</button></div>}
+  </div>
+}
