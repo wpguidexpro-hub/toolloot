@@ -6,3 +6,12 @@
 
 .gameFullscreen{position:fixed;inset:0;background:#050711;overflow:hidden;z-index:9999;touch-action:none}.gameFullscreen canvas{display:block;width:100%;height:100%;image-rendering:pixelated}.gameUI{position:absolute;top:18px;right:18px;display:flex;gap:8px}.gameIcon,.gameRestart{border:1px solid #56635b;background:rgba(8,12,20,.82);color:#fff;min-height:42px;padding:0 13px;border-radius:3px;font:9px "Press Start 2P"}.gameIcon{width:42px;padding:0;display:grid;place-items:center}.gameIcon svg{width:17px}.gameHelp{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);padding:9px 13px;background:rgba(5,8,15,.72);border:1px solid rgba(130,150,180,.25);color:#b9c4cf;font:8px "Press Start 2P";white-space:nowrap}.mobileControls{display:none}.gameTouch{border:1px solid #68746e;background:rgba(22,30,28,.86);color:#fff;border-radius:50%;width:62px;height:62px;font:18px "Press Start 2P";touch-action:none;user-select:none}.shootBtn{border:2px solid #9b5151;background:rgba(115,39,45,.9);color:#fff;border-radius:50%;width:86px;height:86px;font:12px "Press Start 2P";touch-action:none}.shootBtn small{font-size:7px;color:#ffd4d4}@media(max-width:760px){.mobileControls{position:absolute;left:18px;right:18px;bottom:22px;display:flex;justify-content:space-between;align-items:end}.gameHelp{display:none}.gameUI{top:10px;right:10px}.gameRestart{font-size:7px;min-height:38px}.gameIcon{min-height:38px;width:38px}}@media(max-width:420px){.mobileControls{left:12px;right:12px;bottom:14px}.gameTouch{width:56px;height:56px}.shootBtn{width:78px;height:78px}}
 @media (max-width:760px) and (orientation:portrait){.gameFullscreen:before{content:"ROTATE PHONE ↔";position:absolute;inset:0;z-index:20;display:grid;place-items:center;background:#050711;color:#fff;font:14px "Press Start 2P";letter-spacing:1px;text-align:center}.gameFullscreen canvas,.gameFullscreen .mobileControls,.gameFullscreen .gameHelp{visibility:hidden}}
+
+/* HD arcade presentation */
+.gameFullscreen{background:#030611!important;overflow:hidden;touch-action:none;}
+.gameFullscreen canvas{display:block;width:100%;height:100%;image-rendering:auto;}
+.gameUI{z-index:30;}
+.gameIcon,.gameRestart{backdrop-filter:blur(10px);background:rgba(8,14,30,.78)!important;border:1px solid rgba(100,190,255,.35)!important;box-shadow:0 8px 30px rgba(0,0,0,.35),inset 0 0 18px rgba(50,130,255,.08);}
+.mobileControls{z-index:40;}
+.gameTouch,.shootBtn{backdrop-filter:blur(10px);box-shadow:0 8px 28px rgba(0,0,0,.35),inset 0 0 20px rgba(255,255,255,.05);}
+.shootBtn{border-color:rgba(255,220,90,.65)!important;}
