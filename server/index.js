@@ -1,0 +1,43 @@
+import express from "express";
+import cors from "cors";
+import http from "http";
+import {Server} from "socket.io";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import fs from "fs";
+import path from "path";
+import {fileURLToPath} from "url";
+import {v4 as uuid} from "uuid";
+
+const __dirname=path.dirname(fileURLToPath(import.meta.url));
+const dataDir=path.join(__dirname,"data"), dataFile=path.join(dataDir,"game.json");
+fs.mkdirSync(dataDir,{recursive:true});
+if(!fs.existsSync(dataFile)) fs.writeFileSync(dataFile,JSON.stringify({users:[],scores:[]},null,2));
+const read=()=>JSON.parse(fs.readFileSync(dataFile,"utf8"));
+const write=d=>fs.writeFileSync(dataFile,JSON.stringify(d,null,2));
+const JWT_SECRET=process.env.JWT_SECRET||"toolloot-dev-change-this";
+const app=express(); const httpServer=http.createServer(app);
+const io=new Server(httpServer,{cors:{origin:"*",methods:["GET","POST"]}});
+app.use(cors()); app.use(express.json());
+const auth=(req,res,next)=>{try{req.user=jwt.verify((req.headers.authorization||"").replace("Bearer ",""),JWT_SECRET);next()}catch{res.status(401).json({error:"Unauthorized"})}};
+const token=u=>jwt.sign({id:u.id,email:u.email},JWT_SECRET,{expiresIn:"30d"});
+app.get("/api/health",(req,res)=>res.json({ok:true,game:"ToollooT Mining Master"}));
+app.post("/api/register",async(req,res)=>{const{name,email,password}=req.body||{};if(!name||!email||!password||password.length<6)return res.status(400).json({error:"Name, email and 6+ character password required"});const d=read();if(d.users.some(u=>u.email===email.toLowerCase()))return res.status(409).json({error:"Email already registered"});const u={id:uuid(),name:name.trim().slice(0,24),email:email.toLowerCase(),password:await bcrypt.hash(password,10),cash:0,ore:0,zone:1,bulldozerLevel:1,toolLevel:1,workers:0,score:0,wins:0,kills:0,createdAt:Date.now()};d.users.push(u);write(d);res.json({token:token(u),user:{id:u.id,name:u.name,email:u.email}})});
+app.post("/api/login",async(req,res)=>{const{email,password}=req.body||{},d=read(),u=d.users.find(x=>x.email===String(email||"").toLowerCase());if(!u||!(await bcrypt.compare(password||"",u.password)))return res.status(401).json({error:"Invalid email or password"});res.json({token:token(u),user:{id:u.id,name:u.name,email:u.email}})});
+app.get("/api/me",auth,(req,res)=>{const u=read().users.find(x=>x.id===req.user.id);if(!u)return res.status(404).json({error:"User not found"});const{password,...safe}=u;res.json(safe)});
+app.get("/api/leaderboard",(req,res)=>{const d=read();res.json(d.users.map(({password,...u})=>u).sort((a,b)=>b.score-a.score).slice(0,100))});
+app.post("/api/save",auth,(req,res)=>{const d=read(),u=d.users.find(x=>x.id===req.user.id);if(!u)return res.status(404).json({error:"User not found"});const p=req.body||{};for(const k of ["cash","ore","zone","bulldozerLevel","toolLevel","workers","score"])if(Number.isFinite(Number(p[k])))u[k]=Math.max(0,Math.floor(Number(p[k])));write(d);res.json({ok:true})});
+app.post("/api/match-result",auth,(req,res)=>{const d=read(),u=d.users.find(x=>x.id===req.user.id);if(!u)return res.status(404).end();u.score+=Math.max(0,Math.floor(Number(req.body?.score)||0));u.wins+=req.body?.win?1:0;write(d);res.json({ok:true,score:u.score})});
+
+const rooms=new Map();
+const safePlayer=s=>({id:s.id,userId:s.userId,name:s.name,x:s.x,y:s.y,ore:s.ore,score:s.score});
+io.use((socket,next)=>{try{const p=jwt.verify(socket.handshake.auth?.token||"",JWT_SECRET);socket.userId=p.id;next()}catch{next(new Error("Unauthorized"))}});
+io.on("connection",socket=>{
+ socket.on("room:create",cb=>{const code=Math.random().toString(36).slice(2,7).toUpperCase();rooms.set(code,{players:new Map(),started:false});socket.join(code);const u=read().users.find(x=>x.id===socket.userId);rooms.get(code).players.set(socket.id,{id:socket.id,userId:u.id,name:u.name,x:500,y:300,ore:0,score:0});cb?.({code});io.to(code).emit("room:players",[...rooms.get(code).players.values()].map(safePlayer))});
+ socket.on("room:join",(code,cb)=>{const r=rooms.get(String(code||"").toUpperCase());if(!r)return cb?.({error:"Room not found"});if(r.players.size>=10)return cb?.({error:"Room full"});socket.join(String(code).toUpperCase());const u=read().users.find(x=>x.id===socket.userId);r.players.set(socket.id,{id:socket.id,userId:u.id,name:u.name,x:500,y:300,ore:0,score:0});cb?.({code:String(code).toUpperCase()});io.to(String(code).toUpperCase()).emit("room:players",[...r.players.values()].map(safePlayer))});
+ socket.on("room:quick",cb=>{let code=[...rooms.keys()].find(k=>rooms.get(k).players.size<10&&!rooms.get(k).started);if(!code){code=Math.random().toString(36).slice(2,7).toUpperCase();rooms.set(code,{players:new Map(),started:false})}socket.emit("room:players",[...rooms.get(code).players.values()].map(safePlayer));socket.emit("room:joined",{code});socket.emit("room:players",[...rooms.get(code).players.values()].map(safePlayer));cb?.({code});socket.join(code);const u=read().users.find(x=>x.id===socket.userId);rooms.get(code).players.set(socket.id,{id:socket.id,userId:u.id,name:u.name,x:500,y:300,ore:0,score:0});io.to(code).emit("room:players",[...rooms.get(code).players.values()].map(safePlayer))});
+ socket.on("player:move",p=>{for(const r of rooms.values())if(r.players.has(socket.id)){const s=r.players.get(socket.id);s.x=Math.max(20,Math.min(980,Number(p?.x)||500));s.y=Math.max(20,Math.min(580,Number(p?.y)||300));io.to([...socket.rooms].find(x=>x!==socket.id)||"").emit("room:players",[...r.players.values()].map(safePlayer));break}});
+ socket.on("game:start",code=>{const r=rooms.get(String(code||"").toUpperCase());if(r){r.started=true;io.to(String(code).toUpperCase()).emit("game:start")}}); 
+ socket.on("disconnect",()=>{for(const[code,r]of rooms){if(r.players.delete(socket.id)){io.to(code).emit("room:players",[...r.players.values()].map(safePlayer));if(!r.players.size)rooms.delete(code)}}});
+});
+const PORT=process.env.PORT||3000;httpServer.listen(PORT,()=>console.log("ToollooT backend listening on "+PORT));
