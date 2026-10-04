@@ -8,13 +8,13 @@ function DemoGame(){
  useEffect(()=>{
   const c=canvas.current,ctx=c.getContext("2d"),k=keys.current;
   const resize=()=>{c.width=innerWidth;c.height=innerHeight}; resize();addEventListener("resize",resize);
-  state.current={player:{x:innerWidth/2,y:innerHeight-70,w:54,h:26,speed:430},bullets:[],balls:[],particles:[],next:0,score:0,spawn:0,over:false};
+  state.current={player:{x:innerWidth/2,y:innerHeight-70,w:64,h:30,speed:430},bullets:[],balls:[],particles:[],next:0,score:0,spawn:10,over:false,elapsed:0,level:1,drop:0};
   const s=state.current,colors=["#ff4d6d","#ffd166","#06d6a0","#4cc9f0","#a855f7","#ff7b00","#f72585","#90be6d"];
   const shoot=()=>{if(!s.over)s.bullets.push({x:s.player.x,y:s.player.y-18,r:4,vy:-820})};
   const down=e=>{if(["ArrowLeft","ArrowRight"," "].includes(e.key))e.preventDefault();k[e.key.toLowerCase()]=true;if(e.code==="Space")shoot()};
   const up=e=>{k[e.key.toLowerCase()]=false};addEventListener("keydown",down);addEventListener("keyup",up);
   const touchStart=d=>k[d]=true,touchEnd=d=>k[d]=false;
-  const spawnBall=()=>{const r=72+Math.random()*18,x=r+Math.random()*(c.width-r*2);s.balls.push({x,y:-r-4,r,color:colors[Math.floor(Math.random()*colors.length)],stage:5,vy:55+Math.random()*55,vx:(Math.random()-.5)*90,bounces:0});s.next++};
+  const spawnBall=()=>{const r=72+Math.random()*18,x=r+Math.random()*(c.width-r*2);s.balls.push({x,y:-r-8,r,color:colors[Math.floor(Math.random()*colors.length)],stage:5,vy:30+Math.random()*25,vx:(Math.random()-.5)*70,bounces:0,drop:2});s.next++};
   const splitBall=(b,i)=>{
    if(b.r>24){
     const nr=b.r*.55,dx=160+b.r*1.5;
@@ -23,7 +23,7 @@ function DemoGame(){
    }
    s.balls.splice(i,1);return 0;
   };
-  const restart=()=>{s.player.x=c.width/2;s.bullets=[];s.balls=[];s.particles=[];s.next=0;s.score=0;s.spawn=0;s.over=false;setScore(0);setBalls(0)};
+  const restart=()=>{s.player.x=c.width/2;s.bullets=[];s.balls=[];s.particles=[];s.next=0;s.score=0;s.spawn=10;s.over=false;s.elapsed=0;s.level=1;s.drop=0;setScore(0);setBalls(0)};
   const full=()=>{if(document.fullscreenElement)document.exitFullscreen();else document.documentElement.requestFullscreen?.()};
   let raf,last=performance.now();
   const loop=t=>{
@@ -31,9 +31,9 @@ function DemoGame(){
    if(!s.over){
     if(k.arrowleft)s.player.x-=s.player.speed*dt;if(k.arrowright)s.player.x+=s.player.speed*dt;
     s.player.x=Math.max(s.player.w/2+10,Math.min(c.width-s.player.w/2-10,s.player.x));
-    s.spawn-=dt;if(s.spawn<=0&&s.balls.length===0){spawnBall();s.spawn=1.6}
+    s.spawn-=dt;if(s.spawn<=0&&s.balls.length===0){spawnBall();s.spawn=10}
     s.bullets.forEach(b=>b.y+=b.vy*dt);s.bullets=s.bullets.filter(b=>b.y>-30);
-    s.balls.forEach(b=>{b.vy+=210*dt;b.x+=b.vx*dt;b.y+=b.vy*dt;if(b.x-b.r<0){b.x=b.r;b.vx=Math.abs(b.vx)}if(b.x+b.r>c.width){b.x=c.width-b.r;b.vx=-Math.abs(b.vx)}if(b.y-b.r<70){b.y=70+b.r;b.vy=Math.abs(b.vy)}if(b.y+b.r>c.height-16){b.y=c.height-16-b.r;b.vy=-Math.max(420,Math.min(720,Math.abs(b.vy)*1.08));b.bounces++}});
+    s.balls.forEach(b=>{if(b.drop>0){b.drop-=dt;b.vy=65*speedScale}else b.vy+=210*speedScale*dt;b.x+=b.vx*speedScale*dt;b.y+=b.vy*dt;if(b.x-b.r<0){b.x=b.r;b.vx=Math.abs(b.vx)}if(b.x+b.r>c.width){b.x=c.width-b.r;b.vx=-Math.abs(b.vx)}if(b.y-b.r<70){b.y=70+b.r;b.vy=Math.abs(b.vy)}if(b.y+b.r>c.height-16){b.y=c.height-16-b.r;b.vy=-Math.max(420,Math.min(760,Math.abs(b.vy)*1.08*speedScale));b.bounces++}});
     for(let i=s.balls.length-1;i>=0;i--){const b=s.balls[i];for(let j=s.bullets.length-1;j>=0;j--){const q=s.bullets[j];if(Math.hypot(q.x-b.x,q.y-b.y)<b.r+q.r){s.bullets.splice(j,1);const oldR=b.r, made=splitBall(b,i);s.score+=Math.round(oldR*2)+(made?20:60);setScore(s.score);for(let n=0;n<16;n++)s.particles.push({x:b.x,y:b.y,vx:(Math.random()-.5)*(180+oldR*3),vy:(Math.random()-.5)*(180+oldR*3),life:.5,color:b.color});break}}}
     const p=s.player;for(const b of s.balls)if(b.x>p.x-p.w/2&&b.x<p.x+p.w/2&&b.y+b.r>p.y-p.h/2&&b.y-b.r<p.y+p.h/2){s.over=true;break}
    }
@@ -42,8 +42,8 @@ function DemoGame(){
    ctx.strokeStyle="rgba(90,120,190,.12)";for(let y=0;y<c.height;y+=32){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(c.width,y);ctx.stroke()}
    s.balls.forEach(b=>{ctx.beginPath();ctx.arc(b.x,b.y,b.r,0,Math.PI*2);ctx.fillStyle=b.color;ctx.fill();ctx.fillStyle="rgba(255,255,255,.35)";ctx.beginPath();ctx.arc(b.x-b.r*.32,b.y-b.r*.35,b.r*.22,0,Math.PI*2);ctx.fill()});
    s.bullets.forEach(b=>{ctx.fillStyle="#fff7a8";ctx.fillRect(b.x-2,b.y-12,4,18)});s.particles.forEach(p=>{ctx.globalAlpha=Math.max(0,p.life/.5);ctx.fillStyle=p.color;ctx.fillRect(p.x-2,p.y-2,5,5)});ctx.globalAlpha=1;
-   const p=s.player;ctx.fillStyle="#2ec4b6";ctx.fillRect(p.x-p.w/2,p.y-p.h/2,p.w,p.h);ctx.fillStyle="#eaffff";ctx.fillRect(p.x-10,p.y-8,20,6);ctx.fillStyle="#10242a";ctx.fillRect(p.x-5,p.y-5,10,3);
-   ctx.fillStyle="#fff";ctx.font="bold 18px monospace";ctx.fillText("TOOLLOOT 8-BIT",24,34);ctx.fillText("SCORE "+s.score,24,60);ctx.textAlign="right";ctx.fillText("BALLS "+s.balls.length,c.width-24,34);ctx.textAlign="left";
+   const p=s.player;ctx.save();ctx.translate(Math.round(p.x),Math.round(p.y));ctx.fillStyle="#0b1020";ctx.fillRect(-32,-15,64,30);ctx.fillStyle="#2ec4b6";ctx.fillRect(-28,-12,56,24);ctx.fillStyle="#8affea";ctx.fillRect(-18,-8,36,8);ctx.fillStyle="#10242a";ctx.fillRect(-7,-5,14,6);ctx.fillStyle="#ffd166";ctx.fillRect(-24,10,12,5);ctx.fillRect(12,10,12,5);ctx.fillStyle="#ff5d73";ctx.fillRect(-4,-15,8,6);ctx.restore();
+   ctx.fillStyle="#fff";ctx.font="bold 18px monospace";ctx.fillText("TOOLLOOT 8-BIT",24,34);ctx.fillText("SCORE "+s.score,24,60);ctx.textAlign="right";ctx.fillText("BALLS "+s.balls.length,c.width-24,34);ctx.fillText("LEVEL "+s.level,c.width-24,60);ctx.textAlign="left";
    if(s.over){ctx.fillStyle="rgba(0,0,0,.72)";ctx.fillRect(0,0,c.width,c.height);ctx.textAlign="center";ctx.fillStyle="#fff";ctx.font="bold 42px monospace";ctx.fillText("GAME OVER",c.width/2,c.height/2-25);ctx.font="18px monospace";ctx.fillText("SPACE = SHOOT",c.width/2,c.height/2+15);ctx.fillText("PRESS RESTART",c.width/2,c.height/2+45);ctx.textAlign="left"}
    raf=requestAnimationFrame(loop)
   };
