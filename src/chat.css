@@ -15,3 +15,5 @@
 .mobileControls{z-index:40;}
 .gameTouch,.shootBtn{backdrop-filter:blur(10px);box-shadow:0 8px 28px rgba(0,0,0,.35),inset 0 0 20px rgba(255,255,255,.05);}
 .shootBtn{border-color:rgba(255,220,90,.65)!important;}
+
+.upgradeTouch{position:absolute;left:50%;bottom:74px;transform:translateX(-50%);display:flex;gap:10px;z-index:45;pointer-events:none}.upgradeTouch button{pointer-events:auto;background:rgba(5,18,28,.88);border:1px solid rgba(255,209,102,.65);color:#ffd166;border-radius:4px;padding:10px 13px;font:9px "Press Start 2P";box-shadow:0 8px 25px rgba(0,0,0,.3)}.upgradeTouch button:active{transform:translateY(1px);background:#16313b}@media(max-width:760px){.upgradeTouch{bottom:164px;gap:6px}.upgradeTouch button{font-size:7px;padding:9px 8px}}
