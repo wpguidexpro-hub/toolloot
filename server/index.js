@@ -162,11 +162,11 @@ const makeRocks = () => Array.from({length:90}, (_,i) => ({
   id:i, x:40+(i%10)*100+Math.random()*25, y:55+Math.floor(i/10)*62+Math.random()*20,
   type:Math.random()<.1?"gold":Math.random()<.25?"iron":"stone", hp:30
 }));
-const safePlayer = s => ({ id: s.id, userId: s.userId, name: s.name, x: s.x, y: s.y, ore: s.ore, score: s.score });
+const safePlayer = s => ({ id: s.id, userId: s.userId, name: s.name, x: s.x, y: s.y, ore: s.ore, score: s.score, hp: s.hp, kills: s.kills });
 async function addPlayer(socket, room) {
   const user = await getUser(socket.userId);
   if (!user) throw new Error("User not found");
-  room.players.set(socket.id, { id: socket.id, userId: user.id, name: user.name, x: 500, y: 300, ore: 0, score: 0 });
+  room.players.set(socket.id, { id: socket.id, userId: user.id, name: user.name, x: 500, y: 300, ore: 0, score: 0, hp: 100, kills: 0, attackAt: 0 });
 }
 const roomPlayers = room => [...room.players.values()].map(safePlayer);
 const roomState = room => ({ players: roomPlayers(room), rocks: room.rocks.map(r => ({id:r.id,x:r.x,y:r.y,type:r.type,hp:r.hp})) });
@@ -255,6 +255,40 @@ io.on("connection", socket => {
     }
     const code = [...socket.rooms].find(x => x !== socket.id);
     if (code) io.to(code).emit("room:state", roomState(room));
+  });
+
+  socket.on("player:attack", async () => {
+    const room = roomFor(socket);
+    if (!room) return;
+    const attacker = room.players.get(socket.id);
+    const now = Date.now();
+    if (now < attacker.attackAt) return;
+    attacker.attackAt = now + 450;
+    let target = null, best = 90;
+    for (const p of room.players.values()) {
+      if (p.id === attacker.id || p.hp <= 0) continue;
+      const dist = Math.hypot(p.x - attacker.x, p.y - attacker.y);
+      if (dist < best) { target = p; best = dist; }
+    }
+    if (!target) return socket.emit("attack:result", {error:"No enemy in range"});
+    target.hp = Math.max(0, target.hp - 25);
+    let killed = false;
+    if (target.hp === 0) {
+      killed = true;
+      attacker.kills += 1;
+      attacker.score += 100;
+      target.x = 500; target.y = 300; target.hp = 100;
+      await query("UPDATE users SET kills = kills + 1, score = score + 100 WHERE id = ?", [attacker.userId]);
+      socket.emit("attack:result", {hit:true, damage:25, killed:true, score:attacker.score, kills:attacker.kills});
+    } else {
+      socket.emit("attack:result", {hit:true, damage:25, killed:false, targetHp:target.hp, score:attacker.score});
+    }
+    const code = [...socket.rooms].find(x => x !== socket.id);
+    if (code) {
+      io.to(code).emit("combat:event", {attacker: attacker.id, target: target.id, damage:25, killed});
+      io.to(code).emit("room:players", roomPlayers(room));
+      io.to(code).emit("room:state", roomState(room));
+    }
   });
 
   socket.on("game:start", rawCode => {
