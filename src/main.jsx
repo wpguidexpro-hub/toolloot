@@ -11,7 +11,7 @@ function DemoGame(){
   const initAudio=()=>{try{if(!audioCtx)audioCtx=new (window.AudioContext||window.webkitAudioContext)();if(audioCtx.state==="suspended")audioCtx.resume()}catch{}};
   const sfx=(type)=>{if(mute)return;initAudio();if(!audioCtx)return;const now=audioCtx.currentTime,o=audioCtx.createOscillator(),g=audioCtx.createGain();const cfg={shoot:[720,"square",.045,.07],hit:[150,"sawtooth",.08,.10],power:[620,"triangle",.16,.12],bounce:[90,"square",.055,.06],hurt:[75,"sawtooth",.22,.14],gameover:[110,"sawtooth",.5,.16],start:[330,"square",.12,.08]}[type]||[220,"square",.08,.06];o.type=cfg[1];o.frequency.setValueAtTime(cfg[0],now);o.frequency.exponentialRampToValueAtTime(Math.max(35,cfg[0]*.55),now+cfg[2]);g.gain.setValueAtTime(cfg[3],now);g.gain.exponentialRampToValueAtTime(.001,now+cfg[2]);o.connect(g);g.connect(audioCtx.destination);o.start(now);o.stop(now+cfg[2]+.02)};
   const resize=()=>{const dpr=Math.min(2,window.devicePixelRatio||1),w=innerWidth,h=innerHeight;c.style.width=w+"px";c.style.height=h+"px";c.width=Math.floor(w*dpr);c.height=Math.floor(h*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);c._w=w;c._h=h}; resize();addEventListener("resize",resize);
-  state.current={player:{x:innerWidth/2,y:innerHeight-86,w:64,h:42,speed:260,walk:0,dir:1},bullets:[],balls:[],powerups:[],particles:[],next:0,score:0,spawn:10,over:false,elapsed:0,level:1,drop:0,bulletPower:1,playerSpeedPower:1,ballSpeedPower:1,lives:3,shield:0,combo:0,comboTimer:0,magnet:0};
+  state.current={player:{x:innerWidth/2,y:innerHeight-86,w:64,h:42,speed:260,walk:0,dir:1},bullets:[],balls:[],powerups:[],particles:[],next:0,score:0,spawn:10,over:false,elapsed:0,level:1,drop:0,bulletPower:1,playerSpeedPower:1,ballSpeedPower:1,lives:3,shield:0,combo:0,comboTimer:0,magnet:0,shake:0,flash:0,birds:[]};
   const s=state.current,colors=["#ff4d6d","#ffd166","#06d6a0","#4cc9f0","#a855f7","#ff7b00","#f72585","#90be6d"];
   const shoot=()=>{if(s.over)return;sfx("shoot");s.muzzle=(s.muzzle||0)+0.08;const count=s.bulletPower||1;for(let n=0;n<count;n++){const spread=(n-(count-1)/2)*14;s.bullets.push({x:s.player.x+spread,y:s.player.y-18,r:4,vy:-820,vx:spread*3})}};
   const down=e=>{if(["ArrowLeft","ArrowRight"," "].includes(e.key))e.preventDefault();k[e.key.toLowerCase()]=true;if(e.code==="Space"&&!e.repeat)shoot()};
@@ -19,7 +19,7 @@ function DemoGame(){
   const touchStart=d=>k[d]=true,touchEnd=d=>k[d]=false;
   const spawnBall=()=>{const r=72+Math.random()*18,x=r+Math.random()*(innerWidth-r*2);s.balls.push({x,y:-r-8,r,color:colors[Math.floor(Math.random()*colors.length)],stage:5,vy:30+Math.random()*25,vx:(Math.random()-.5)*70,bounces:0,drop:2,special:s.next%3===2});s.next++};
   const spawnPower=(b)=>{const types=["B+","P+","SLOW","FAST","SHIELD","BOMB","HEART","MAGNET"];const type=types[Math.floor(Math.random()*types.length)];s.powerups.push({x:b.x,y:b.y,r:13,type,vy:90,vx:(Math.random()-.5)*35,life:10})};
-  const splitBall=(b,i)=>{
+  const burst=(x,y,color,count=22,power=240)=>{for(let n=0;n<count;n++)s.particles.push({x,y,vx:(Math.random()-.5)*power,vy:(Math.random()-.5)*power,life:.35+Math.random()*.35,color})};\n  const splitBall=(b,i)=>{
    if(b.r>24){
     const nr=b.r*.55,dx=160+b.r*1.5;
     s.balls.splice(i,1,{x:b.x-nr*.7,y:b.y,r:nr,color:b.color,vy:-Math.max(170,b.r*4),vx:-dx,bounces:0},{x:b.x+nr*.7,y:b.y,r:nr,color:b.color,vy:-Math.max(150,b.r*3.6),vx:dx,bounces:0});
@@ -27,7 +27,7 @@ function DemoGame(){
    }
    s.balls.splice(i,1);return 0;
   };
-  const restart=()=>{sfx("start");s.player.x=innerWidth/2;s.player.walk=0;s.muzzle=0;s.bullets=[];s.balls=[];s.powerups=[];s.particles=[];s.next=0;s.score=0;s.bulletPower=1;s.playerSpeedPower=1;s.ballSpeedPower=1;s.lives=3;s.shield=0;s.combo=0;s.comboTimer=0;s.magnet=0;s.spawn=10;s.over=false;s.elapsed=0;s.level=1;s.drop=0;setScore(0);setBalls(0)};
+  const restart=()=>{sfx("start");s.player.x=innerWidth/2;s.player.walk=0;s.muzzle=0;s.bullets=[];s.balls=[];s.powerups=[];s.particles=[];s.next=0;s.score=0;s.bulletPower=1;s.playerSpeedPower=1;s.ballSpeedPower=1;s.lives=3;s.shield=0;s.combo=0;s.comboTimer=0;s.magnet=0;s.shake=0;s.flash=0;s.spawn=10;s.over=false;s.elapsed=0;s.level=1;s.drop=0;s.birds=[];setScore(0);setBalls(0)};
   const full=async()=>{if(document.fullscreenElement){document.exitFullscreen();return}await document.documentElement.requestFullscreen?.();try{await screen.orientation?.lock?.("landscape")}catch{} };
   let raf,last=performance.now();
   const loop=t=>{
@@ -35,7 +35,7 @@ function DemoGame(){
    if(!s.over){
     s.elapsed+=dt;
     s.level=1+Math.floor(s.elapsed/60);
-    const speedScale=1+(s.level-1)*0.14;
+    const speedScale=1+(s.level-1)*0.14;s.shake=Math.max(0,s.shake-dt);s.flash=Math.max(0,s.flash-dt);
     const moveSpeed=s.player.speed*(s.playerSpeedPower||1);s.muzzle=Math.max(0,(s.muzzle||0)-dt);const walking=k.arrowleft||k.arrowright;if(walking){s.player.walk+=dt*10}else{s.player.walk*=Math.max(0,1-dt*8)}if(k.arrowleft){s.player.x-=moveSpeed*dt;s.player.dir=-1}if(k.arrowright){s.player.x+=moveSpeed*dt;s.player.dir=1};
     s.player.x=Math.max(s.player.w/2+10,Math.min(innerWidth-s.player.w/2-10,s.player.x));
     s.spawn-=dt;if(s.spawn<=0){spawnBall();s.spawn=10}
@@ -45,13 +45,13 @@ function DemoGame(){
     s.powerups.forEach(pw=>{if(s.magnet>0){const dx=s.player.x-pw.x,dy=s.player.y-pw.y,dist=Math.hypot(dx,dy);if(dist<360){pw.vx+=dx*4*dt;pw.vy+=dy*4*dt}}pw.x+=pw.vx*dt;pw.y+=pw.vy*dt;pw.life-=dt});s.magnet=Math.max(0,s.magnet-dt);s.powerups=s.powerups.filter(pw=>pw.life>0&&pw.y<innerHeight+30);const pp=s.player;for(let i=s.powerups.length-1;i>=0;i--){const pw=s.powerups[i];if(pw.x>pp.x-pp.w/2&&pw.x<pp.x+pp.w/2&&pw.y+pw.r>pp.y-pp.h/2&&pw.y-pw.r<pp.y+pp.h/2){if(pw.type==="B+")s.bulletPower=Math.min(4,(s.bulletPower||1)+1);if(pw.type==="P+")s.playerSpeedPower=Math.min(1.8,(s.playerSpeedPower||1)+0.25);if(pw.type==="SLOW")s.ballSpeedPower=Math.max(0.55,(s.ballSpeedPower||1)-0.2);if(pw.type==="FAST")s.ballSpeedPower=Math.min(1.7,(s.ballSpeedPower||1)+0.2);if(pw.type==="SHIELD")s.shield=1;if(pw.type==="BOMB"){for(let bi=s.balls.length-1;bi>=0;bi--){if(s.balls[bi].r<=38)s.balls.splice(bi,1)}s.score+=500}if(pw.type==="HEART")s.lives=Math.min(5,s.lives+1);if(pw.type==="MAGNET")s.magnet=12;s.score+=100;setScore(s.score);s.powerups.splice(i,1);sfx("power")}}
    const p=s.player;for(const b of s.balls)if(b.x>p.x-p.w/2&&b.x<p.x+p.w/2&&b.y+b.r>p.y-p.h/2&&b.y-b.r<p.y+p.h/2){if(s.shield){s.shield=0;sfx("hit");b.vy=-520;b.vx+=(b.x<p.x?-220:220);continue}s.lives--;s.combo=0;sfx("hurt");s.comboTimer=0;if(s.lives<=0){s.over=true;sfx("gameover")}else{b.y=Math.min(b.y,innerHeight-140);b.vy=-650}}
    }
-   s.particles.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt});s.particles=s.particles.filter(p=>p.life>0);
+   s.particles.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=420*dt;p.life-=dt});s.particles=s.particles.filter(p=>p.life>0);
    ctx.imageSmoothingEnabled=false;
    // Open sky + grassy floor — clean, no arena grid lines
    const sky=ctx.createLinearGradient(0,0,0,innerHeight*.78);sky.addColorStop(0,"#79c9f2");sky.addColorStop(.48,"#b9e8ff");sky.addColorStop(1,"#e7f5df");ctx.fillStyle=sky;ctx.fillRect(0,0,innerWidth,innerHeight);
    const sun=ctx.createRadialGradient(innerWidth*.78,innerHeight*.18,8,innerWidth*.78,innerHeight*.18,150);sun.addColorStop(0,"rgba(255,248,190,.95)");sun.addColorStop(1,"rgba(255,248,190,0)");ctx.fillStyle=sun;ctx.fillRect(0,0,innerWidth,innerHeight*.65);
    const cloudT=t*.012;for(let i=0;i<7;i++){const cx=((i*220+cloudT*(12+i*2))%(innerWidth+260))-130,cy=75+(i%3)*62;ctx.fillStyle="rgba(255,255,255,.78)";for(const [dx,dy,rr] of [[0,12,28],[28,0,38],[65,12,25],[43,20,30]]){ctx.beginPath();ctx.arc(cx+dx,cy+dy,rr,0,Math.PI*2);ctx.fill()}}
-   const horizon=innerHeight-105;ctx.fillStyle="#77a85a";ctx.fillRect(0,horizon,innerWidth,105);ctx.fillStyle="#5f8e49";ctx.fillRect(0,horizon+14,innerWidth,91);
+   const horizon=innerHeight-105;\n   // Distant moving trees.\n   const treeShift=(t*.018)%260;for(let i=-1;i<Math.ceil(innerWidth/130)+2;i++){const tx=i*130-treeShift,ty=horizon-18-(i%3)*7;ctx.fillStyle="#6b4b32";ctx.fillRect(tx+24,ty-58,13,64);ctx.fillStyle="#356b3c";ctx.beginPath();ctx.arc(tx+30,ty-75,34,0,Math.PI*2);ctx.arc(tx+5,ty-52,25,0,Math.PI*2);ctx.arc(tx+54,ty-52,27,0,Math.PI*2);ctx.fill();ctx.fillStyle="#4e8748";ctx.beginPath();ctx.arc(tx+30,ty-92,20,0,Math.PI*2);ctx.fill()}\n   // Small animated birds in the sky.\n   for(let i=0;i<5;i++){const bx=((i*250+t*.035*(1+i*.15))%(innerWidth+120))-60,by=125+(i%3)*55+Math.sin(t*.004+i)*9;ctx.strokeStyle="rgba(45,65,80,.8)";ctx.lineWidth=2;ctx.beginPath();ctx.arc(bx-5,by,6,.15,Math.PI-.15);ctx.arc(bx+5,by,6,.15,Math.PI-.15);ctx.stroke()}ctx.fillStyle="#77a85a";ctx.fillRect(0,horizon,innerWidth,105);ctx.fillStyle="#5f8e49";ctx.fillRect(0,horizon+14,innerWidth,91);
    ctx.fillStyle="#6c965d";ctx.beginPath();ctx.moveTo(0,horizon);for(let i=0;i<=innerWidth;i+=80)ctx.lineTo(i,horizon-35-Math.sin(i*.008)*24);ctx.lineTo(innerWidth,horizon);ctx.closePath();ctx.fill();
    for(let i=0;i<innerWidth;i+=34){const sway=Math.sin(t*.004+i)*2;ctx.strokeStyle="#3f7137";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(i,horizon+25);ctx.lineTo(i+4+sway,horizon+7);ctx.stroke();ctx.fillStyle="#8dbb62";ctx.fillRect(i+8,horizon+36,9,4)}
    const vignette=ctx.createRadialGradient(innerWidth*.5,innerHeight*.35,100,innerWidth*.5,innerHeight*.5,Math.max(innerWidth,innerHeight)*.8);vignette.addColorStop(0,"rgba(255,255,255,0)");vignette.addColorStop(1,"rgba(20,55,45,.25)");ctx.fillStyle=vignette;ctx.fillRect(0,0,innerWidth,innerHeight);
@@ -66,7 +66,7 @@ function DemoGame(){
    if((s.muzzle||0)>0){ctx.fillStyle="#fff6a8";ctx.beginPath();ctx.moveTo(42,-10);ctx.lineTo(62,-3);ctx.lineTo(42,1);ctx.lineTo(48,-5);ctx.closePath();ctx.fill();ctx.fillStyle="#ff9f1c";ctx.fillRect(39,-8,8,5)}
    ctx.fillStyle="#1f2937";ctx.fillRect(-16,22+step,15,6);ctx.fillRect(1,22-step,15,6);ctx.fillStyle="#ffe08a";ctx.fillRect(-5,-29,3,3);ctx.fillRect(4,-29,3,3);ctx.fillStyle="#fff";ctx.fillRect(-4,-29,2,2);ctx.fillRect(5,-29,2,2);ctx.fillStyle="#b91c1c";ctx.fillRect(-5,-22,10,3);ctx.translate(0,-bodyBob);ctx.restore();
    ctx.fillStyle="rgba(0,0,0,.45)";ctx.fillRect(14,14,235,78);ctx.fillRect(innerWidth-205,14,191,78);ctx.fillStyle="#fff";ctx.font="bold 18px monospace";ctx.fillText("TOOLLOOT 8-BIT",24,34);ctx.fillText("SCORE "+s.score,24,60);ctx.textAlign="right";ctx.fillText("BALLS "+s.balls.length,innerWidth-24,34);ctx.fillText("LEVEL "+s.level,innerWidth-24,60);ctx.fillText("LIVES "+s.lives+"  "+("♥".repeat(s.lives)),innerWidth-24,84);ctx.textAlign="left";ctx.fillStyle="#ffd166";ctx.font="bold 14px monospace";ctx.fillText("POWERS: B+ P+ SLOW FAST SHIELD BOMB HEART MAGNET",24,84);if(s.combo>1){ctx.fillStyle="#fff";ctx.font="bold 20px monospace";ctx.fillText("COMBO x"+s.combo,24,112)}ctx.textAlign="left";
-   if(s.over){ctx.fillStyle="rgba(0,0,0,.72)";ctx.fillRect(0,0,c.width,c.height);ctx.textAlign="center";ctx.fillStyle="#fff";ctx.font="bold 42px monospace";ctx.fillText("GAME OVER",innerWidth/2,innerHeight/2-25);ctx.font="18px monospace";ctx.fillText("SPACE = SHOOT",innerWidth/2,innerHeight/2+15);ctx.fillText("PRESS RESTART",innerWidth/2,innerHeight/2+45);ctx.textAlign="left"}
+   ctx.restore();if(s.flash>0){ctx.fillStyle="rgba(255,255,255,"+(s.flash/.035*.16)+")";ctx.fillRect(0,0,innerWidth,innerHeight)}\n   if(s.over){ctx.fillStyle="rgba(0,0,0,.72)";ctx.fillRect(0,0,c.width,c.height);ctx.textAlign="center";ctx.fillStyle="#fff";ctx.font="bold 42px monospace";ctx.fillText("GAME OVER",innerWidth/2,innerHeight/2-25);ctx.font="18px monospace";ctx.fillText("SPACE = SHOOT",innerWidth/2,innerHeight/2+15);ctx.fillText("PRESS RESTART",innerWidth/2,innerHeight/2+45);ctx.textAlign="left"}
    raf=requestAnimationFrame(loop)
   };
   raf=requestAnimationFrame(loop);window.toollootGame={touchStart,touchEnd,shoot,restart,full};
