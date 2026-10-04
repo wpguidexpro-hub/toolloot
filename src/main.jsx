@@ -40,7 +40,7 @@ function DemoGame(){
    const dt=Math.min(.033,(t-last)/1000);last=t;
    if(!s.over&&!s.paused){
     s.elapsed+=dt;s.achievementTimer=Math.max(0,(s.achievementTimer||0)-dt);s.levelBanner=Math.max(0,(s.levelBanner||0)-dt);if(s.levelReady>0)s.levelReady-=dt;
-    const newLevel=1+Math.floor(s.elapsed/60);if(newLevel>s.level){s.level=newLevel;s.levelBanner=2.8;s.levelReady=2.8;s.paused=true;s.achievement="LEVEL "+s.level+" COMPLETE!";s.achievementTimer=2.8;sfx("power");s.coins+=10;s.highScore=Math.max(s.highScore,s.score);localStorage.setItem("toollootCoins",String(s.coins));}if(s.level>1&&s.level!==lastAchievement){lastAchievement=s.level;s.achievement="LEVEL "+s.level+" — SPEED UP";s.achievementTimer=2.4;sfx("power") }
+    const newLevel=1+Math.floor(s.elapsed/60);if(newLevel>s.level){s.level=newLevel;s.levelBanner=2.8;s.levelReady=2.8;s.achievement="LEVEL "+s.level+" COMPLETE!";s.achievementTimer=2.8;sfx("power");s.coins+=10;s.highScore=Math.max(s.highScore,s.score);localStorage.setItem("toollootCoins",String(s.coins));}if(s.level>1&&s.level!==lastAchievement){lastAchievement=s.level;s.achievement="LEVEL "+s.level+" — SPEED UP";s.achievementTimer=2.4;sfx("power") }
     const speedScale=1+(s.level-1)*0.14;
     if(s.level%5===0&&s.bossLevel!==s.level&&!s.boss&&s.elapsed>1){s.bossLevel=s.level;spawnBoss();}s.shake=Math.max(0,s.shake-dt);s.flash=Math.max(0,s.flash-dt);
     const moveSpeed=s.player.speed*(s.playerSpeedPower||1);s.muzzle=Math.max(0,(s.muzzle||0)-dt);const walking=k.arrowleft||k.arrowright;if(walking){s.player.walk+=dt*10}else{s.player.walk*=Math.max(0,1-dt*8)}if(k.arrowleft){s.player.x-=moveSpeed*dt;s.player.dir=-1}if(k.arrowright){s.player.x+=moveSpeed*dt;s.player.dir=1};
