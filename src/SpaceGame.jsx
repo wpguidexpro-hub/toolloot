@@ -1,59 +1,19 @@
-import { useEffect, useRef, useState } from "react";
-import * as THREE from "three";
-
-const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-function shipMesh(color=0x54d8ff, scale=1){
-  const g=new THREE.Group();
-  const mat=new THREE.MeshStandardMaterial({color,metalness:.65,roughness:.28,emissive:color,emissiveIntensity:.08});
-  const dark=new THREE.MeshStandardMaterial({color:0x18283a,metalness:.8,roughness:.25});
-  const body=new THREE.Mesh(new THREE.ConeGeometry(.72,2.7,6),mat); body.rotation.x=-Math.PI/2; g.add(body);
-  const cockpit=new THREE.Mesh(new THREE.SphereGeometry(.38,10,8),new THREE.MeshStandardMaterial({color:0x9ff4ff,metalness:.2,roughness:.08,emissive:0x168cff,emissiveIntensity:.45})); cockpit.position.z=-.18; g.add(cockpit);
-  for(const x of [-.72,.72]){const w=new THREE.Mesh(new THREE.BoxGeometry(1.45,.12,.8),dark);w.position.set(x*.75,0,.45);w.rotation.z=x<0?-.18:.18;g.add(w)}
-  for(const x of [-.34,.34]){const e=new THREE.Mesh(new THREE.SphereGeometry(.13,8,6),new THREE.MeshBasicMaterial({color:0xff8b35}));e.position.set(x,.02,1.18);g.add(e)}
-  g.scale.setScalar(scale); return g;
-}
-function SpaceGame({onBack}){
- const mount=useRef(null), keys=useRef({}), pointer=useRef({x:0,y:0}), fire=useRef(false);
- const [hud,setHud]=useState({score:0,wave:1,hp:100,shield:100,cam:"TPP"});
- useEffect(()=>{
-  const el=mount.current, scene=new THREE.Scene(); scene.background=new THREE.Color(0x02030b); scene.fog=new THREE.FogExp2(0x02030b,.006);
-  const camera=new THREE.PerspectiveCamera(65,innerWidth/innerHeight,.05,1200);
-  const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:"high-performance"}); renderer.setPixelRatio(Math.min(devicePixelRatio,1.6));renderer.setSize(innerWidth,innerHeight);el.appendChild(renderer.domElement);
-  scene.add(new THREE.AmbientLight(0x6688aa,1.2)); const sun=new THREE.DirectionalLight(0xffffff,2.2);sun.position.set(8,12,4);scene.add(sun);
-  const starGeo=new THREE.BufferGeometry(), pos=new Float32Array(5000*3); for(let i=0;i<5000;i++){pos[i*3]=(Math.random()-.5)*900;pos[i*3+1]=(Math.random()-.5)*500;pos[i*3+2]=(Math.random()-.5)*900} starGeo.setAttribute("position",new THREE.BufferAttribute(pos,3));scene.add(new THREE.Points(starGeo,new THREE.PointsMaterial({color:0xffffff,size:.65,sizeAttenuation:true})));
-  for(let i=0;i<4;i++){const p=new THREE.Mesh(new THREE.SphereGeometry(18+Math.random()*18,16,10),new THREE.MeshStandardMaterial({color:[0x4d376d,0x254f72,0x704638,0x315b45][i],roughness:1}));p.position.set((Math.random()-.5)*500,(Math.random()-.5)*180,-250-i*110);scene.add(p); if(i===1){const r=new THREE.Mesh(new THREE.TorusGeometry(26,2,8,40),new THREE.MeshBasicMaterial({color:0xb99b68,transparent:true,opacity:.55}));r.rotation.x=Math.PI/2.8;r.position.copy(p.position);scene.add(r)}}
-  const player=shipMesh(); player.position.set(0,0,8);scene.add(player);
-  const ast=[], enemies=[], shots=[], particles=[];
-  const makeAst=()=>{const o=new THREE.Mesh(new THREE.IcosahedronGeometry(1,1),new THREE.MeshStandardMaterial({color:0x56616c,roughness:1}));o.scale.setScalar(1+Math.random()*2.5);o.position.set((Math.random()-.5)*55,(Math.random()-.5)*32,-35-Math.random()*120);o.userData={speed:8+Math.random()*15};scene.add(o);ast.push(o)};
-  const makeEnemy=()=>{const o=shipMesh(0xff4f72,.8);o.rotation.y=Math.PI;o.position.set((Math.random()-.5)*50,(Math.random()-.5)*25,-65-Math.random()*80);o.userData={hp:3,speed:8+Math.random()*8};scene.add(o);enemies.push(o)};
-  for(let i=0;i<32;i++)makeAst(); for(let i=0;i<5;i++)makeEnemy();
-  const boom=(p)=>{for(let i=0;i<14;i++){const q=new THREE.Mesh(new THREE.SphereGeometry(.08,5,5),new THREE.MeshBasicMaterial({color:Math.random()>.5?0xffb52e:0xff4b35}));q.position.copy(p);q.userData={v:new THREE.Vector3((Math.random()-.5)*15,(Math.random()-.5)*15,(Math.random()-.5)*15),life:.55};scene.add(q);particles.push(q)}};
-  const shoot=()=>{const s=new THREE.Mesh(new THREE.CylinderGeometry(.045,.045,3,6),new THREE.MeshBasicMaterial({color:0x72efff}));s.rotation.x=Math.PI/2;s.position.copy(player.position);s.position.z-=2;scene.add(s);shots.push(s)};
-  let camMode=1,score=0,hp=100,shield=100,wave=1,last=performance.now(),shotClock=0,spawnClock=0,raf;
-  const down=e=>{keys.current[e.key.toLowerCase()]=true;if(e.key.toLowerCase()==="v"){camMode=camMode?0:1;setHud(h=>({...h,cam:camMode?"TPP":"FPP"}))}if(e.code==="Space")fire.current=true};
-  const up=e=>{keys.current[e.key.toLowerCase()]=false;if(e.code==="Space")fire.current=false};
-  const move=e=>{pointer.current.x=(e.clientX/innerWidth-.5)*2;pointer.current.y=(e.clientY/innerHeight-.5)*2};
-  const click=()=>fire.current=true, release=()=>fire.current=false;
-  addEventListener("keydown",down);addEventListener("keyup",up);addEventListener("mousemove",move);addEventListener("mousedown",click);addEventListener("mouseup",release);
-  const loop=now=>{const dt=Math.min(.035,(now-last)/1000);last=now;
-    const k=keys.current; const mx=(k.d||k.arrowright?1:0)-(k.a||k.arrowleft?1:0), my=(k.s||k.arrowdown?1:0)-(k.w||k.arrowup?1:0);
-    player.position.x=clamp(player.position.x+mx*24*dt,-24,24);player.position.y=clamp(player.position.y-my*18*dt,-13,13);
-    player.rotation.z=THREE.MathUtils.lerp(player.rotation.z,-mx*.35,.1);player.rotation.x=THREE.MathUtils.lerp(player.rotation.x,my*.18,.1);
-    if(fire.current&&now-shotClock>145){shoot();shotClock=now}
-    shots.forEach(s=>s.position.z-=80*dt);
-    ast.forEach(o=>{o.position.z+=o.userData.speed*dt;o.rotation.x+=dt;o.rotation.y+=dt*.7;if(o.position.z>18){o.position.z=-130-Math.random()*50;o.position.x=(Math.random()-.5)*55;o.position.y=(Math.random()-.5)*32}});
-    enemies.forEach(o=>{o.position.z+=o.userData.speed*dt;o.position.x+=Math.sin(now*.001+o.id)*dt*2;if(o.position.z>20){o.position.z=-100-Math.random()*80;o.userData.hp=3}});
-    for(let i=shots.length-1;i>=0;i--){let hit=false;for(let j=enemies.length-1;j>=0;j--){if(shots[i].position.distanceTo(enemies[j].position)<1.5){enemies[j].userData.hp--;scene.remove(shots[i]);shots.splice(i,1);hit=true;if(enemies[j].userData.hp<=0){score+=100;boom(enemies[j].position);enemies[j].position.z=-120-Math.random()*80;enemies[j].userData.hp=3}break}}if(!hit&&shots[i]&&shots[i].position.z<-150){scene.remove(shots[i]);shots.splice(i,1)}}
-    enemies.forEach(o=>{if(o.position.distanceTo(player.position)<2.2){shield-=18;o.position.z=-110-Math.random()*70;boom(player.position)}});ast.forEach(o=>{if(o.position.distanceTo(player.position)<2.3){hp-=12;o.position.z=-100-Math.random()*70;boom(player.position)}});
-    particles.forEach((p,i)=>{p.position.addScaledVector(p.userData.v,dt);p.userData.life-=dt;p.scale.multiplyScalar(.94);if(p.userData.life<=0){scene.remove(p);particles.splice(i,1)}});
-    spawnClock+=dt;if(spawnClock>10){wave++;spawnClock=0;for(let i=0;i<2;i++)makeEnemy()}
-    shield=clamp(shield+12*dt,0,100); if(hp<=0){hp=100;shield=100;score=Math.max(0,score-250);boom(player.position)}
-    if(camMode){const target=new THREE.Vector3(player.position.x*.35,player.position.y*.3,player.position.z+10);camera.position.lerp(new THREE.Vector3(player.position.x,player.position.y+3,player.position.z+11),.08);camera.lookAt(target)}else{camera.position.lerp(new THREE.Vector3(player.position.x,player.position.y+.35,player.position.z-1.3),.16);camera.lookAt(new THREE.Vector3(player.position.x+pointer.current.x*8,player.position.y-pointer.current.y*5,player.position.z-30))}
-    setHud(h=>({...h,score,wave,hp:Math.round(hp),shield:Math.round(shield)}));renderer.render(scene,camera);raf=requestAnimationFrame(loop)};
-  raf=requestAnimationFrame(loop);
-  const resize=()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)};addEventListener("resize",resize);
-  return()=>{cancelAnimationFrame(raf);removeEventListener("keydown",down);removeEventListener("keyup",up);removeEventListener("mousemove",move);removeEventListener("mousedown",click);removeEventListener("mouseup",release);removeEventListener("resize",resize);renderer.dispose();el.innerHTML=""};
- },[]);
- return <div className="spaceGame"><div ref={mount} className="spaceCanvas"/><div className="spaceHud"><div><b>STARFALL</b><span>SPACE COMBAT // WAVE {hud.wave}</span></div><div className="spaceStats"><b>SCORE {hud.score.toString().padStart(6,"0")}</b><button onClick={onBack}>EXIT</button></div></div><div className="bars"><label>HULL {hud.hp}%<i><em style={{width:hud.hp+"%"}}/></i></label><label>SHIELD {hud.shield}%<i><em className="shieldFill" style={{width:hud.shield+"%"}}/></i></label></div><div className="crosshair">+</div><div className="spaceHelp">WASD / ARROWS • MOUSE AIM • CLICK / SPACE FIRE • V CAMERA: {hud.cam}</div><div className="touchSpace"><div className="touchPad" onPointerMove={e=>{const r=e.currentTarget.getBoundingClientRect();keys.current.a=e.clientX<r.left+r.width/2-10;keys.current.d=e.clientX>r.left+r.width/2+10;keys.current.w=e.clientY<r.top+r.height/2-10;keys.current.s=e.clientY>r.top+r.height/2+10}}/><button onPointerDown={()=>fire.current=true} onPointerUp={()=>fire.current=false}>FIRE</button></div></div>
-}
-export default SpaceGame;
+import {useEffect,useRef,useState} from "react";import*as THREE from"three";
+const rnd=(a,b)=>a+Math.random()*(b-a);
+function SpaceGame({onBack}){const ref=useRef(null),keys=useRef({}),[ui,setUi]=useState({score:0,distance:0,speed:32,high:+localStorage.getItem("star_runner_high")||0,over:false});
+useEffect(()=>{const el=ref.current,s=new THREE.Scene();s.background=new THREE.Color(0x01030a);const c=new THREE.PerspectiveCamera(70,innerWidth/innerHeight,.1,1200),r=new THREE.WebGLRenderer({antialias:true,powerPreference:"high-performance"});r.setPixelRatio(Math.min(devicePixelRatio,1.5));r.setSize(innerWidth,innerHeight);el.appendChild(r.domElement);
+s.add(new THREE.AmbientLight(0x6688aa,1.5));const sun=new THREE.DirectionalLight(0xffffff,2);sun.position.set(5,8,8);s.add(sun);
+const sg=new THREE.BufferGeometry(),sp=new Float32Array(4500);for(let i=0;i<1500;i++){sp[i*3]=rnd(-180,180);sp[i*3+1]=rnd(-100,100);sp[i*3+2]=rnd(-900,80)}sg.setAttribute("position",new THREE.BufferAttribute(sp,3));s.add(new THREE.Points(sg,new THREE.PointsMaterial({color:0xffffff,size:.7})));
+const ship=new THREE.Group(),body=new THREE.Mesh(new THREE.ConeGeometry(.65,2.5,6),new THREE.MeshStandardMaterial({color:0x42cfff,metalness:.7,roughness:.25}));body.rotation.x=-Math.PI/2;ship.add(body);const glass=new THREE.Mesh(new THREE.SphereGeometry(.3,10,8),new THREE.MeshStandardMaterial({color:0x9ef4ff,emissive:0x168cff,emissiveIntensity:.7}));glass.position.z=-.2;ship.add(glass);for(const x of[-.8,.8]){const w=new THREE.Mesh(new THREE.BoxGeometry(1.3,.12,.65),new THREE.MeshStandardMaterial({color:0x172c43,metalness:.8}));w.position.set(x*.7,0,.45);w.rotation.z=x<0?-.15:.15;ship.add(w)}ship.position.set(0,0,3);s.add(ship);
+const objects=[];function spawn(){const kind=Math.random()<.72?"rock":"gate";let o;if(kind==="rock"){o=new THREE.Mesh(new THREE.IcosahedronGeometry(1,1),new THREE.MeshStandardMaterial({color:0x66717d,roughness:1}));o.scale.setScalar(rnd(1.1,2.8));}else{o=new THREE.Mesh(new THREE.TorusGeometry(rnd(3.5,5),.35,8,20),new THREE.MeshStandardMaterial({color:0x35d7ff,emissive:0x087a9c,emissiveIntensity:.45}));o.rotation.x=rnd(-.5,.5)}o.position.set(rnd(-11,11),rnd(-6,7),-170);o.userData={kind,passed:false};s.add(o);objects.push(o)}
+const pickups=[];function coin(){const o=new THREE.Mesh(new THREE.TorusGeometry(.5,.16,8,16),new THREE.MeshStandardMaterial({color:0xffd34d,emissive:0xb56b00,emissiveIntensity:.5}));o.position.set(rnd(-11,11),rnd(-6,7),-170);s.add(o);pickups.push(o)}
+for(let i=0;i<14;i++)spawn();for(let i=0;i<10;i++)coin();
+let last=performance.now(),dist=0,score=0,speed=32,alive=true,spawnT=0,coinT=0,raf;
+const kd=e=>{keys.current[e.key.toLowerCase()]=true;if(e.key==="r"&& !alive){alive=true;dist=0;score=0;speed=32;setUi(u=>({...u,over:false,score:0,distance:0,speed:32}));for(let i=0;i<objects.length;i++)objects[i].position.z=-30-i*12}};const ku=e=>keys.current[e.key.toLowerCase()]=false;addEventListener("keydown",kd);addEventListener("keyup",ku);
+const resetObj=o=>{o.position.set(rnd(-11,11),rnd(-6,7),-170);o.userData.passed=false};const loop=t=>{const dt=Math.min(.035,(t-last)/1000);last=t;if(alive){const k=keys.current,dx=(k.d||k.arrowright?1:0)-(k.a||k.arrowleft?1:0),dy=(k.w||k.arrowup?1:0)-(k.s||k.arrowdown?1:0);ship.position.x=THREE.MathUtils.lerp(ship.position.x,THREE.MathUtils.clamp(ship.position.x+dx*18*dt,-12,12),.55);ship.position.y=THREE.MathUtils.lerp(ship.position.y,THREE.MathUtils.clamp(ship.position.y+dy*14*dt,-7,8),.55);ship.rotation.z=THREE.MathUtils.lerp(ship.rotation.z,-dx*.35,.12);speed=Math.min(75,speed+dt*.65);dist+=speed*dt;score=Math.floor(dist*2);
+spawnT+=dt;coinT+=dt;if(spawnT>Math.max(.7,1.7-speed/70)){spawn();spawnT=0}if(coinT>1){coin();coinT=0}
+objects.forEach(o=>{o.position.z+=speed*dt;o.rotation.x+=dt;o.rotation.y+=dt*.7;if(o.position.z>12)resetObj(o);if(o.position.distanceTo(ship.position)<2.1){alive=false;const h=Math.max(score,+localStorage.getItem("star_runner_high")||0);localStorage.setItem("star_runner_high",h);setUi(u=>({...u,score,distance:Math.floor(dist),speed:Math.floor(speed),high:h,over:true}))}});
+pickups.forEach(o=>{o.position.z+=speed*dt;o.rotation.z+=dt*4;if(o.position.z>12)resetObj(o);if(o.position.distanceTo(ship.position)<1.5){score+=250;resetObj(o)}});
+setUi(u=>({...u,score,distance:Math.floor(dist),speed:Math.floor(speed)}))}
+c.position.lerp(new THREE.Vector3(ship.position.x*.35,ship.position.y*.3,ship.position.z+13),.08);c.lookAt(ship.position.x,ship.position.y,ship.position.z-35);r.render(s,c);raf=requestAnimationFrame(loop)};raf=requestAnimationFrame(loop);const rs=()=>{c.aspect=innerWidth/innerHeight;c.updateProjectionMatrix();r.setSize(innerWidth,innerHeight)};addEventListener("resize",rs);return()=>{cancelAnimationFrame(raf);removeEventListener("keydown",kd);removeEventListener("keyup",ku);removeEventListener("resize",rs);r.dispose();el.innerHTML=""}},[]);
+return <div className="spaceGame"><div ref={ref} className="spaceCanvas"/><div className="runnerTop"><div><b>STAR RUNNER</b><span>INFINITE SPACE • DODGE • SURVIVE</span></div><button onClick={onBack}>EXIT</button></div><div className="runnerStats"><strong>{ui.score.toString().padStart(7,"0")}</strong><span>DISTANCE {ui.distance} m</span><span>SPEED {ui.speed}</span><span>BEST {ui.high}</span></div><div className="runnerHint">A D / ← → MOVE • W S / ↑ ↓ DODGE</div>{ui.over&&<div className="gameOver"><small>SHIP CRASHED</small><h1>GAME OVER</h1><p>SCORE {ui.score} • DISTANCE {ui.distance}m</p><button onClick={()=>location.reload()}>RUN AGAIN</button></div>}<div className="mobileRun"><button onPointerDown={()=>keys.current.a=true} onPointerUp={()=>keys.current.a=false}>◀</button><button onPointerDown={()=>keys.current.d=true} onPointerUp={()=>keys.current.d=false}>▶</button></div></div>}export default SpaceGame;
