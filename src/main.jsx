@@ -6,7 +6,7 @@ import "./chat.css";
 function DemoGame(){
  const canvas=useRef(null),keys=useRef({}),state=useRef(null),[score,setScore]=useState(0),[balls,setBalls]=useState(0);
  useEffect(()=>{
-  const c=canvas.current,ctx=c.getContext("2d",{alpha:false}),k=keys.current;\n  const bgImg=new Image(),ballImg=new Image();bgImg.src="/toolloot/game/background.svg";ballImg.src="/toolloot/game/ball.svg";
+  const c=canvas.current,ctx=c.getContext("2d",{alpha:false}),k=keys.current;\n  const bgImg=new Image(),ballImg=new Image();bgImg.src=import.meta.env.BASE_URL+"game/background.svg";ballImg.src=import.meta.env.BASE_URL+"game/ball.svg";
   let audioCtx=null;let mute=false;let musicGain=null;let musicTimer=null;let musicStep=0;let lastAchievement=0;
   const initAudio=()=>{try{if(!audioCtx)audioCtx=new (window.AudioContext||window.webkitAudioContext)();if(audioCtx.state==="suspended")audioCtx.resume()}catch{}};
   const startMusic=()=>{initAudio();if(!audioCtx||mute||musicTimer)return;musicGain=audioCtx.createGain();musicGain.gain.value=.045;musicGain.connect(audioCtx.destination);const notes=[220,261.63,329.63,392,329.63,261.63,293.66,349.23,440,349.23,293.66,261.63,196,246.94,293.66,392];const playNote=()=>{if(!audioCtx||!musicGain||mute)return;const now=audioCtx.currentTime,n=notes[musicStep++%notes.length],o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type="square";o.frequency.setValueAtTime(n,now);g.gain.setValueAtTime(.0001,now);g.gain.exponentialRampToValueAtTime(.18,now+.015);g.gain.exponentialRampToValueAtTime(.0001,now+.22);o.connect(g);g.connect(musicGain);o.start(now);o.stop(now+.24)};playNote();musicTimer=setInterval(playNote,260)};
