@@ -25,3 +25,35 @@ addEventListener("keydown",e=>keys[e.code]=true);addEventListener("keyup",e=>key
 let drag=false,lastX=0,lastY=0;addEventListener("pointerdown",e=>{if(e.target.id==="fire")return;drag=true;lastX=e.clientX;lastY=e.clientY});addEventListener("pointerup",()=>drag=false);addEventListener("pointermove",e=>{if(!drag)return;yaw-=(e.clientX-lastX)*.006;pitch=THREE.MathUtils.clamp(pitch-(e.clientY-lastY)*.004,-.15,.75);lastX=e.clientX;lastY=e.clientY});
 function shoot(){if(performance.now()-lastShot<350)return;lastShot=performance.now();send("shoot",{x:me?.x||0,y:me?.y||0,rot:yaw})}addEventListener("pointerdown",e=>{if(e.target.id!=="fire")shoot()});document.querySelector("#fire").addEventListener("pointerdown",e=>{e.preventDefault();shoot()});
 function loop(){requestAnimationFrame(loop);if(me){let dx=0,dz=0;if(keys.KeyW||keys.ArrowUp)dz-=1;if(keys.KeyS||keys.ArrowDown)dz+=1;if(keys.KeyA||keys.ArrowLeft)dx-=1;if(keys.KeyD||keys.ArrowRight)dx+=1;const l=Math.hypot(dx,dz)||1;dx/=l;dz/=l;const speed=.14,c=Math.cos(yaw),s=Math.sin(yaw);me.x=THREE.MathUtils.clamp(me.x+(dx*c-dz*s)*speed,-66,66);me.y=THREE.MathUtils.clamp(me.y+(dx*s+dz*c)*speed,-66,66);me.rot=yaw;const o=players.get(id);if(o){o.mesh.position.set(me.x,0,me.y);o.mesh.rotation.y=yaw}send("move",{x:me.x,y:me.y,rot:yaw})}if(me){camera.position.lerp(new THREE.Vector3(me.x+Math.sin(yaw)*7,4.3,me.y+Math.cos(yaw)*7),.12);camera.lookAt(new THREE.Vector3(me.x,1.4,me.y))}renderer.render(scene,camera)}loop();addEventListener("resize",()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
+/* FPP_WEAPON_SYSTEM */
+const FPP_WEAPON={gun:null,bullets:[],speed:38,fireGap:120,lastShot:0};
+const fppGunLoader=new GLTFLoader();
+fppGunLoader.load("https://cdn.3dassets.dev/assets/28220/v1/model.glb",g=>{
+  FPP_WEAPON.gun=g.scene;
+  FPP_WEAPON.gun.scale.setScalar(.42);
+  FPP_WEAPON.gun.position.set(.42,-.34,-.72);
+  FPP_WEAPON.gun.rotation.set(0,Math.PI,0);
+  camera.add(FPP_WEAPON.gun);
+});
+function fppShoot(){
+  const now=performance.now();
+  if(now-FPP_WEAPON.lastShot<FPP_WEAPON.fireGap)return;
+  FPP_WEAPON.lastShot=now;
+  const dir=new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion).normalize();
+  const start=camera.getWorldPosition(new THREE.Vector3()).add(dir.clone().multiplyScalar(.7));
+  const b=new THREE.Mesh(new THREE.SphereGeometry(.055,8,8),new THREE.MeshBasicMaterial());
+  b.position.copy(start);b.userData.vel=dir.multiplyScalar(FPP_WEAPON.speed);b.userData.life=1.6;
+  scene.add(b);FPP_WEAPON.bullets.push(b);
+  if(typeof ws!=="undefined"&&ws&&ws.readyState===1)ws.send(JSON.stringify({type:"shoot",x:start.x,y:start.z,dx:dir.x,dz:dir.z}));
+}
+window.addEventListener("mousedown",e=>{if(e.button===0)fppShoot()});
+window.addEventListener("keydown",e=>{if(e.code==="Space")fppShoot()});
+const oldAnimate=window.animate;
+if(typeof oldAnimate==="function"){}
+
+function enableFPP(){
+ camera.position.set(0,1.65,0);
+ camera.rotation.order="YXZ";
+ document.body.classList.add("fpp");
+}
+enableFPP();
