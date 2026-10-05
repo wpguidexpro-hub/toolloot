@@ -56,6 +56,7 @@ const loot=[
 loot.forEach(x=>loadAsset(x[1],x[2],x[3]));
 
 const fppGroup=new THREE.Group();
+let runTime=0;
 camera.add(fppGroup);
 scene.add(camera);
 
@@ -63,7 +64,7 @@ scene.add(camera);
 loader.load("https://cdn.3dassets.dev/assets/28219/v1/model.glb",g=>{
  const gun=g.scene;
  gun.scale.setScalar(.42);
- gun.position.set(.42,-.30,-.68);
+ gun.position.set(.34,-.30,-.62);
  gun.rotation.set(0,Math.PI,0);
  gun.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
  fppGroup.add(gun);
@@ -104,7 +105,7 @@ function update(){
  const forward=(keys.KeyW||keys.ArrowUp?1:0)-(keys.KeyS||keys.ArrowDown?1:0);
  const strafe=(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0);
  const len=Math.hypot(forward,strafe)||1;
- const speed=.105;
+ const moving=!!(forward||strafe); const speed=moving?.105:.0; if(moving)runTime+=.16;
  const c=Math.cos(me.yaw),s=Math.sin(me.yaw);
  me.x+=((strafe/len)*c+(forward/len)*s)*speed;
  me.z+=((strafe/len)*-s+(forward/len)*c)*speed;
@@ -115,6 +116,10 @@ function update(){
  camera.rotation.order="YXZ";
  camera.rotation.y=me.yaw;
  camera.rotation.x=me.pitch;
+ // weapon stays in the player hand area and bobs while running
+ fppGroup.position.y=moving?Math.sin(runTime)*.018:0;
+ fppGroup.position.x=moving?Math.sin(runTime*.5)*.012:0;
+ fppGroup.rotation.z=moving?Math.sin(runTime)*.012:0;
 
  for(let i=bullets.length-1;i>=0;i--){
    const b=bullets[i];
