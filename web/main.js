@@ -5,8 +5,10 @@ const camera=new THREE.PerspectiveCamera(65,innerWidth/innerHeight,.1,300),rende
 scene.add(new THREE.HemisphereLight(0xb9dcff,0x203020,2));const sun=new THREE.DirectionalLight(0xffffff,3);sun.position.set(30,50,20);sun.castShadow=true;scene.add(sun);
 const assetRoot=new THREE.Group();scene.add(assetRoot);
 const loader=new GLTFLoader();
-const characterURL="https://cdn.3dassets.dev/assets/28265/v1/model.glb";
+const characterURL="https://cdn.3dassets.dev/assets/28249/v1/model.glb";
 const characterLoader=new GLTFLoader();
+const vehicleLoader=new GLTFLoader();
+vehicleLoader.load("https://cdn.3dassets.dev/assets/28244/v1/model.glb",g=>{const v=g.scene;v.scale.setScalar(.9);v.position.set(12,0,-7);v.rotation.y=Math.PI/2;v.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});scene.add(v);});
 characterLoader.load(characterURL,g=>{const model=g.scene;model.scale.setScalar(1.8);model.position.y=0;model.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});window.realCharacter=model;},undefined,e=>console.warn("character asset failed",e));
 loader.load("https://cdn.3dassets.dev/assets/28276/v1/model.glb",g=>{g.scene.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});assetRoot.add(g.scene)},undefined,e=>console.warn("Battle assets failed",e));
 const lootLoader=new GLTFLoader();
