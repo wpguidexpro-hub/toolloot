@@ -37,3 +37,24 @@ fppLoader.load("https://cdn.3dassets.dev/assets/28219/v1/model.glb",g=>{
   camera.add(gun);
 });
 camera.position.set(0,1.62,0);
+
+/* REAL_LOOT_PACK */
+const lootAssets=[
+ ["armor","https://cdn.3dassets.dev/assets/28221/v1/model.glb",new THREE.Vector3(-5,0,-3),.8],
+ ["plate-carrier","https://cdn.3dassets.dev/assets/28222/v1/model.glb",new THREE.Vector3(-2,0,-3),.8],
+ ["backpack","https://cdn.3dassets.dev/assets/28223/v1/model.glb",new THREE.Vector3(1,0,-3),1],
+ ["large-pack","https://cdn.3dassets.dev/assets/28224/v1/model.glb",new THREE.Vector3(4,0,-3),.8],
+ ["medkit","https://cdn.3dassets.dev/assets/28225/v1/model.glb",new THREE.Vector3(-5,0,2),1],
+ ["bandage","https://cdn.3dassets.dev/assets/28226/v1/model.glb",new THREE.Vector3(-2,0,2),1],
+ ["ammo","https://cdn.3dassets.dev/assets/28227/v1/model.glb",new THREE.Vector3(1,0,2),1],
+ ["crate","https://cdn.3dassets.dev/assets/28228/v1/model.glb",new THREE.Vector3(4,0,2),.8]
+];
+const realLootLoader=new GLTFLoader();
+lootAssets.forEach(([name,url,pos,scale])=>{
+ realLootLoader.load(url,g=>{
+  const m=g.scene;m.position.copy(pos);m.scale.setScalar(scale);
+  m.userData.lootType=name;m.userData.pickup=true;
+  m.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
+  scene.add(m);
+ },undefined,e=>console.warn("loot asset failed",name,e));
+});
