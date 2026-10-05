@@ -1,1 +1,371 @@
-<!doctype html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>ToollooT Battle Arena</title><link rel="stylesheet" href="./style.css"><script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js"}}</script><meta name="version" content="battle-v2"><meta http-equiv="Cache-Control" content="no-cache"><meta http-equiv="Pragma" content="no-cache"></head><body><div id="hud"><b>TOOLLOOT BATTLE ARENA</b><span id="status">CONNECTING…</span><span>PLAYERS: <i id="count">0</i></span><span>HP: <i id="hp">100</i></span></div><div id="crosshair">+</div><div id="help">WASD / ARROWS = MOVE · DRAG = AIM · CLICK = FIRE</div><div id="fire">FIRE</div><script type="module" src="./main.js?v=20261005-4"></script></body></html>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="description" content="Thalvorn — A 3D LAN multiplayer FPS/TPS built with Babylon.js across procedurally generated maps.">
+    <title>Thalvorn | Babylon.js LAN Multiplayer</title>
+
+    <!-- Babylon.js CDN (Core Engine) — pinned to avoid breaking changes -->
+    <script src="https://cdn.jsdelivr.net/npm/babylonjs@6.49.0/babylon.js"></script>
+    <!-- Babylon.js GLTF/GLB Loaders — pinned -->
+    <script src="https://cdn.jsdelivr.net/npm/babylonjs-loaders@6.49.0/babylonjs.loaders.min.js"></script>
+
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎯</text></svg>">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="./css/styles.css">
+</head>
+<body>
+    <!-- ======== Connection Screen ======== -->
+    <div id="connect-screen">
+        <div class="connect-box">
+            <div class="connect-title">🎮 THALVORN</div>
+            <div class="connect-subtitle">LAN Multiplayer</div>
+
+            <div class="connect-fields">
+                <label for="player-name-input">Player Name</label>
+                <input type="text" id="player-name-input" placeholder="Enter your name..."
+                    maxlength="16" value="" autocomplete="off">
+
+                <label for="server-ip-input">Server Address</label>
+                <input type="text" id="server-ip-input" placeholder="localhost:3000"
+                    value="localhost:3000" autocomplete="off">
+                <script>
+                    // Auto-fill server address from current URL
+                    document.addEventListener("DOMContentLoaded", () => {
+                        const input = document.getElementById("server-ip-input");
+                        if (input && window.location.host) {
+                            input.value = window.location.host;
+                        }
+                    });
+                </script>
+
+                <!-- Custom Character Images -->
+                <div class="avatar-section">
+                    <div class="avatar-title">📸 Custom Character (Optional)</div>
+
+                    <div class="avatar-inputs">
+                        <div class="avatar-input-group">
+                            <label for="face-image-input">👤 Face Image</label>
+                            <div class="avatar-size-hint">Recommended: 128 × 128 px (square)</div>
+                            <input type="file" id="face-image-input" accept="image/*">
+                            <div class="avatar-preview" id="face-preview"></div>
+                        </div>
+
+                        <div class="avatar-input-group">
+                            <label for="body-image-input">🎽 Body Image</label>
+                            <div class="avatar-size-hint">Recommended: 128 × 256 px (tall)</div>
+                            <input type="file" id="body-image-input" accept="image/*">
+                            <div class="avatar-preview" id="body-preview"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <label for="map-select">Map</label>
+                <select id="map-select" style="
+                    width: 100%; padding: 10px 14px; border-radius: 6px;
+                    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15);
+                    color: #999999; font-size: 14px; margin-bottom: 12px;
+                    font-family: 'Segoe UI', Arial, sans-serif; cursor: pointer;
+                ">
+                    <option value="forest">🌲 Forest (200×200)</option>
+                    <option value="city">🏙️ City (100×100)</option>
+                </select>
+
+                <button id="connect-btn" class="connect-btn">⚡ Connect & Play</button>
+
+                <div id="connect-status" class="connect-status"></div>
+            </div>
+
+            <div class="connect-help">
+                Host runs: <kbd>node server/server.js</kbd><br>
+                Others connect to the host's LAN IP
+            </div>
+        </div>
+    </div>
+
+    <!-- ======== 3D Canvas ======== -->
+    <canvas id="renderCanvas"></canvas>
+
+    <!-- ======== Minimap ======== -->
+    <canvas id="minimap-canvas"></canvas>
+
+    <!-- ======== Loading Screen ======== -->
+    <div id="loading-screen" style="
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        background: #0a0f14; display: none; flex-direction: column;
+        justify-content: center; align-items: center; z-index: 200;
+    ">
+        <div style="color: #66ccff; font-size: 28px; font-weight: 700;
+            letter-spacing: 3px; text-transform: uppercase;
+            margin-bottom: 20px; font-family: 'Segoe UI', Arial, sans-serif;">
+            THALVORN
+        </div>
+        <div id="loading-status" style="color: #889; font-size: 14px;
+            font-family: 'Consolas', monospace;">
+            Loading engine...
+        </div>
+        <div style="margin-top: 20px; width: 200px; height: 3px;
+            background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden;">
+            <div style="width: 60%; height: 100%; background: #66ccff;
+                animation: loadbar 1.5s infinite ease-in-out; border-radius: 2px;"></div>
+        </div>
+        <style>
+            @keyframes loadbar {
+                0%   { width: 20%; margin-left: 0; }
+                50%  { width: 60%; margin-left: 20%; }
+                100% { width: 20%; margin-left: 80%; }
+            }
+        </style>
+    </div>
+
+    <!-- ======== Pointer Lock Overlay ======== -->
+    <div id="lock-overlay" class="hidden">
+        <div class="title">Thalvorn</div>
+        <div class="subtitle">Babylon.js 3D Engine</div>
+        <div class="prompt">🎯 Click to Play</div>
+
+        <!-- Settings Panel -->
+        <div id="pause-settings" style="
+            margin-top: 24px; padding: 16px 28px; border-radius: 8px;
+            background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+            display: flex; flex-direction: column; align-items: center; gap: 10px;
+        ">
+            <div style="color: #88aacc; font-size: 13px; font-weight: 600;
+                letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px;">⚙ Settings</div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <label for="sensitivity-slider" style="color: #aabbcc; font-size: 13px;
+                    font-family: 'Segoe UI', Arial, sans-serif;">Mouse Sensitivity:</label>
+                <input type="range" id="sensitivity-slider"
+                    min="1" max="20" value="8" step="1"
+                    style="width: 120px; cursor: pointer; accent-color: #66ccff;">
+                <span id="sensitivity-value" style="color: #66ccff; font-size: 14px;
+                    font-family: Consolas, monospace; min-width: 20px; font-weight: bold;">8</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <label for="crosshair-opacity" style="color: #aabbcc; font-size: 13px;
+                    font-family: 'Segoe UI', Arial, sans-serif;">Crosshair Opacity:</label>
+                <input type="range" id="crosshair-opacity"
+                    min="0" max="100" value="80" step="5"
+                    style="width: 120px; cursor: pointer; accent-color: #66ccff;">
+                <span id="crosshair-opacity-value" style="color: #66ccff; font-size: 14px;
+                    font-family: Consolas, monospace; min-width: 30px; font-weight: bold;">80%</span>
+            </div>
+            <button id="btn-fullscreen" style="
+                margin-top: 6px; padding: 6px 14px; border-radius: 4px;
+                background: rgba(100, 200, 255, 0.15); border: 1px solid rgba(100, 200, 255, 0.4);
+                color: #66ccff; font-size: 12px; font-weight: 600; cursor: pointer;
+                display: flex; align-items: center; gap: 6px;
+            ">⛶ Fullscreen (Blocks All Browser Shortcuts)</button>
+        </div>
+
+        <div class="controls">
+            <kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> Move &nbsp;|&nbsp;
+            <kbd>Mouse</kbd> Look &nbsp;|&nbsp;
+            <kbd>LMB</kbd> Shoot<br>
+            <kbd>Shift</kbd> Run &nbsp;|&nbsp;
+            <kbd>Ctrl</kbd> / <kbd>C</kbd> Crouch &nbsp;|&nbsp;
+            <kbd>Space</kbd> Jump<br>
+            <kbd>V</kbd> Toggle Camera &nbsp;|&nbsp;
+            <kbd>R</kbd> Reload &nbsp;|&nbsp;
+            <kbd>Tab</kbd> Scoreboard &nbsp;|&nbsp;
+            <kbd>Esc</kbd> Pause
+        </div>
+    </div>
+
+    <!-- ======== HUD Overlay ======== -->
+    <div id="hud">
+        <!-- Crosshair -->
+        <div id="crosshair">
+            <div class="line-h"></div>
+            <div class="line-v"></div>
+            <div class="dot"></div>
+        </div>
+
+        <!-- Hit Marker -->
+        <div id="hit-marker">
+            <div class="hm hm-1"></div>
+            <div class="hm hm-2"></div>
+            <div class="hm hm-3"></div>
+            <div class="hm hm-4"></div>
+        </div>
+
+        <!-- Muzzle Flash Overlay -->
+        <div id="muzzle-flash"></div>
+
+        <!-- Damage Flash Overlay -->
+        <div id="damage-overlay"></div>
+
+        <!-- Directional Damage Indicator -->
+        <div id="directional-damage-indicator"></div>
+
+        <!-- Kill Confirmation Banner -->
+        <div id="kill-banner">
+            <div class="kill-title">🎯 ENEMY ELIMINATED</div>
+            <div id="kill-victim-name" class="kill-name">Player</div>
+        </div>
+
+        <!-- Death Overlay -->
+        <div id="death-overlay">
+            <div class="death-text">☠ YOU DIED</div>
+            <div class="death-sub">Respawning...</div>
+        </div>
+
+        <!-- Sniper Scope Overlay with Tactical SVG Reticle -->
+        <div id="scope-overlay">
+            <svg class="scope-svg" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid slice">
+                <!-- Outer Range Rings -->
+                <circle cx="500" cy="500" r="350" fill="none" stroke="rgba(34, 255, 102, 0.75)" stroke-width="2"/>
+                <circle cx="500" cy="500" r="365" fill="none" stroke="rgba(34, 255, 102, 0.45)" stroke-width="1" stroke-dasharray="6,8"/>
+                <circle cx="500" cy="500" r="180" fill="none" stroke="rgba(34, 255, 102, 0.35)" stroke-width="0.8"/>
+                
+                <!-- Main Crosshairs -->
+                <line x1="500" y1="150" x2="500" y2="850" stroke="rgba(34, 255, 102, 0.85)" stroke-width="1.8"/>
+                <line x1="150" y1="500" x2="850" y2="500" stroke="rgba(34, 255, 102, 0.85)" stroke-width="1.8"/>
+                
+                <!-- Center Aim Dot -->
+                <circle cx="500" cy="500" r="2.5" fill="#ff3333"/>
+                
+                <!-- Elevation Mil-Dots & Range Markers -->
+                <circle cx="500" cy="420" r="2.5" fill="#22ff66"/>
+                <circle cx="500" cy="340" r="2.5" fill="#22ff66"/>
+                <circle cx="500" cy="260" r="2.5" fill="#22ff66"/>
+                <circle cx="500" cy="580" r="2.5" fill="#22ff66"/>
+                <circle cx="500" cy="660" r="2.5" fill="#22ff66"/>
+                <circle cx="500" cy="740" r="2.5" fill="#22ff66"/>
+                
+                <!-- Windage Mil-Dots -->
+                <circle cx="420" cy="500" r="2.5" fill="#22ff66"/>
+                <circle cx="340" cy="500" r="2.5" fill="#22ff66"/>
+                <circle cx="260" cy="500" r="2.5" fill="#22ff66"/>
+                <circle cx="580" cy="500" r="2.5" fill="#22ff66"/>
+                <circle cx="660" cy="500" r="2.5" fill="#22ff66"/>
+                <circle cx="740" cy="500" r="2.5" fill="#22ff66"/>
+                
+                <!-- Ballistic Markings & Labels -->
+                <line x1="480" y1="580" x2="520" y2="580" stroke="rgba(34, 255, 102, 0.7)" stroke-width="1"/>
+                <text x="530" y="584" fill="#22ff66" font-size="12" font-family="'Consolas', monospace" font-weight="bold">100m</text>
+                
+                <line x1="475" y1="660" x2="525" y2="660" stroke="rgba(34, 255, 102, 0.7)" stroke-width="1"/>
+                <text x="535" y="664" fill="#22ff66" font-size="12" font-family="'Consolas', monospace" font-weight="bold">250m</text>
+                
+                <line x1="470" y1="740" x2="530" y2="740" stroke="rgba(34, 255, 102, 0.7)" stroke-width="1"/>
+                <text x="540" y="744" fill="#22ff66" font-size="12" font-family="'Consolas', monospace" font-weight="bold">500m</text>
+                
+                <!-- Scope Header & Tech Data -->
+                <text x="500" y="220" fill="#22ff66" font-size="13" font-family="'Consolas', monospace" text-anchor="middle" font-weight="bold" letter-spacing="3">RYTEC AMR 50 CAL — OPTICS 8X</text>
+                <text x="280" y="270" fill="rgba(34, 255, 102, 0.7)" font-size="11" font-family="'Consolas', monospace">ELEV: +0.0</text>
+                <text x="720" y="270" fill="rgba(34, 255, 102, 0.7)" font-size="11" font-family="'Consolas', monospace" text-anchor="end">WIND: 0.0 M/S</text>
+            </svg>
+        </div>
+
+        <!-- Invulnerability Indicator -->
+        <div id="invuln-indicator">🛡️ INVULNERABLE</div>
+
+        <!-- FPS & Ping Counter (top-right) -->
+        <div id="fps-counter">
+            FPS: <span id="fps-value">--</span>
+            &nbsp;|&nbsp; Ping: <span id="ping-value" style="color:#00ff66;">--</span>
+            &nbsp;|&nbsp; Players: <span id="player-count">1</span>
+            &nbsp;|&nbsp; <span id="team-indicator" style="font-weight:bold;"></span>
+        </div>
+
+        <!-- Camera Mode (top-left) -->
+        <div id="camera-mode">
+            Camera: <span id="camera-mode-value" class="mode-label">FPS</span>
+        </div>
+
+        <!-- Kill Feed (right side) -->
+        <div id="kill-feed"></div>
+
+        <!-- HP Bar (bottom-left) -->
+        <div id="hp-bar-container">
+            <div class="hp-icon">❤</div>
+            <div class="hp-bar">
+                <div id="hp-fill" class="hp-fill" style="width: 100%;"></div>
+            </div>
+            <div id="hp-text" class="hp-text">100</div>
+        </div>
+
+        <!-- Player Status (bottom-left, above HP) -->
+        <div id="player-status">
+            Status: <span id="status-value" class="status-value">IDLE</span><br>
+            Pos: <span id="coords-value" style="color:#8aa; font-size:11px;">0, 0, 0</span>
+        </div>
+
+        <!-- Weapon Name (above ammo) -->
+        <div id="weapon-info">
+            <span id="weapon-icon">🔪</span>
+            <span id="weapon-name">Knife</span>
+        </div>
+
+        <!-- Weapon Timer Bar -->
+        <div id="weapon-timer-container" class="hidden">
+            <div id="weapon-timer-fill"></div>
+            <span id="weapon-timer-text"></span>
+        </div>
+
+        <!-- Ammo Counter (bottom-right) -->
+        <div id="ammo-counter">
+            <span id="ammo-current" class="current">∞</span><span class="separator">/</span><span id="ammo-max" class="max">∞</span>
+        </div>
+
+        <!-- Scoreboard Overlay (Tab) -->
+        <div id="scoreboard-overlay">
+            <div class="scoreboard-title">SCOREBOARD</div>
+            <table class="scoreboard-table">
+                <thead>
+                    <tr>
+                        <th>Player</th>
+                        <th>Team</th>
+                        <th>Kills</th>
+                        <th>Deaths</th>
+                        <th>HP</th>
+                    </tr>
+                </thead>
+                <tbody id="scoreboard-body"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ======== Mobile Touch Controls (Call of Duty Mobile-style layout) ======== -->
+    <div id="mobile-controls">
+        <!-- Left: Virtual Joystick Area (movement) -->
+        <div id="joystick-area">
+            <div id="joystick-base">
+                <div id="joystick-thumb"></div>
+            </div>
+        </div>
+
+        <!-- Right: Look Area (drag to aim) -->
+        <div id="look-area"></div>
+
+        <!-- Action Buttons (proven CoD Mobile ergonomics) -->
+        <div id="btn-fire"   class="touch-btn fire-btn"   role="button" aria-label="Fire">🔥</div>
+        <div id="btn-jump"   class="touch-btn jump-btn"   role="button" aria-label="Jump">⬆️</div>
+        <div id="btn-crouch" class="touch-btn crouch-btn" role="button" aria-label="Crouch">⬇️</div>
+        <div id="btn-reload" class="touch-btn reload-btn" role="button" aria-label="Reload">🔄</div>
+        <div id="btn-camera" class="touch-btn camera-btn" role="button" aria-label="Toggle camera">📷</div>
+    </div>
+    <script type="module" src="./js/main.js"></script>
+
+    <!-- Crosshair opacity control -->
+    <script>
+        (function() {
+            const slider = document.getElementById('crosshair-opacity');
+            const label = document.getElementById('crosshair-opacity-value');
+            const crosshair = document.getElementById('crosshair');
+            if (slider && crosshair) {
+                crosshair.style.opacity = '0.8';
+                slider.addEventListener('input', function() {
+                    const val = parseInt(this.value);
+                    crosshair.style.opacity = (val / 100).toString();
+                    if (label) label.textContent = val + '%';
+                });
+            }
+        })();
+    </script>
+</body>
+</html>
