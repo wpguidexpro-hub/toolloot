@@ -1,60 +1,134 @@
 import * as THREE from "three";
-import { GLTFLoader } from "https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/loaders/GLTFLoader.js";
-const scene=new THREE.Scene();scene.background=new THREE.Color(0x08131b);scene.fog=new THREE.Fog(0x08131b,45,150);
-const camera=new THREE.PerspectiveCamera(65,innerWidth/innerHeight,.1,300),renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=true;document.body.appendChild(renderer.domElement);
-scene.add(new THREE.HemisphereLight(0xb9dcff,0x203020,2));const sun=new THREE.DirectionalLight(0xffffff,3);sun.position.set(30,50,20);sun.castShadow=true;scene.add(sun);
-const assetRoot=new THREE.Group();scene.add(assetRoot);
+import {GLTFLoader} from "https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/loaders/GLTFLoader.js";
+
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0x8fa0a8);
+scene.fog=new THREE.Fog(0x8fa0a8,45,180);
+const camera=new THREE.PerspectiveCamera(75,innerWidth/innerHeight,.05,300);
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,1.75));
+renderer.setSize(innerWidth,innerHeight);
+renderer.shadowMap.enabled=true;
+document.body.appendChild(renderer.domElement);
+
+scene.add(new THREE.HemisphereLight(0xddeeff,0x35402f,2.2));
+const sun=new THREE.DirectionalLight(0xffffff,3);
+sun.position.set(40,70,25);sun.castShadow=true;scene.add(sun);
+
 const loader=new GLTFLoader();
-const characterURL="https://cdn.3dassets.dev/assets/28249/v1/model.glb";
-const characterLoader=new GLTFLoader();
-const vehicleLoader=new GLTFLoader();
-vehicleLoader.load("https://cdn.3dassets.dev/assets/28244/v1/model.glb",g=>{const v=g.scene;v.scale.setScalar(.9);v.position.set(12,0,-7);v.rotation.y=Math.PI/2;v.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});scene.add(v);});
-characterLoader.load(characterURL,g=>{const model=g.scene;model.scale.setScalar(1.8);model.position.y=0;model.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});window.realCharacter=model;},undefined,e=>console.warn("character asset failed",e));
-loader.load("https://cdn.3dassets.dev/assets/28276/v1/model.glb",g=>{g.scene.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});assetRoot.add(g.scene)},undefined,e=>console.warn("Battle assets failed",e));
-const lootLoader=new GLTFLoader();
-lootLoader.load("https://cdn.3dassets.dev/assets/28220/v1/model.glb",g=>{const rifle=g.scene;rifle.scale.setScalar(1.4);rifle.position.set(8,.15,3);rifle.rotation.y=.7;rifle.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});scene.add(rifle)},undefined,e=>console.warn("Loot asset failed",e));
-const zone=new THREE.Mesh(new THREE.CylinderGeometry(48,48,.08,96),new THREE.MeshBasicMaterial({color:0x39a9ff,transparent:true,opacity:.09}));zone.position.y=.05;scene.add(zone);const ring=new THREE.Mesh(new THREE.RingGeometry(47.7,48,96),new THREE.MeshBasicMaterial({color:0x55c8ff,transparent:true,opacity:.8,side:THREE.DoubleSide}));ring.rotation.x=-Math.PI/2;ring.position.y=.08;scene.add(ring);
-let me={id:"local_"+Math.random().toString(36).slice(2,8),name:"Player",x:0,y:0,rot:0,alive:true},players=new Map(),keys={},yaw=0,pitch=.25,lastShot=0;const id=me.id,name="Player-"+id.slice(6); players.set(id,{mesh:makePlayer(me,true),data:me}); document.querySelector("#count").textContent="1";
-const ws=new WebSocket(location.protocol==="file:"||location.hostname==="localhost"?"ws://localhost:5190":(location.protocol==="https:"?"wss://"+location.host:"ws://"+location.host));
-function makePlayer(p,self){const g=new THREE.Group();if(window.realCharacter){g.add(window.realCharacter.clone(true))}else{const body=new THREE.Mesh(new THREE.CapsuleGeometry(.55,1.15,5,10),new THREE.MeshStandardMaterial({color:self?0x33aaff:0xff4d5d}));body.position.y=1.15;g.add(body)}scene.add(g);g.position.set(p.x,0,p.y);return g}
-function sync(p){let o=players.get(p.id);if(!o){o={mesh:makePlayer(p,p.id===id),data:p};players.set(p.id,o)}o.data=p;o.mesh.position.x=p.x;o.mesh.position.z=p.y;o.mesh.rotation.y=p.rot||0;o.mesh.visible=p.alive!==false}
-function send(type,data={}){if(ws.readyState===1)ws.send(JSON.stringify({type,...data}))}
-ws.onopen=()=>{document.querySelector("#status").textContent="ONLINE";send("join",{id,name})};ws.onclose=()=>document.querySelector("#status").textContent="OFFLINE";ws.onerror=()=>document.querySelector("#status").textContent="SERVER ERROR";
-ws.onmessage=e=>{const m=JSON.parse(e.data);if(m.type==="state"){m.players.forEach(sync);me=m.players.find(p=>p.id===id)||me}else if(m.type==="player_join"){sync(m.player)}else if(m.type==="move"){sync(m.player)}else if(m.type==="player_leave"){const o=players.get(m.id);if(o){scene.remove(o.mesh);players.delete(m.id)}}else if(m.type==="hit"&&m.target===id)document.querySelector("#hp").textContent=m.hp;document.querySelector("#count").textContent=players.size};
-addEventListener("keydown",e=>keys[e.code]=true);addEventListener("keyup",e=>keys[e.code]=false);
-let drag=false,lastX=0,lastY=0;addEventListener("pointerdown",e=>{if(e.target.id==="fire")return;drag=true;lastX=e.clientX;lastY=e.clientY});addEventListener("pointerup",()=>drag=false);addEventListener("pointermove",e=>{if(!drag)return;yaw-=(e.clientX-lastX)*.006;pitch=THREE.MathUtils.clamp(pitch-(e.clientY-lastY)*.004,-.15,.75);lastX=e.clientX;lastY=e.clientY});
-function shoot(){if(performance.now()-lastShot<350)return;lastShot=performance.now();send("shoot",{x:me?.x||0,y:me?.y||0,rot:yaw})}addEventListener("pointerdown",e=>{if(e.target.id!=="fire")shoot()});document.querySelector("#fire").addEventListener("pointerdown",e=>{e.preventDefault();shoot()});
-function loop(){requestAnimationFrame(loop);if(me){let dx=0,dz=0;if(keys.KeyW||keys.ArrowUp)dz-=1;if(keys.KeyS||keys.ArrowDown)dz+=1;if(keys.KeyA||keys.ArrowLeft)dx-=1;if(keys.KeyD||keys.ArrowRight)dx+=1;const l=Math.hypot(dx,dz)||1;dx/=l;dz/=l;const speed=.14,c=Math.cos(yaw),s=Math.sin(yaw);me.x=THREE.MathUtils.clamp(me.x+(dx*c-dz*s)*speed,-66,66);me.y=THREE.MathUtils.clamp(me.y+(dx*s+dz*c)*speed,-66,66);me.rot=yaw;const o=players.get(id);if(o){o.mesh.position.set(me.x,0,me.y);o.mesh.rotation.y=yaw}send("move",{x:me.x,y:me.y,rot:yaw})}if(me){camera.position.lerp(new THREE.Vector3(me.x+Math.sin(yaw)*7,4.3,me.y+Math.cos(yaw)*7),.12);camera.lookAt(new THREE.Vector3(me.x,1.4,me.y))}renderer.render(scene,camera)}loop();addEventListener("resize",()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
+const root=new THREE.Group();scene.add(root);
 
-/* REAL_FPP_COMBAT */
-let fppGun=null, lastShotAt=0;
-const fppLoader=new GLTFLoader();
-fppLoader.load("https://cdn.3dassets.dev/assets/28219/v1/model.glb",g=>{
-  const gun=g.scene;
-  gun.scale.setScalar(.55);
-  gun.position.set(.34,-.30,-.62);
-  gun.rotation.set(0,Math.PI,0);
-  camera.add(gun);
-});
-camera.position.set(0,1.62,0);
+loader.load("https://cdn.3dassets.dev/assets/28276/v1/model.glb",g=>{
+ g.scene.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
+ root.add(g.scene);
+},undefined,e=>console.error("STARTER SCENE LOAD FAILED",e));
 
-/* REAL_LOOT_PACK */
-const lootAssets=[
- ["armor","https://cdn.3dassets.dev/assets/28221/v1/model.glb",new THREE.Vector3(-5,0,-3),.8],
- ["plate-carrier","https://cdn.3dassets.dev/assets/28222/v1/model.glb",new THREE.Vector3(-2,0,-3),.8],
- ["backpack","https://cdn.3dassets.dev/assets/28223/v1/model.glb",new THREE.Vector3(1,0,-3),1],
- ["large-pack","https://cdn.3dassets.dev/assets/28224/v1/model.glb",new THREE.Vector3(4,0,-3),.8],
- ["medkit","https://cdn.3dassets.dev/assets/28225/v1/model.glb",new THREE.Vector3(-5,0,2),1],
- ["bandage","https://cdn.3dassets.dev/assets/28226/v1/model.glb",new THREE.Vector3(-2,0,2),1],
- ["ammo","https://cdn.3dassets.dev/assets/28227/v1/model.glb",new THREE.Vector3(1,0,2),1],
- ["crate","https://cdn.3dassets.dev/assets/28228/v1/model.glb",new THREE.Vector3(4,0,2),.8]
+const me={x:0,z:0,yaw:0,pitch:0,hp:100};
+const keys={};
+let locked=false,lastShot=0;
+
+function loadAsset(url,pos,scale=1,rotY=0,parent=scene){
+ loader.load(url,g=>{
+   const m=g.scene;m.position.copy(pos);m.scale.setScalar(scale);m.rotation.y=rotY;
+   m.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
+   parent.add(m);
+ },undefined,e=>console.error("ASSET LOAD FAILED",url,e));
+}
+
+// Real posed enemy/operator asset. The pack is static, so it is used as a visible enemy until rigged player animation is added.
+loadAsset("https://cdn.3dassets.dev/assets/28249/v1/model.glb",new THREE.Vector3(10,0,-6),1.05,Math.PI);
+
+// Real vehicle
+loadAsset("https://cdn.3dassets.dev/assets/28244/v1/model.glb",new THREE.Vector3(14,0,-10),.9,Math.PI/2);
+
+// Real loot from the verified pack manifest.
+const loot=[
+ ["assault rifle","https://cdn.3dassets.dev/assets/28220/v1/model.glb",new THREE.Vector3(4,0,2),.8],
+ ["armour plate","https://cdn.3dassets.dev/assets/28222/v1/model.glb",new THREE.Vector3(6,0,2),1.8],
+ ["plate carrier","https://cdn.3dassets.dev/assets/28224/v1/model.glb",new THREE.Vector3(8,0,2),1.4],
+ ["small backpack","https://cdn.3dassets.dev/assets/28223/v1/model.glb",new THREE.Vector3(10,0,2),1.2],
+ ["large backpack","https://cdn.3dassets.dev/assets/28225/v1/model.glb",new THREE.Vector3(12,0,2),1.1],
+ ["medkit","https://cdn.3dassets.dev/assets/28226/v1/model.glb",new THREE.Vector3(4,0,5),2.2],
+ ["bandage","https://cdn.3dassets.dev/assets/28228/v1/model.glb",new THREE.Vector3(6,0,5),2.4],
+ ["ammo","https://cdn.3dassets.dev/assets/28227/v1/model.glb",new THREE.Vector3(8,0,5),1.5],
+ ["munitions crate","https://cdn.3dassets.dev/assets/28229/v1/model.glb",new THREE.Vector3(11,0,5),1]
 ];
-const realLootLoader=new GLTFLoader();
-lootAssets.forEach(([name,url,pos,scale])=>{
- realLootLoader.load(url,g=>{
-  const m=g.scene;m.position.copy(pos);m.scale.setScalar(scale);
-  m.userData.lootType=name;m.userData.pickup=true;
-  m.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
-  scene.add(m);
- },undefined,e=>console.warn("loot asset failed",name,e));
+loot.forEach(x=>loadAsset(x[1],x[2],x[3]));
+
+const fppGroup=new THREE.Group();
+camera.add(fppGroup);
+scene.add(camera);
+
+// Real Battle Rifle GLB held in FPP view.
+loader.load("https://cdn.3dassets.dev/assets/28219/v1/model.glb",g=>{
+ const gun=g.scene;
+ gun.scale.setScalar(.42);
+ gun.position.set(.42,-.30,-.68);
+ gun.rotation.set(0,Math.PI,0);
+ gun.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
+ fppGroup.add(gun);
+},undefined,e=>console.error("FPP GUN LOAD FAILED",e));
+
+const bullets=[];
+function shoot(){
+ const now=performance.now();
+ if(now-lastShot<120)return;
+ lastShot=now;
+ const dir=new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion).normalize();
+ const p=camera.getWorldPosition(new THREE.Vector3());
+ const b=new THREE.Mesh(
+   new THREE.SphereGeometry(.045,8,8),
+   new THREE.MeshBasicMaterial({color:0xffd54a})
+ );
+ b.position.copy(p).addScaledVector(dir,.8);
+ b.userData.velocity=dir.multiplyScalar(65);
+ b.userData.life=1.4;
+ scene.add(b);bullets.push(b);
+}
+addEventListener("mousedown",e=>{if(e.button===0){if(!locked)lockPointer();shoot()}});
+addEventListener("keydown",e=>{keys[e.code]=true;if(e.code==="Space")shoot()});
+addEventListener("keyup",e=>keys[e.code]=false);
+
+function lockPointer(){
+ renderer.domElement.requestPointerLock?.();
+ locked=true;
+}
+document.addEventListener("pointerlockchange",()=>locked=document.pointerLockElement===renderer.domElement);
+document.addEventListener("mousemove",e=>{
+ if(!locked)return;
+ me.yaw-=e.movementX*.0025;
+ me.pitch=THREE.MathUtils.clamp(me.pitch-e.movementY*.0022,-1.35,1.35);
+});
+
+function update(){
+ const forward=(keys.KeyW||keys.ArrowUp?1:0)-(keys.KeyS||keys.ArrowDown?1:0);
+ const strafe=(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0);
+ const len=Math.hypot(forward,strafe)||1;
+ const speed=.105;
+ const c=Math.cos(me.yaw),s=Math.sin(me.yaw);
+ me.x+=((strafe/len)*c+(forward/len)*s)*speed;
+ me.z+=((strafe/len)*-s+(forward/len)*c)*speed;
+ me.x=THREE.MathUtils.clamp(me.x,-65,65);
+ me.z=THREE.MathUtils.clamp(me.z,-65,65);
+
+ camera.position.set(me.x,1.62,me.z);
+ camera.rotation.order="YXZ";
+ camera.rotation.y=me.yaw;
+ camera.rotation.x=me.pitch;
+
+ for(let i=bullets.length-1;i>=0;i--){
+   const b=bullets[i];
+   b.position.addScaledVector(b.userData.velocity,.016);
+   b.userData.life-=.016;
+   if(b.userData.life<=0){scene.remove(b);bullets.splice(i,1)}
+ }
+}
+
+function loop(){requestAnimationFrame(loop);update();renderer.render(scene,camera)}
+loop();
+
+addEventListener("resize",()=>{
+ camera.aspect=innerWidth/innerHeight;
+ camera.updateProjectionMatrix();
+ renderer.setSize(innerWidth,innerHeight);
 });
