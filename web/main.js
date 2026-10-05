@@ -136,8 +136,7 @@ function update(){
 }
 
 let lastFrame=performance.now();
-function loop(){requestAnimationFrame(loop);const now=performance.now();const dt=Math.min(.05,(now-lastFrame)/1000);lastFrame=now;update();updateBattle(dt);renderer.render(scene,camera)}
-loop();
+function loop(){requestAnimationFrame(loop);const now=performance.now();const dt=Math.min(.05,(now-lastFrame)/1000);lastFrame=now;update();if(typeof updateBattle==="function")updateBattle(dt);renderer.render(scene,camera)}
 
 addEventListener("resize",()=>{
  camera.aspect=innerWidth/innerHeight;
@@ -278,3 +277,7 @@ function updateBattle(dt){
  });
  hudExtra();
 }
+
+
+// Start the render loop only after all battle variables/functions are initialized.
+loop();
