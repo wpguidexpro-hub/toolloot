@@ -1,10 +1,13 @@
 import * as THREE from "three";
+import { GLTFLoader } from "https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/loaders/GLTFLoader.js";
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x08131b);scene.fog=new THREE.Fog(0x08131b,45,150);
 const camera=new THREE.PerspectiveCamera(65,innerWidth/innerHeight,.1,300),renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=true;document.body.appendChild(renderer.domElement);
 scene.add(new THREE.HemisphereLight(0xb9dcff,0x203020,2));const sun=new THREE.DirectionalLight(0xffffff,3);sun.position.set(30,50,20);sun.castShadow=true;scene.add(sun);
-const ground=new THREE.Mesh(new THREE.PlaneGeometry(140,140),new THREE.MeshStandardMaterial({color:0x263d2b,roughness:1}));ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;scene.add(ground);
-const grid=new THREE.GridHelper(140,28,0x58745d,0x334d3a);grid.position.y=.02;scene.add(grid);
-for(let i=0;i<34;i++){const x=(Math.random()-.5)*110,z=(Math.random()-.5)*110;if(Math.hypot(x,z)<12)continue;const w=3+Math.random()*5,h=2+Math.random()*6,d=3+Math.random()*5,m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),new THREE.MeshStandardMaterial({color:0x44515a}));m.position.set(x,h/2,z);m.castShadow=m.receiveShadow=true;scene.add(m)}
+const assetRoot=new THREE.Group();scene.add(assetRoot);
+const loader=new GLTFLoader();
+loader.load("https://cdn.3dassets.dev/assets/28276/v1/model.glb",g=>{g.scene.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});assetRoot.add(g.scene)},undefined,e=>console.warn("Battle assets failed",e));
+const lootLoader=new GLTFLoader();
+lootLoader.load("https://cdn.3dassets.dev/assets/28220/v1/model.glb",g=>{const rifle=g.scene;rifle.scale.setScalar(1.4);rifle.position.set(8,.15,3);rifle.rotation.y=.7;rifle.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});scene.add(rifle)},undefined,e=>console.warn("Loot asset failed",e));
 const zone=new THREE.Mesh(new THREE.CylinderGeometry(48,48,.08,96),new THREE.MeshBasicMaterial({color:0x39a9ff,transparent:true,opacity:.09}));zone.position.y=.05;scene.add(zone);const ring=new THREE.Mesh(new THREE.RingGeometry(47.7,48,96),new THREE.MeshBasicMaterial({color:0x55c8ff,transparent:true,opacity:.8,side:THREE.DoubleSide}));ring.rotation.x=-Math.PI/2;ring.position.y=.08;scene.add(ring);
 let me={id:"local_"+Math.random().toString(36).slice(2,8),name:"Player",x:0,y:0,rot:0,alive:true},players=new Map(),keys={},yaw=0,pitch=.25,lastShot=0;const id=me.id,name="Player-"+id.slice(6); players.set(id,{mesh:makePlayer(me,true),data:me}); document.querySelector("#count").textContent="1";
 const ws=new WebSocket(location.protocol==="file:"||location.hostname==="localhost"?"ws://localhost:5190":(location.protocol==="https:"?"wss://"+location.host:"ws://"+location.host));
