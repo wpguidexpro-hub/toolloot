@@ -8,6 +8,7 @@ const camera=new THREE.PerspectiveCamera(75,innerWidth/innerHeight,.05,300);
 const renderer=new THREE.WebGLRenderer({antialias:true});
 renderer.setPixelRatio(Math.min(devicePixelRatio,1.75));
 renderer.setSize(innerWidth,innerHeight);
+status("LOADING REAL 3D ASSETS…");
 renderer.shadowMap.enabled=true;
 document.body.appendChild(renderer.domElement);
 
@@ -21,11 +22,14 @@ const root=new THREE.Group();scene.add(root);
 loader.load("https://cdn.3dassets.dev/assets/28276/v1/model.glb",g=>{
  g.scene.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
  root.add(g.scene);
-},undefined,e=>console.error("STARTER SCENE LOAD FAILED",e));
+ status("READY — CLICK TO AIM");
+},undefined,e=>{console.error("STARTER SCENE LOAD FAILED",e);status("SCENE LOAD FAILED");});
 
 const me={x:0,z:0,yaw:0,pitch:0,hp:100};
 const keys={};
 let locked=false,lastShot=0;
+const statusEl=document.getElementById("status");
+function status(t){if(statusEl)statusEl.textContent=t;}
 
 function loadAsset(url,pos,scale=1,rotY=0,parent=scene){
  loader.load(url,g=>{
@@ -39,7 +43,7 @@ function loadAsset(url,pos,scale=1,rotY=0,parent=scene){
 loadAsset("https://cdn.3dassets.dev/assets/28249/v1/model.glb",new THREE.Vector3(10,0,-6),1.05,Math.PI);
 
 // Real vehicle
-loadAsset("https://cdn.3dassets.dev/assets/28244/v1/model.glb",new THREE.Vector3(14,0,-10),.9,Math.PI/2);
+loadAsset("https://cdn.3dassets.dev/assets/28243/v1/model.glb",new THREE.Vector3(14,0,-10),.9,Math.PI/2);
 
 // Real loot from the verified pack manifest.
 const loot=[
@@ -68,7 +72,8 @@ loader.load("https://cdn.3dassets.dev/assets/28219/v1/model.glb",g=>{
  gun.rotation.set(0,Math.PI,0);
  gun.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
  fppGroup.add(gun);
-},undefined,e=>console.error("FPP GUN LOAD FAILED",e));
+ status("READY — FPP WEAPON LOADED");
+},undefined,e=>{console.error("FPP GUN LOAD FAILED",e);status("WEAPON LOAD FAILED");});
 
 const bullets=[];
 function shoot(){
