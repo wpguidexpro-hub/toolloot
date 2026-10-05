@@ -8,7 +8,6 @@ const camera=new THREE.PerspectiveCamera(75,innerWidth/innerHeight,.05,300);
 const renderer=new THREE.WebGLRenderer({antialias:true});
 renderer.setPixelRatio(Math.min(devicePixelRatio,1.75));
 renderer.setSize(innerWidth,innerHeight);
-status("LOADING REAL 3D ASSETS…");
 renderer.shadowMap.enabled=true;
 document.body.appendChild(renderer.domElement);
 
@@ -24,6 +23,8 @@ loader.load("https://cdn.3dassets.dev/assets/28276/v1/model.glb",g=>{
  root.add(g.scene);
  status("READY — CLICK TO AIM");
 },undefined,e=>{console.error("STARTER SCENE LOAD FAILED",e);status("SCENE LOAD FAILED");});
+
+status("LOADING REAL 3D ASSETS…");
 
 const me={x:0,z:0,yaw:0,pitch:0,hp:100};
 const keys={};
