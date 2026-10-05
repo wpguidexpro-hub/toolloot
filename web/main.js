@@ -5,13 +5,16 @@ const camera=new THREE.PerspectiveCamera(65,innerWidth/innerHeight,.1,300),rende
 scene.add(new THREE.HemisphereLight(0xb9dcff,0x203020,2));const sun=new THREE.DirectionalLight(0xffffff,3);sun.position.set(30,50,20);sun.castShadow=true;scene.add(sun);
 const assetRoot=new THREE.Group();scene.add(assetRoot);
 const loader=new GLTFLoader();
+const characterURL="https://cdn.3dassets.dev/assets/28265/v1/model.glb";
+const characterLoader=new GLTFLoader();
+characterLoader.load(characterURL,g=>{const model=g.scene;model.scale.setScalar(1.8);model.position.y=0;model.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});window.realCharacter=model;},undefined,e=>console.warn("character asset failed",e));
 loader.load("https://cdn.3dassets.dev/assets/28276/v1/model.glb",g=>{g.scene.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});assetRoot.add(g.scene)},undefined,e=>console.warn("Battle assets failed",e));
 const lootLoader=new GLTFLoader();
 lootLoader.load("https://cdn.3dassets.dev/assets/28220/v1/model.glb",g=>{const rifle=g.scene;rifle.scale.setScalar(1.4);rifle.position.set(8,.15,3);rifle.rotation.y=.7;rifle.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});scene.add(rifle)},undefined,e=>console.warn("Loot asset failed",e));
 const zone=new THREE.Mesh(new THREE.CylinderGeometry(48,48,.08,96),new THREE.MeshBasicMaterial({color:0x39a9ff,transparent:true,opacity:.09}));zone.position.y=.05;scene.add(zone);const ring=new THREE.Mesh(new THREE.RingGeometry(47.7,48,96),new THREE.MeshBasicMaterial({color:0x55c8ff,transparent:true,opacity:.8,side:THREE.DoubleSide}));ring.rotation.x=-Math.PI/2;ring.position.y=.08;scene.add(ring);
 let me={id:"local_"+Math.random().toString(36).slice(2,8),name:"Player",x:0,y:0,rot:0,alive:true},players=new Map(),keys={},yaw=0,pitch=.25,lastShot=0;const id=me.id,name="Player-"+id.slice(6); players.set(id,{mesh:makePlayer(me,true),data:me}); document.querySelector("#count").textContent="1";
 const ws=new WebSocket(location.protocol==="file:"||location.hostname==="localhost"?"ws://localhost:5190":(location.protocol==="https:"?"wss://"+location.host:"ws://"+location.host));
-function makePlayer(p,self){const g=new THREE.Group(),body=new THREE.Mesh(new THREE.CapsuleGeometry(.55,1.15,5,10),new THREE.MeshStandardMaterial({color:self?0x33aaff:0xff4d5d}));body.position.y=1.15;body.castShadow=true;g.add(body);const head=new THREE.Mesh(new THREE.SphereGeometry(.38,12,8),new THREE.MeshStandardMaterial({color:0xe6b38a}));head.position.y=2.15;head.castShadow=true;g.add(head);scene.add(g);g.position.set(p.x,0,p.y);return g}
+function makePlayer(p,self){const g=new THREE.Group();if(window.realCharacter){g.add(window.realCharacter.clone(true))}else{const body=new THREE.Mesh(new THREE.CapsuleGeometry(.55,1.15,5,10),new THREE.MeshStandardMaterial({color:self?0x33aaff:0xff4d5d}));body.position.y=1.15;g.add(body)}scene.add(g);g.position.set(p.x,0,p.y);return g}
 function sync(p){let o=players.get(p.id);if(!o){o={mesh:makePlayer(p,p.id===id),data:p};players.set(p.id,o)}o.data=p;o.mesh.position.x=p.x;o.mesh.position.z=p.y;o.mesh.rotation.y=p.rot||0;o.mesh.visible=p.alive!==false}
 function send(type,data={}){if(ws.readyState===1)ws.send(JSON.stringify({type,...data}))}
 ws.onopen=()=>{document.querySelector("#status").textContent="ONLINE";send("join",{id,name})};ws.onclose=()=>document.querySelector("#status").textContent="OFFLINE";ws.onerror=()=>document.querySelector("#status").textContent="SERVER ERROR";
