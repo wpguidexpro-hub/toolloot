@@ -135,7 +135,8 @@ function update(){
  }
 }
 
-function loop(){requestAnimationFrame(loop);update();renderer.render(scene,camera)}
+let lastFrame=performance.now();
+function loop(){requestAnimationFrame(loop);const now=performance.now();const dt=Math.min(.05,(now-lastFrame)/1000);lastFrame=now;update();updateBattle(dt);renderer.render(scene,camera)}
 loop();
 
 addEventListener("resize",()=>{
@@ -143,3 +144,137 @@ addEventListener("resize",()=>{
  camera.updateProjectionMatrix();
  renderer.setSize(innerWidth,innerHeight);
 });
+
+
+// ===== BATTLE-ROYALE GAMEPLAY: SAFE ZONE + BOTS + COMBAT =====
+const arenaCenter=new THREE.Vector3(0,0,0);
+let zoneRadius=58;
+const zoneMinRadius=10;
+let zoneTimer=90;
+let zonePhase=0;
+
+const zoneMat=new THREE.MeshBasicMaterial({color:0x35a7ff,transparent:true,opacity:.9});
+const zoneRing=new THREE.Mesh(new THREE.RingGeometry(zoneRadius-.10,zoneRadius+.10,96),zoneMat);
+zoneRing.rotation.x=-Math.PI/2;
+zoneRing.position.y=.035;
+scene.add(zoneRing);
+
+const zoneFill=new THREE.Mesh(
+ new THREE.CircleGeometry(zoneRadius,96),
+ new THREE.MeshBasicMaterial({color:0x3b8cff,transparent:true,opacity:.025,side:THREE.DoubleSide})
+);
+zoneFill.rotation.x=-Math.PI/2; zoneFill.position.y=.02; scene.add(zoneFill);
+
+const bots=[];
+let kills=0;
+let ammo=30,maxAmmo=30,reloading=false,reloadAt=0;
+const botPositions=[[18,-8],[-22,-12],[25,18],[-28,22],[5,30],[-35,-30]];
+function makeBot(i){
+ const g=new THREE.Group();
+ g.position.set(botPositions[i][0],0,botPositions[i][1]);
+ const body=new THREE.Mesh(new THREE.CapsuleGeometry(.42,1.0,5,8),new THREE.MeshStandardMaterial({color:0x8b2635}));
+ body.position.y=1; body.castShadow=true; g.add(body);
+ const head=new THREE.Mesh(new THREE.SphereGeometry(.28,12,8),new THREE.MeshStandardMaterial({color:0xc58d6d}));
+ head.position.y=1.78; head.castShadow=true; g.add(head);
+ const gun=new THREE.Mesh(new THREE.BoxGeometry(.12,.12,.72),new THREE.MeshStandardMaterial({color:0x222222}));
+ gun.position.set(.38,1.18,-.32); gun.rotation.x=-.15; g.add(gun);
+ g.userData={hp:100,alive:true,shootCd:1.2+i*.3,wander:i*.9};
+ scene.add(g); bots.push(g);
+}
+for(let i=0;i<botPositions.length;i++)makeBot(i);
+
+function hudExtra(){
+ const h=document.getElementById("hud");
+ if(!h)return;
+ const add=(id,text)=>{let e=document.getElementById(id);if(!e){e=document.createElement("span");e.id=id;h.appendChild(e)}e.textContent=text};
+ add("ammoHud",`AMMO: ${ammo}/${maxAmmo}`);
+ add("zoneHud",`ZONE: ${Math.ceil(zoneTimer)}s`);
+ add("killHud",`KILLS: ${kills}`);
+ add("botHud",`ENEMIES: ${bots.filter(b=>b.userData.alive).length}`);
+}
+hudExtra();
+
+function reload(){
+ if(reloading||ammo===maxAmmo)return;
+ reloading=true; reloadAt=performance.now()+1400;
+ status("RELOADING…");
+}
+function damageMe(amount){
+ me.hp=Math.max(0,me.hp-amount);
+ const hp=document.getElementById("hp"); if(hp)hp.textContent=Math.ceil(me.hp);
+ if(me.hp<=0){status("YOU DIED — PRESS R TO RESTART");locked=false}
+}
+function restartPlayer(){
+ me.x=0;me.z=0;me.hp=100;kills=0;ammo=maxAmmo;reloading=false;
+ bots.forEach((b,i)=>{b.visible=true;b.userData.alive=true;b.userData.hp=100;b.position.set(botPositions[i][0],0,botPositions[i][1])});
+}
+addEventListener("keydown",e=>{if(e.code==="KeyR"){if(me.hp<=0)restartPlayer();else reload()}});
+function hitBots(){
+ const origin=camera.getWorldPosition(new THREE.Vector3());
+ const dir=new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion).normalize();
+ let best=null,bestDist=Infinity;
+ bots.forEach(b=>{
+  if(!b.userData.alive)return;
+  const target=new THREE.Vector3(b.position.x,1.15,b.position.z);
+  const to=target.sub(origin); const dist=to.length();
+  if(dist>65)return;
+  const angle=dir.angleTo(to.normalize());
+  if(angle<.065 && dist<bestDist){best=b;bestDist=dist}
+ });
+ if(best){
+  best.userData.hp-=34;
+  if(best.userData.hp<=0){
+   best.userData.alive=false; best.visible=false; kills++;
+   status("ENEMY ELIMINATED!");
+  } else status("HIT!");
+ }
+}
+const oldShoot=shoot;
+shoot=function(){
+ if(me.hp<=0||reloading)return;
+ if(ammo<=0){reload();return}
+ ammo--; oldShoot(); hitBots(); hudExtra();
+};
+
+function updateBattle(dt){
+ if(me.hp<=0)return;
+ if(reloading && performance.now()>=reloadAt){ammo=maxAmmo;reloading=false;status("READY");}
+ // shrink the safe zone in stages
+ zoneTimer-=dt;
+ if(zoneTimer<=0 && zoneRadius>zoneMinRadius){
+  zoneRadius=Math.max(zoneMinRadius,zoneRadius-8);
+  zoneTimer=45; zonePhase++;
+  zoneRing.geometry.dispose(); zoneRing.geometry=new THREE.RingGeometry(zoneRadius-.10,zoneRadius+.10,96);
+  zoneFill.geometry.dispose(); zoneFill.geometry=new THREE.CircleGeometry(zoneRadius,96);
+ }
+ zoneRing.rotation.z+=dt*.12;
+ zoneFill.scale.setScalar(1);
+ zoneRing.position.set(arenaCenter.x,.035,arenaCenter.z);
+ zoneFill.position.set(arenaCenter.x,.02,arenaCenter.z);
+
+ const d=Math.hypot(me.x-arenaCenter.x,me.z-arenaCenter.z);
+ if(d>zoneRadius)damageMe(7*dt);
+
+ bots.forEach((b,i)=>{
+  if(!b.userData.alive)return;
+  const dx=me.x-b.position.x,dz=me.z-b.position.z,dist=Math.hypot(dx,dz);
+  b.userData.wander+=dt;
+  if(dist<34){
+   const step=dt*(dist>11?1.8:0);
+   b.position.x+=(dx/dist||0)*step;
+   b.position.z+=(dz/dist||0)*step;
+   b.rotation.y=Math.atan2(dx,dz);
+   b.userData.shootCd-=dt;
+   if(dist<28 && b.userData.shootCd<=0){
+    b.userData.shootCd=1.4+i*.18;
+    damageMe(4+Math.random()*4);
+   }
+  } else {
+   b.position.x+=Math.sin(b.userData.wander+i)*dt*.7;
+   b.position.z+=Math.cos(b.userData.wander*.8+i)*dt*.7;
+  }
+  b.position.x=THREE.MathUtils.clamp(b.position.x,-60,60);
+  b.position.z=THREE.MathUtils.clamp(b.position.z,-60,60);
+ });
+ hudExtra();
+}
