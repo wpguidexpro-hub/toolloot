@@ -29,30 +29,11 @@ function loop(){requestAnimationFrame(loop);if(me){let dx=0,dz=0;if(keys.KeyW||k
 /* REAL_FPP_COMBAT */
 let fppGun=null, lastShotAt=0;
 const fppLoader=new GLTFLoader();
-fppLoader.load("https://cdn.3dassets.dev/assets/28220/v1/model.glb",g=>{
-  fppGun=g.scene; fppGun.scale.setScalar(.38);
-  fppGun.position.set(.42,-.32,-.72); fppGun.rotation.set(0,Math.PI,0);
-  camera.add(fppGun);
+fppLoader.load("https://cdn.3dassets.dev/assets/28219/v1/model.glb",g=>{
+  const gun=g.scene;
+  gun.scale.setScalar(.55);
+  gun.position.set(.34,-.30,-.62);
+  gun.rotation.set(0,Math.PI,0);
+  camera.add(gun);
 });
-function fppShootReal(){
-  const now=performance.now(); if(now-lastShotAt<140)return; lastShotAt=now;
-  const origin=camera.getWorldPosition(new THREE.Vector3());
-  const dir=new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion).normalize();
-  const tracer=new THREE.Mesh(new THREE.CylinderGeometry(.018,.018,.55,6),new THREE.MeshBasicMaterial());
-  tracer.position.copy(origin).addScaledVector(dir,.8);
-  tracer.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir);
-  tracer.userData.vel=dir.clone().multiplyScalar(70); tracer.userData.life=.22;
-  scene.add(tracer);
-}
-const fppProjectiles=[];
-function updateFppProjectiles(dt){
-  scene.traverse(o=>{
-    if(o.userData&&o.userData.vel&&o.userData.life!==undefined){
-      o.position.addScaledVector(o.userData.vel,dt); o.userData.life-=dt;
-      if(o.userData.life<=0) scene.remove(o);
-    }
-  });
-}
-document.addEventListener("mousedown",e=>{if(e.button===0)fppShootReal()});
-document.addEventListener("keydown",e=>{if(e.code==="Space")fppShootReal()});
-camera.position.set(0,1.65,0);
+camera.position.set(0,1.62,0);
