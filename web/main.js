@@ -15,6 +15,9 @@ scene.add(new THREE.HemisphereLight(0xddeeff,0x35402f,2.2));
 const sun=new THREE.DirectionalLight(0xffffff,3);
 sun.position.set(40,70,25);sun.castShadow=true;scene.add(sun);
 
+const statusEl=document.getElementById("status");
+function status(t){if(statusEl)statusEl.textContent=t;}
+
 const loader=new GLTFLoader();
 const root=new THREE.Group();scene.add(root);
 
@@ -29,9 +32,6 @@ status("LOADING REAL 3D ASSETS…");
 const me={x:0,z:0,yaw:0,pitch:0,hp:100};
 const keys={};
 let locked=false,lastShot=0;
-const statusEl=document.getElementById("status");
-function status(t){if(statusEl)statusEl.textContent=t;}
-
 function loadAsset(url,pos,scale=1,rotY=0,parent=scene){
  loader.load(url,g=>{
    const m=g.scene;m.position.copy(pos);m.scale.setScalar(scale);m.rotation.y=rotY;
